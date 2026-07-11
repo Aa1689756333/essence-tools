@@ -1,0 +1,104 @@
+@import "tailwindcss";
+
+@theme {
+  /* 背景层 */
+  --color-bg: #f6f5f2;
+  --color-bg-sidebar: #1b1b1f;
+  --color-card: #ffffff;
+  --color-card-alt: #faf9f7;
+
+  /* 文字层 */
+  --color-text: #1a1a1e;
+  --color-text-secondary: #6b6b73;
+  --color-text-tertiary: #a0a0a8;
+
+  /* 品牌色 */
+  --color-accent: #d97706;
+  --color-accent-hover: #b45309;
+  --color-accent-subtle: #fef3c7;
+
+  /* 边框 */
+  --color-border: #e8e6e1;
+  --color-border-light: #f0eee9;
+
+  /* 工具主题色 */
+  --color-tool-amber: #d97706;
+  --color-tool-emerald: #059669;
+  --color-tool-indigo: #4f46e5;
+  --color-tool-rose: #e11d48;
+  --color-tool-cyan: #0891b2;
+  --color-tool-violet: #7c3aed;
+}
+
+/* ===== 基础 ===== */
+
+body {
+  font-family: "PingFang SC", "Noto Sans SC", "Microsoft YaHei", system-ui, sans-serif;
+  color: var(--color-text);
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  letter-spacing: 0.01em;
+}
+
+/* ===== 动画 ===== */
+
+@keyframes fade-up {
+  from { opacity: 0; transform: translateY(10px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+@keyframes pulse-dot {
+  0%, 100% { box-shadow: 0 0 0 0 rgba(217, 119, 6, 0.4); }
+  50% { box-shadow: 0 0 0 8px rgba(217, 119, 6, 0); }
+}
+
+@keyframes spin {
+  to { transform: rotate(360deg); }
+}
+
+@keyframes shimmer {
+  0% { background-position: -200% 0; }
+  100% { background-position: 200% 0; }
+}
+
+@keyframes gentle-float {
+  0%, 100% { transform: translateY(0); }
+  50% { transform: translateY(-3px); }
+}
+
+.animate-fade-up {
+  animation: fade-up 0.5s cubic-bezier(0.16, 1, 0.3, 1) both;
+}
+
+.animate-pulse-dot {
+  animation: pulse-dot 1.6s ease-in-out infinite;
+}
+
+.animate-spin-slow {
+  animation: spin 0.8s linear infinite;
+}
+
+.animate-shimmer {
+  background: linear-gradient(90deg, #d97706 0%, #f59e0b 50%, #d97706 100%);
+  background-size: 200% 100%;
+  animation: shimmer 2s ease-in-out infinite;
+}
+
+.animate-float {
+  animation: gentle-float 3s ease-in-out infinite;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .animate-fade-up { animation: none; }
+  .animate-pulse-dot { animation: none; }
+  .animate-spin-slow { animation-duration: 3s; }
+  .animate-shimmer { animation: none; }
+  .animate-float { animation: none; }
+}
+
+/* ===== 滚动条 ===== */
+
+.custom-scrollbar::-webkit-scrollbar { width: 5px; }
+.custom-scrollbar::-webkit-scrollbar-track { background: transparent; }
+.custom-scrollbar::-webkit-scrollbar-thumb { background: #d6d3d1; border-radius: 3px; }
+.custom-scrollbar::-webkit-scrollbar-thumb:hover { background: #a8a29e; }
