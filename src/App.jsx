@@ -198,16 +198,14 @@ export default function App() {
   }, []);
 
   return (
-    <div className="min-h-screen bg-stone-100">
-      <nav className="nav-shadow bg-stone-900 py-3.5 px-6">
-        <div className="max-w-[1300px] mx-auto flex items-center justify-center">
-          <h1 className="text-[14px] font-semibold text-stone-100 tracking-[2px]">
-            NOVEL<span className="text-brand mx-[2px]">.</span>FORMATTER
-          </h1>
-        </div>
-      </nav>
+    <div className="min-h-screen bg-bg">
+      <header className="text-center py-8 pb-5 border-b border-border bg-card-bg">
+        <h1 className="text-[28px] font-bold text-accent tracking-[2px] mb-1.5">
+          NovelFormatter
+        </h1>
+      </header>
 
-      <main className="max-w-[1300px] mx-auto px-5 py-6">
+      <div className="max-w-[1300px] mx-auto px-5 py-6">
         <div className="grid grid-cols-1 md:grid-cols-2 gap-5 h-[600px] max-md:h-auto">
           <EditorPanel
             textareaRef={textareaRef}
@@ -240,7 +238,7 @@ export default function App() {
           copyLabel={copyLabel}
           disabled={isProcessing}
         />
-      </main>
+      </div>
     </div>
   );
 }

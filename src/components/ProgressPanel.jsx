@@ -1,70 +1,73 @@
-const phases = ['字符转换', '标点统一', '空格处理', '段落处理'];
+const phaseLabels = [
+  { name: '字符级转换', desc: '全角/半角统一 · 间隔号规范' },
+  { name: '标点统一', desc: '标点转换 · 省略号 · 破折号 · 引号状态机' },
+  { name: '空格处理', desc: '中英文间距 · 标点间距 · 拆行保护' },
+  { name: '段落处理', desc: '缩进 · 章节标题 · 段落去重 · 对话格式' },
+];
 
-function StepDot({ state }) {
-  if (state === 'complete') {
-    return (
-      <div className="w-[18px] h-[18px] rounded-full bg-brand flex items-center justify-center shrink-0 z-10 transition-all duration-500">
-        <svg className="w-2.5 h-2.5 text-white" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="4" strokeLinecap="round" strokeLinejoin="round">
-          <polyline points="20 6 9 17 4 12"/>
-        </svg>
-      </div>
-    );
-  }
+const spinner = (
+  <svg className="w-4 h-4 animate-spin" viewBox="0 0 24 24" fill="none">
+    <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="3" />
+    <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z" />
+  </svg>
+);
 
-  if (state === 'active') {
-    return (
-      <div className="w-[18px] h-[18px] rounded-full bg-brand animate-pulse-dot flex items-center justify-center shrink-0 z-10 transition-all duration-500">
-        <svg className="w-2.5 h-2.5 text-white animate-spin-slow" viewBox="0 0 24 24" fill="none">
-          <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="3"/>
-          <path className="opacity-90" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z"/>
-        </svg>
-      </div>
-    );
-  }
-
-  return (
-    <div className="w-[18px] h-[18px] rounded-full bg-stone-100 border border-stone-200/60 flex items-center justify-center shrink-0 z-10 transition-all duration-500">
-      <span className="w-1 h-1 rounded-full bg-stone-300" />
-    </div>
-  );
-}
+const check = (
+  <svg className="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round">
+    <polyline points="20 6 9 17 4 12" />
+  </svg>
+);
 
 export default function ProgressPanel({ activePhase }) {
   return (
-    <div className="mt-5 animate-fade-up" role="status" aria-label="排版处理进度">
-      <div className="px-8 py-5 floating-card">
-        {/* 步骤条 */}
-        <div className="flex items-start">
-          {phases.map((name, i) => {
-            const state = i < activePhase ? 'complete' : i === activePhase ? 'active' : 'pending';
-            const isLast = i === phases.length - 1;
+    <div className="mt-4 px-5 py-4 bg-[#faf7f0] border border-border rounded-md">
+      <div className="flex items-center gap-2 mb-3">
+        <span className="text-accent">{spinner}</span>
+        <span className="text-[13px] font-semibold text-text-secondary">排版处理中...</span>
+      </div>
 
-            return (
-              <div key={i} className="flex items-start flex-1 min-w-0 last:flex-initial">
-                <div className="flex flex-col items-center gap-2">
-                  <StepDot state={state} />
-                  <span className={`text-[11px] font-medium whitespace-nowrap transition-colors duration-500 ${
-                    state === 'complete' ? 'text-brand' :
-                    state === 'active' ? 'text-stone-600' : 'text-stone-300'
-                  }`}>
-                    {name}
-                  </span>
-                </div>
+      <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
+        {phaseLabels.map((phase, i) => {
+          let icon, nameClass, descClass;
 
-                {!isLast && (
-                  <div className="flex-1 pt-[8px] px-3 min-w-[20px]">
-                    <div className="h-px bg-stone-100 rounded-full overflow-hidden">
-                      <div
-                        className="h-full bg-brand/70 rounded-full transition-all duration-700 ease-out"
-                        style={{ width: i < activePhase ? '100%' : '0%' }}
-                      />
-                    </div>
-                  </div>
-                )}
-              </div>
+          if (i < activePhase) {
+            icon = <span className="text-success">{check}</span>;
+            nameClass = 'text-text';
+            descClass = 'text-text-secondary';
+          } else if (i === activePhase) {
+            icon = <span className="text-accent">{spinner}</span>;
+            nameClass = 'text-accent font-semibold';
+            descClass = 'text-accent/60';
+          } else {
+            icon = (
+              <span className="text-[#d4c5b2]">
+                <svg className="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                  <circle cx="12" cy="12" r="9" />
+                </svg>
+              </span>
             );
-          })}
-        </div>
+            nameClass = 'text-[#c5b8a5]';
+            descClass = 'text-[#d4c5b2]';
+          }
+
+          return (
+            <div key={i} className="flex items-start gap-2">
+              <span className="mt-0.5 shrink-0">{icon}</span>
+              <div className="min-w-0">
+                <div className={`text-[13px] leading-tight ${nameClass}`}>{phase.name}</div>
+                <div className={`text-[11px] leading-tight mt-0.5 ${descClass}`}>{phase.desc}</div>
+              </div>
+            </div>
+          );
+        })}
+      </div>
+
+      {/* 进度条 */}
+      <div className="mt-3 h-1 bg-[#e8e0d4] rounded-full overflow-hidden">
+        <div
+          className="h-full bg-accent rounded-full transition-all duration-500 ease-out"
+          style={{ width: `${((activePhase + 1) / 4) * 100}%` }}
+        />
       </div>
     </div>
   );
