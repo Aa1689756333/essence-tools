@@ -1,0 +1,193 @@
+@import "tailwindcss";
+
+@theme {
+  --color-brand: #d97706;
+  --color-brand-hover: #b45309;
+  --color-surface: #ffffff;
+}
+
+/* ===== 基础 ===== */
+
+body {
+  font-family: "PingFang SC", "Noto Sans SC", "Microsoft YaHei", system-ui, sans-serif;
+  background: #f5f5f4;
+  color: #1c1917;
+  min-height: 100vh;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+.font-serif-cjk {
+  font-family: "PingFang SC", "Noto Sans SC", "STSong", "SimSun", serif;
+}
+
+/* ===== textarea + overlay ===== */
+
+.textarea-invisible {
+  color: transparent;
+  -webkit-text-fill-color: transparent;
+  caret-color: #78716c;
+  background: transparent;
+}
+
+.textarea-invisible::placeholder {
+  color: #a8a29e;
+  -webkit-text-fill-color: #a8a29e;
+  font-weight: 300;
+}
+
+.highlight-overlay .line {
+  display: block;
+  border-radius: 2px;
+  transition: background 0.1s ease;
+}
+
+.highlight-overlay .line.active {
+  background: rgba(217, 119, 6, 0.08);
+}
+
+.output-paragraph {
+  margin: 0;
+  padding: 1px 4px;
+  border-radius: 2px;
+  transition: background 0.1s ease;
+  cursor: default;
+}
+
+.output-paragraph:hover {
+  background: rgba(217, 119, 6, 0.05);
+}
+
+.output-paragraph.active {
+  background: rgba(217, 119, 6, 0.08);
+}
+
+/* ===== 浮起卡片 ===== */
+
+.floating-card {
+  background: var(--color-surface);
+  border-radius: 14px;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.03), 0 6px 16px rgba(0, 0, 0, 0.02);
+  overflow: hidden;
+  transition: box-shadow 0.5s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.floating-card:hover {
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.03), 0 16px 40px rgba(0, 0, 0, 0.05);
+}
+
+.card-divider {
+  height: 0.5px;
+  background: #e7e5e4;
+}
+
+/* ===== 导航栏阴影 ===== */
+
+.nav-shadow {
+  box-shadow: 0 1px 0 rgba(255, 255, 255, 0.04) inset, 0 4px 20px rgba(0, 0, 0, 0.12);
+}
+
+/* ===== 按钮 ===== */
+
+.btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  border-radius: 9px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.15s ease;
+  border: none;
+  line-height: 1;
+  user-select: none;
+}
+
+.btn:focus-visible {
+  outline: 2px solid var(--color-brand);
+  outline-offset: 2px;
+}
+
+.btn:disabled {
+  opacity: 0.4;
+  cursor: not-allowed;
+}
+
+.btn-lg {
+  padding: 11px 28px;
+  font-size: 13px;
+  font-weight: 600;
+  border-radius: 10px;
+  letter-spacing: 0.02em;
+}
+
+.btn-md {
+  padding: 7px 14px;
+  font-size: 12px;
+}
+
+.btn-dark {
+  background: #1c1917;
+  color: #fafaf9;
+}
+
+.btn-dark:hover:not(:disabled) {
+  background: #292524;
+}
+
+.btn-dark:active:not(:disabled) {
+  transform: scale(0.97);
+}
+
+.btn-subtle {
+  background: transparent;
+  color: #78716c;
+  border: 1px solid #e7e5e4;
+}
+
+.btn-subtle:hover:not(:disabled) {
+  background: #fafaf9;
+  border-color: #d6d3d1;
+  color: #44403c;
+}
+
+/* ===== 动画 ===== */
+
+@keyframes fade-up {
+  from { opacity: 0; transform: translateY(8px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+@keyframes pulse-dot {
+  0%, 100% { box-shadow: 0 0 0 0 rgba(217, 119, 6, 0.45); }
+  50% { box-shadow: 0 0 0 7px rgba(217, 119, 6, 0); }
+}
+
+@keyframes spin {
+  to { transform: rotate(360deg); }
+}
+
+.animate-fade-up {
+  animation: fade-up 0.4s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.animate-pulse-dot {
+  animation: pulse-dot 1.6s ease-in-out infinite;
+}
+
+.animate-spin-slow {
+  animation: spin 0.8s linear infinite;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .animate-fade-up { animation: none; }
+  .animate-pulse-dot { animation: none; }
+  .animate-spin-slow { animation-duration: 3s; }
+}
+
+/* ===== 滚动条 ===== */
+
+.custom-scrollbar::-webkit-scrollbar { width: 4px; }
+.custom-scrollbar::-webkit-scrollbar-track { background: transparent; }
+.custom-scrollbar::-webkit-scrollbar-thumb { background: #d6d3d1; border-radius: 2px; }
+.custom-scrollbar::-webkit-scrollbar-thumb:hover { background: #a8a29e; }
