@@ -1,0 +1,10 @@
+import MarkdownEditor from '@/tools/markdown-editor/MarkdownEditor';
+
+export const metadata = {
+  title: 'Markdown 编辑器 - ToolBox',
+  description: '在线 Markdown 编辑器，实时预览渲染效果，支持导出为 Markdown 或 HTML 文件。',
+};
+
+export default function Page() {
+  return <MarkdownEditor />;
+}

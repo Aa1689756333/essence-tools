@@ -23,6 +23,18 @@ export const tools = [
     tags: ['编辑', 'HTML'],
     clientOnly: true,
   },
+  {
+    id: 'markdown-editor',
+    name: 'Markdown 编辑器',
+    desc: '编写 Markdown 语法，实时预览，支持导出为 MD 或 HTML',
+    icon: 'FileText',
+    emoji: '📄',
+    color: 'mint',
+    path: '/markdown-editor',
+    category: '文本',
+    tags: ['编辑', 'Markdown'],
+    clientOnly: true,
+  },
 ];
 
 export const categories = ['全部', ...new Set(tools.map(t => t.category))];
