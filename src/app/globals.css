@@ -13,14 +13,6 @@
   --color-text-secondary: #6b7280;
   --color-text-tertiary: #9ca3af;
 
-  /* 品牌色 — 薄荷绿 */
-  --color-accent: #059669;
-  --color-accent-hover: #047857;
-  --color-accent-subtle: #ecfdf5;
-
-  /* 功能色 */
-  --color-success: #059669;
-
   /* 边框 */
   --color-border: #e5e7eb;
   --color-border-light: #f3f4f6;
@@ -99,3 +91,13 @@ body {
 .custom-scrollbar::-webkit-scrollbar-track { background: transparent; }
 .custom-scrollbar::-webkit-scrollbar-thumb { background: #d1d5db; border-radius: 3px; }
 .custom-scrollbar::-webkit-scrollbar-thumb:hover { background: #9ca3af; }
+
+/* ===== 隐藏滚动条但保留滚动功能 ===== */
+
+.scrollbar-hide {
+  -ms-overflow-style: none;
+  scrollbar-width: none;
+}
+.scrollbar-hide::-webkit-scrollbar {
+  display: none;
+}

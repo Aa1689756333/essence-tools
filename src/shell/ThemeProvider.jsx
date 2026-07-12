@@ -87,6 +87,7 @@ export default function ThemeProvider({ children }) {
     root.style.setProperty('--theme-subtle', theme.subtle);
     root.style.setProperty('--theme-shadow', theme.shadow);
     root.style.setProperty('--theme-light', theme.light);
+    root.style.setProperty('--theme-accent-rgb', theme.shadow);
     root.style.setProperty('--theme-gradient', `linear-gradient(135deg, ${theme.accent}, ${theme.light})`);
   }, [theme]);
 

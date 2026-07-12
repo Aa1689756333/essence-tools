@@ -40,7 +40,7 @@ export default function ToolCard({ tool, index }) {
       </h3>
 
       {/* 描述 */}
-      <p className="text-[13px] text-gray-400 leading-[1.65] mb-4">
+      <p className="text-[13px] text-gray-400 leading-[1.65] mb-4 line-clamp-2">
         {tool.desc}
       </p>
 

@@ -206,7 +206,7 @@ export default function NovelFormatter() {
         </p>
       </div>
 
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-5 h-[600px] max-md:h-auto">
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-5 h-[calc(100vh-240px)] min-h-[380px] max-md:min-h-[250px] max-md:max-h-[42vh]">
         <EditorPanel
           textareaRef={textareaRef}
           overlayRef={overlayRef}

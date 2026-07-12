@@ -2,6 +2,7 @@
 
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
+import { useEffect } from 'react';
 import { useSidebar } from './useSidebar';
 import { useTheme } from './ThemeProvider';
 import { LayoutGrid, ChevronLeft, Wrench, X } from 'lucide-react';
@@ -12,6 +13,20 @@ export default function Sidebar({ tools, toolsByCategory }) {
   const { theme } = useTheme();
 
   const isActive = (path) => pathname === path;
+
+  // ESC 键关闭移动端侧边栏
+  useEffect(() => {
+    const handleKeyDown = (e) => {
+      if (e.key === 'Escape' && mobileOpen && isMobile) {
+        closeMobile();
+      }
+    };
+    
+    if (isMobile) {
+      document.addEventListener('keydown', handleKeyDown);
+      return () => document.removeEventListener('keydown', handleKeyDown);
+    }
+  }, [mobileOpen, isMobile, closeMobile]);
 
   const navContent = (
     <>
@@ -165,7 +180,7 @@ export default function Sidebar({ tools, toolsByCategory }) {
         )}
         {/* 抽屉 */}
         <aside
-          className={`fixed top-0 left-0 h-full w-[260px] bg-white border-r border-gray-200 flex flex-col z-50 transform transition-transform duration-300 ease-[cubic-bezier(0.16,1,0.3,1)] md:hidden ${
+          className={`fixed top-0 left-0 h-full w-[min(260px,72vw)] bg-white border-r border-gray-200 flex flex-col z-50 transform transition-transform duration-300 ease-[cubic-bezier(0.16,1,0.3,1)] md:hidden ${
             mobileOpen ? 'translate-x-0' : '-translate-x-full'
           }`}
         >
@@ -190,10 +205,8 @@ export default function Sidebar({ tools, toolsByCategory }) {
         className="absolute top-1/2 -translate-y-1/2 -right-3 w-6 h-10 rounded-md bg-white border border-gray-200 flex flex-col items-center justify-center gap-0.5 z-30 shadow-[0_1px_3px_rgba(0,0,0,0.04),0_2px_6px_rgba(0,0,0,0.06)] hover:shadow-[0_2px_6px_rgba(0,0,0,0.06),0_4px_12px_rgba(0,0,0,0.1)] hover:border-gray-300 transition-all duration-200 cursor-pointer overflow-hidden group"
       >
         <span
-          className="absolute left-0 top-1.5 bottom-1.5 w-[2.5px] rounded-r-[2.5px] bg-gray-300 transition-colors duration-200"
+          className="absolute left-0 top-1.5 bottom-1.5 w-[2.5px] rounded-r-[2.5px] transition-colors duration-200"
           style={{ backgroundColor: theme.accent }}
-          onMouseEnter={(e) => e.target.style.backgroundColor = theme.accent}
-          onMouseLeave={(e) => e.target.style.backgroundColor = theme.accent}
         />
         <ChevronLeft
           className={`w-2.5 h-2.5 text-gray-400 group-hover:text-gray-700 transition-all duration-300 relative z-10 ${collapsed ? 'rotate-180' : ''}`}

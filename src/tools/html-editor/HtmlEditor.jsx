@@ -13,6 +13,8 @@ import {
   Indent, Outdent,
   Minus,
   Type,
+  Link, Image, Table,
+  X,
 } from 'lucide-react';
 
 const FONT_SIZES = ['12px','14px','16px','18px','20px','24px','28px','32px','36px','48px'];
@@ -75,6 +77,26 @@ function ToolbarSelect({ value, options, onChange, title, width }) {
   );
 }
 
+function Modal({ isOpen, onClose, title, children, theme }) {
+  if (!isOpen) return null;
+
+  return (
+    <div className="fixed inset-0 z-[100] flex items-center justify-center bg-black/30 backdrop-blur-sm" onClick={onClose}>
+      <div className="bg-white rounded-xl shadow-2xl min-w-[320px] max-w-[90vw] max-h-[80vh] overflow-hidden" onClick={(e) => e.stopPropagation()}>
+        <div className="flex items-center justify-between px-5 py-3 border-b border-gray-100">
+          <h3 className="text-[15px] font-semibold text-gray-800">{title}</h3>
+          <button onClick={onClose} className="w-7 h-7 rounded-lg flex items-center justify-center text-gray-400 hover:bg-gray-100 hover:text-gray-600 transition-colors">
+            <X className="w-4 h-4" />
+          </button>
+        </div>
+        <div className="p-5">
+          {children}
+        </div>
+      </div>
+    </div>
+  );
+}
+
 export default function HtmlEditor() {
   const { theme } = useTheme();
   const editorRef = useRef(null);
@@ -84,12 +106,55 @@ export default function HtmlEditor() {
   const [copied, setCopied] = useState(false);
   const [fontSize, setFontSize] = useState('16px');
   const [fontFamily, setFontFamily] = useState('');
+  const [formatState, setFormatState] = useState({
+    bold: false, italic: false, underline: false, strikethrough: false,
+    alignLeft: false, alignCenter: false, alignRight: false, alignJustify: false,
+    unorderedList: false, orderedList: false,
+    h1: false, h2: false, h3: false, p: false,
+  });
+  const [modalType, setModalType] = useState(null);
+  const [modalData, setModalData] = useState({});
+  const [tableMenu, setTableMenu] = useState(null);
+  const [selectedCell, setSelectedCell] = useState(null);
 
   useEffect(() => {
     if (editorRef.current) {
       editorRef.current.focus();
     }
   }, []);
+
+  // 检测当前格式状态
+  useEffect(() => {
+    const updateFormatState = () => {
+      if (!editorRef.current || showCode) return;
+
+      const selection = window.getSelection();
+      if (!selection.rangeCount) return;
+
+      const range = selection.getRangeAt(0);
+      if (!editorRef.current.contains(range.commonAncestorContainer)) return;
+
+      setFormatState({
+        bold: document.queryCommandState('bold'),
+        italic: document.queryCommandState('italic'),
+        underline: document.queryCommandState('underline'),
+        strikethrough: document.queryCommandState('strikeThrough'),
+        alignLeft: document.queryCommandState('justifyLeft'),
+        alignCenter: document.queryCommandState('justifyCenter'),
+        alignRight: document.queryCommandState('justifyRight'),
+        alignJustify: document.queryCommandState('justifyFull'),
+        unorderedList: document.queryCommandState('insertUnorderedList'),
+        orderedList: document.queryCommandState('insertOrderedList'),
+        h1: document.queryCommandValue('formatBlock') === 'h1',
+        h2: document.queryCommandValue('formatBlock') === 'h2',
+        h3: document.queryCommandValue('formatBlock') === 'h3',
+        p: document.queryCommandValue('formatBlock') === 'p' || document.queryCommandValue('formatBlock') === 'div',
+      });
+    };
+
+    document.addEventListener('selectionchange', updateFormatState);
+    return () => document.removeEventListener('selectionchange', updateFormatState);
+  }, [showCode]);
 
   const exec = useCallback((cmd, value) => {
     document.execCommand(cmd, false, value || null);
@@ -217,39 +282,166 @@ ${html}
   }, [exec]);
 
   const handleInsertLink = useCallback(() => {
-    const url = prompt('请输入链接地址:', 'https://');
-    if (url) exec('createLink', url);
-  }, [exec]);
+    const selection = window.getSelection();
+    const selectedText = selection.toString();
+    setModalData({ type: 'link', url: 'https://', text: selectedText });
+    setModalType('link');
+  }, []);
 
   const handleInsertImage = useCallback(() => {
-    const url = prompt('请输入图片地址:', 'https://');
-    if (url) exec('insertImage', url);
-  }, [exec]);
+    setModalData({ type: 'image', url: 'https://', alt: '' });
+    setModalType('image');
+  }, []);
 
   const handleInsertHr = useCallback(() => {
     exec('insertHorizontalRule');
   }, [exec]);
 
   const handleInsertTable = useCallback(() => {
-    const rows = prompt('行数:', '3');
-    const cols = prompt('列数:', '3');
-    if (!rows || !cols) return;
-    const r = parseInt(rows);
-    const c = parseInt(cols);
-    if (isNaN(r) || isNaN(c) || r < 1 || c < 1) return;
+    setModalData({ type: 'table', rows: 3, cols: 3 });
+    setModalType('table');
+  }, []);
 
-    let table = '<table style="border-collapse:collapse;width:100%;margin:8px 0">';
-    for (let i = 0; i < r; i++) {
-      table += '<tr>';
-      for (let j = 0; j < c; j++) {
-        const tag = i === 0 ? 'th' : 'td';
-        table += `<${tag} style="border:1px solid #ddd;padding:8px;text-align:left">${i === 0 ? '标题' : ''}</${tag}>`;
+  const handleModalConfirm = useCallback(() => {
+    if (modalType === 'link') {
+      const { url, text } = modalData;
+      if (url && url !== 'https://') {
+        if (text) {
+          exec('insertHTML', `<a href="${url}" target="_blank">${text}</a>`);
+        } else {
+          exec('createLink', url);
+        }
       }
-      table += '</tr>';
+    } else if (modalType === 'image') {
+      const { url, alt } = modalData;
+      if (url && url !== 'https://') {
+        exec('insertHTML', `<img src="${url}" alt="${alt || ''}" style="max-width:100%;height:auto" />`);
+      }
+    } else if (modalType === 'table') {
+      const r = parseInt(modalData.rows);
+      const c = parseInt(modalData.cols);
+      if (isNaN(r) || isNaN(c) || r < 1 || c < 1) return;
+
+      let table = '<table style="border-collapse:collapse;width:100%;margin:8px 0">';
+      for (let i = 0; i < r; i++) {
+        table += '<tr>';
+        for (let j = 0; j < c; j++) {
+          const tag = i === 0 ? 'th' : 'td';
+          table += `<${tag} style="border:1px solid #ddd;padding:8px;text-align:left">${i === 0 ? '标题' : ''}</${tag}>`;
+        }
+        table += '</tr>';
+      }
+      table += '</table><p><br></p>';
+      exec('insertHTML', table);
     }
-    table += '</table><p><br></p>';
-    exec('insertHTML', table);
+    setModalType(null);
+    setModalData({});
+  }, [modalType, modalData, exec]);
+
+  const handleModalCancel = useCallback(() => {
+    setModalType(null);
+    setModalData({});
+  }, []);
+
+  // 粘贴处理：默认清理格式
+  const handlePaste = useCallback((e) => {
+    e.preventDefault();
+    const text = e.clipboardData.getData('text/plain');
+    exec('insertText', text);
   }, [exec]);
+
+  // 表格右键菜单处理
+  const handleContextMenu = useCallback((e) => {
+    const target = e.target;
+    if (target.tagName === 'TD' || target.tagName === 'TH') {
+      e.preventDefault();
+      setSelectedCell(target);
+      setTableMenu({ x: e.clientX, y: e.clientY });
+    }
+  }, []);
+
+  const handleAddRow = useCallback(() => {
+    if (!selectedCell) return;
+    const row = selectedCell.parentElement;
+    const table = row.parentElement;
+    const newRow = table.insertRow(row.rowIndex + 1);
+    const cols = row.cells.length;
+    for (let i = 0; i < cols; i++) {
+      const cell = newRow.insertCell();
+      cell.style.border = '1px solid #ddd';
+      cell.style.padding = '8px';
+      cell.innerHTML = '&nbsp;';
+    }
+    setTableMenu(null);
+    setSelectedCell(null);
+  }, [selectedCell]);
+
+  const handleAddCol = useCallback(() => {
+    if (!selectedCell) return;
+    const table = selectedCell.closest('table');
+    const cellIndex = selectedCell.cellIndex;
+    for (let i = 0; i < table.rows.length; i++) {
+      const row = table.rows[i];
+      const cell = row.insertCell(cellIndex + 1);
+      cell.style.border = '1px solid #ddd';
+      cell.style.padding = '8px';
+      cell.innerHTML = i === 0 ? '标题' : '&nbsp;';
+      if (i === 0) {
+        const newTh = document.createElement('th');
+        newTh.style.border = '1px solid #ddd';
+        newTh.style.padding = '8px';
+        newTh.innerHTML = '标题';
+        cell.replaceWith(newTh);
+      }
+    }
+    setTableMenu(null);
+    setSelectedCell(null);
+  }, [selectedCell]);
+
+  const handleDeleteRow = useCallback(() => {
+    if (!selectedCell) return;
+    const row = selectedCell.parentElement;
+    const table = row.parentElement;
+    if (table.rows.length > 1) {
+      row.remove();
+    }
+    setTableMenu(null);
+    setSelectedCell(null);
+  }, [selectedCell]);
+
+  const handleDeleteCol = useCallback(() => {
+    if (!selectedCell) return;
+    const table = selectedCell.closest('table');
+    const cellIndex = selectedCell.cellIndex;
+    for (let i = table.rows.length - 1; i >= 0; i--) {
+      const row = table.rows[i];
+      if (row.cells.length > 1) {
+        row.deleteCell(cellIndex);
+      }
+    }
+    setTableMenu(null);
+    setSelectedCell(null);
+  }, [selectedCell]);
+
+  const handleDeleteTable = useCallback(() => {
+    if (!selectedCell) return;
+    const table = selectedCell.closest('table');
+    table.remove();
+    setTableMenu(null);
+    setSelectedCell(null);
+  }, [selectedCell]);
+
+  // 点击其他地方关闭表格菜单
+  useEffect(() => {
+    const handleClick = () => {
+      setTableMenu(null);
+      setSelectedCell(null);
+    };
+    if (tableMenu) {
+      document.addEventListener('click', handleClick);
+      return () => document.removeEventListener('click', handleClick);
+    }
+  }, [tableMenu]);
 
   const fontSizeOptions = FONT_SIZES.map(s => ({ label: s, value: s }));
   const fontFamilyOptions = FONT_FAMILIES.map(f => ({ label: f.label, value: f.value }));
@@ -268,10 +460,9 @@ ${html}
       <div className="rounded-xl border border-gray-200 bg-white overflow-hidden shadow-[0_1px_3px_rgba(0,0,0,0.04)]">
         {/* 工具栏 */}
         <div className="border-b border-gray-200 bg-gray-50/80 px-2 sm:px-3 py-2">
-          {/* 第一行 */}
           <div className="flex items-center gap-0.5 flex-wrap">
-            <ToolbarBtn icon={Undo2} onClick={() => exec('undo')} title="撤销" />
-            <ToolbarBtn icon={Redo2} onClick={() => exec('redo')} title="恢复" />
+            <ToolbarBtn icon={Undo2} onClick={() => exec('undo')} title="撤销 (Ctrl+Z)" />
+            <ToolbarBtn icon={Redo2} onClick={() => exec('redo')} title="恢复 (Ctrl+Y)" />
             <ToolbarDivider />
 
             <ToolbarSelect
@@ -290,42 +481,40 @@ ${html}
             />
             <ToolbarDivider />
 
-            <ToolbarBtn icon={Bold} onClick={() => exec('bold')} title="加粗" />
-            <ToolbarBtn icon={Italic} onClick={() => exec('italic')} title="斜体" />
-            <ToolbarBtn icon={Underline} onClick={() => exec('underline')} title="下划线" />
-            <ToolbarBtn icon={Strikethrough} onClick={() => exec('strikeThrough')} title="删除线" />
+            <ToolbarBtn icon={Bold} onClick={() => exec('bold')} active={formatState.bold} title="加粗 (Ctrl+B)" />
+            <ToolbarBtn icon={Italic} onClick={() => exec('italic')} active={formatState.italic} title="斜体 (Ctrl+I)" />
+            <ToolbarBtn icon={Underline} onClick={() => exec('underline')} active={formatState.underline} title="下划线 (Ctrl+U)" />
+            <ToolbarBtn icon={Strikethrough} onClick={() => exec('strikeThrough')} active={formatState.strikethrough} title="删除线" />
             <ToolbarDivider />
 
-            <ToolbarBtn icon={Heading1} onClick={() => exec('formatBlock', 'h1')} title="标题 1" />
-            <ToolbarBtn icon={Heading2} onClick={() => exec('formatBlock', 'h2')} title="标题 2" />
-            <ToolbarBtn icon={Heading3} onClick={() => exec('formatBlock', 'h3')} title="标题 3" />
-            <ToolbarBtn icon={Type} onClick={() => exec('formatBlock', 'p')} title="正文" />
+            <ToolbarBtn icon={Heading1} onClick={() => exec('formatBlock', 'h1')} active={formatState.h1} title="标题 1" />
+            <ToolbarBtn icon={Heading2} onClick={() => exec('formatBlock', 'h2')} active={formatState.h2} title="标题 2" />
+            <ToolbarBtn icon={Heading3} onClick={() => exec('formatBlock', 'h3')} active={formatState.h3} title="标题 3" />
+            <ToolbarBtn icon={Type} onClick={() => exec('formatBlock', 'p')} active={formatState.p} title="正文" />
             <ToolbarDivider />
 
-            <ToolbarBtn icon={AlignLeft} onClick={() => exec('justifyLeft')} title="左对齐" />
-            <ToolbarBtn icon={AlignCenter} onClick={() => exec('justifyCenter')} title="居中" />
-            <ToolbarBtn icon={AlignRight} onClick={() => exec('justifyRight')} title="右对齐" />
-            <ToolbarBtn icon={AlignJustify} onClick={() => exec('justifyFull')} title="两端对齐" />
+            <ToolbarBtn icon={AlignLeft} onClick={() => exec('justifyLeft')} active={formatState.alignLeft} title="左对齐" />
+            <ToolbarBtn icon={AlignCenter} onClick={() => exec('justifyCenter')} active={formatState.alignCenter} title="居中" />
+            <ToolbarBtn icon={AlignRight} onClick={() => exec('justifyRight')} active={formatState.alignRight} title="右对齐" />
+            <ToolbarBtn icon={AlignJustify} onClick={() => exec('justifyFull')} active={formatState.alignJustify} title="两端对齐" />
             <ToolbarDivider />
 
-            <ToolbarBtn icon={List} onClick={() => exec('insertUnorderedList')} title="无序列表" />
-            <ToolbarBtn icon={ListOrdered} onClick={() => exec('insertOrderedList')} title="有序列表" />
+            <ToolbarBtn icon={List} onClick={() => exec('insertUnorderedList')} active={formatState.unorderedList} title="无序列表" />
+            <ToolbarBtn icon={ListOrdered} onClick={() => exec('insertOrderedList')} active={formatState.orderedList} title="有序列表" />
             <ToolbarBtn icon={Outdent} onClick={() => exec('outdent')} title="减少缩进" />
             <ToolbarBtn icon={Indent} onClick={() => exec('indent')} title="增加缩进" />
             <ToolbarDivider />
 
             <ToolbarBtn icon={Minus} onClick={handleInsertHr} title="分割线" />
             <ToolbarBtn icon={Code} onClick={toggleCodeView} active={showCode} title="HTML 源码" />
-          </div>
+            <ToolbarDivider />
 
-          {/* 第二行：颜色和表格 */}
-          <div className="flex items-center gap-0.5 flex-wrap mt-1.5">
             <ColorPicker icon="A" label="文字颜色" colors={COLORS} onSelect={handleColor} theme={theme} />
             <ColorPicker icon="BG" label="背景颜色" colors={COLORS} onSelect={handleBgColor} theme={theme} isBg />
             <ToolbarDivider />
-            <ToolbarBtn icon={Type} onClick={handleInsertLink} title="插入链接" />
-            <ToolbarBtn icon={Type} onClick={handleInsertImage} title="插入图片" />
-            <ToolbarBtn icon={Type} onClick={handleInsertTable} title="插入表格" />
+            <ToolbarBtn icon={Link} onClick={handleInsertLink} title="插入链接" />
+            <ToolbarBtn icon={Image} onClick={handleInsertImage} title="插入图片" />
+            <ToolbarBtn icon={Table} onClick={handleInsertTable} title="插入表格" />
           </div>
         </div>
 
@@ -366,12 +555,41 @@ ${html}
               contentEditable
               suppressContentEditableWarning
               onInput={handleInput}
+              onPaste={handlePaste}
+              onContextMenu={handleContextMenu}
               className="editor-content"
               spellCheck={false}
             />
           )}
         </div>
       </div>
+
+      {/* 表格右键菜单 */}
+      {tableMenu && (
+        <div
+          className="fixed z-[200] bg-white rounded-lg shadow-lg border border-gray-200 py-1 min-w-[140px]"
+          style={{ left: tableMenu.x, top: tableMenu.y }}
+          onClick={(e) => e.stopPropagation()}
+        >
+          <button onClick={handleAddRow} className="w-full px-3 py-1.5 text-left text-[13px] text-gray-700 hover:bg-gray-100 transition-colors">
+            向下插入行
+          </button>
+          <button onClick={handleAddCol} className="w-full px-3 py-1.5 text-left text-[13px] text-gray-700 hover:bg-gray-100 transition-colors">
+            向右插入列
+          </button>
+          <div className="h-px bg-gray-100 my-1" />
+          <button onClick={handleDeleteRow} className="w-full px-3 py-1.5 text-left text-[13px] text-red-600 hover:bg-red-50 transition-colors">
+            删除行
+          </button>
+          <button onClick={handleDeleteCol} className="w-full px-3 py-1.5 text-left text-[13px] text-red-600 hover:bg-red-50 transition-colors">
+            删除列
+          </button>
+          <div className="h-px bg-gray-100 my-1" />
+          <button onClick={handleDeleteTable} className="w-full px-3 py-1.5 text-left text-[13px] text-red-600 hover:bg-red-50 transition-colors">
+            删除表格
+          </button>
+        </div>
+      )}
 
       {/* 底部操作栏 */}
       <div className="flex items-center justify-between mt-4 flex-wrap gap-2">
@@ -432,6 +650,130 @@ ${html}
           </button>
         </div>
       </div>
+
+      {/* 模态框 */}
+      <Modal isOpen={modalType === 'link'} onClose={handleModalCancel} title="插入链接" theme={theme}>
+        <div className="space-y-3">
+          <div>
+            <label className="block text-[13px] text-gray-600 mb-1.5">链接地址</label>
+            <input
+              type="text"
+              value={modalData.url || ''}
+              onChange={(e) => setModalData({ ...modalData, url: e.target.value })}
+              className="w-full h-[36px] px-3 rounded-lg border border-gray-200 text-[13px] focus:outline-none focus:border-gray-300"
+              placeholder="https://"
+            />
+          </div>
+          {modalData.text && (
+            <div>
+              <label className="block text-[13px] text-gray-600 mb-1.5">链接文本</label>
+              <input
+                type="text"
+                value={modalData.text || ''}
+                onChange={(e) => setModalData({ ...modalData, text: e.target.value })}
+                className="w-full h-[36px] px-3 rounded-lg border border-gray-200 text-[13px] focus:outline-none focus:border-gray-300"
+              />
+            </div>
+          )}
+          <div className="flex gap-2 pt-2">
+            <button
+              onClick={handleModalConfirm}
+              className="flex-1 h-[36px] rounded-lg text-[13px] font-semibold text-white cursor-pointer transition-all"
+              style={{ backgroundColor: theme.accent }}
+            >
+              确定
+            </button>
+            <button
+              onClick={handleModalCancel}
+              className="flex-1 h-[36px] rounded-lg text-[13px] font-semibold text-gray-500 bg-white border border-gray-200 cursor-pointer hover:bg-gray-50 transition-all"
+            >
+              取消
+            </button>
+          </div>
+        </div>
+      </Modal>
+
+      <Modal isOpen={modalType === 'image'} onClose={handleModalCancel} title="插入图片" theme={theme}>
+        <div className="space-y-3">
+          <div>
+            <label className="block text-[13px] text-gray-600 mb-1.5">图片地址</label>
+            <input
+              type="text"
+              value={modalData.url || ''}
+              onChange={(e) => setModalData({ ...modalData, url: e.target.value })}
+              className="w-full h-[36px] px-3 rounded-lg border border-gray-200 text-[13px] focus:outline-none focus:border-gray-300"
+              placeholder="https://"
+            />
+          </div>
+          <div>
+            <label className="block text-[13px] text-gray-600 mb-1.5">替代文本 (可选)</label>
+            <input
+              type="text"
+              value={modalData.alt || ''}
+              onChange={(e) => setModalData({ ...modalData, alt: e.target.value })}
+              className="w-full h-[36px] px-3 rounded-lg border border-gray-200 text-[13px] focus:outline-none focus:border-gray-300"
+              placeholder="图片描述"
+            />
+          </div>
+          <div className="flex gap-2 pt-2">
+            <button
+              onClick={handleModalConfirm}
+              className="flex-1 h-[36px] rounded-lg text-[13px] font-semibold text-white cursor-pointer transition-all"
+              style={{ backgroundColor: theme.accent }}
+            >
+              确定
+            </button>
+            <button
+              onClick={handleModalCancel}
+              className="flex-1 h-[36px] rounded-lg text-[13px] font-semibold text-gray-500 bg-white border border-gray-200 cursor-pointer hover:bg-gray-50 transition-all"
+            >
+              取消
+            </button>
+          </div>
+        </div>
+      </Modal>
+
+      <Modal isOpen={modalType === 'table'} onClose={handleModalCancel} title="插入表格" theme={theme}>
+        <div className="space-y-3">
+          <div>
+            <label className="block text-[13px] text-gray-600 mb-1.5">行数</label>
+            <input
+              type="number"
+              value={modalData.rows || 3}
+              onChange={(e) => setModalData({ ...modalData, rows: e.target.value })}
+              className="w-full h-[36px] px-3 rounded-lg border border-gray-200 text-[13px] focus:outline-none focus:border-gray-300"
+              min="1"
+              max="20"
+            />
+          </div>
+          <div>
+            <label className="block text-[13px] text-gray-600 mb-1.5">列数</label>
+            <input
+              type="number"
+              value={modalData.cols || 3}
+              onChange={(e) => setModalData({ ...modalData, cols: e.target.value })}
+              className="w-full h-[36px] px-3 rounded-lg border border-gray-200 text-[13px] focus:outline-none focus:border-gray-300"
+              min="1"
+              max="10"
+            />
+          </div>
+          <div className="flex gap-2 pt-2">
+            <button
+              onClick={handleModalConfirm}
+              className="flex-1 h-[36px] rounded-lg text-[13px] font-semibold text-white cursor-pointer transition-all"
+              style={{ backgroundColor: theme.accent }}
+            >
+              确定
+            </button>
+            <button
+              onClick={handleModalCancel}
+              className="flex-1 h-[36px] rounded-lg text-[13px] font-semibold text-gray-500 bg-white border border-gray-200 cursor-pointer hover:bg-gray-50 transition-all"
+            >
+              取消
+            </button>
+          </div>
+        </div>
+      </Modal>
     </div>
   );
 }
