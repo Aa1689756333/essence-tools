@@ -2,13 +2,15 @@
 
 import { useState, useRef, useEffect } from 'react';
 import { usePathname } from 'next/navigation';
-import { Search, Bell, Palette, Check } from 'lucide-react';
+import { Search, Bell, Palette, Check, Menu } from 'lucide-react';
 import { tools } from '@/tools/registry';
 import { useTheme } from './ThemeProvider';
+import { useSidebar } from './useSidebar';
 
 export default function Topbar() {
   const pathname = usePathname();
   const { theme, themes, setTheme } = useTheme();
+  const { toggle, isMobile } = useSidebar();
   const [showPicker, setShowPicker] = useState(false);
   const pickerRef = useRef(null);
 
@@ -27,8 +29,16 @@ export default function Topbar() {
   }, [showPicker]);
 
   return (
-    <header className="h-[54px] px-8 flex items-center justify-between border-b border-gray-200 bg-white shrink-0">
+    <header className="h-[54px] px-4 sm:px-5 md:px-6 lg:px-8 flex items-center justify-between border-b border-gray-200 bg-white shrink-0">
       <div className="flex items-center gap-2 text-[13px]">
+        {isMobile && (
+          <button
+            onClick={toggle}
+            className="w-[34px] h-[34px] rounded-lg border border-gray-200 bg-white flex items-center justify-center text-gray-400 hover:bg-gray-50 hover:border-gray-300 hover:text-gray-600 transition-all duration-150 cursor-pointer md:hidden"
+          >
+            <Menu className="w-4 h-4" />
+          </button>
+        )}
         <span className="text-gray-400 font-medium">ToolBox</span>
         <span className="text-gray-300 text-base">/</span>
         <span className="text-gray-900 font-semibold">{currentPageName}</span>

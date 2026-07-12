@@ -197,7 +197,15 @@ export default function NovelFormatter() {
   }, []);
 
   return (
-    <div className="max-w-[1300px] mx-auto">
+    <div className="w-full">
+      {/* 页面标题 */}
+      <div className="mb-4 md:mb-5 lg:mb-6">
+        <h1 className="text-[22px] font-bold text-text mb-1.5 tracking-tight">小说排版器</h1>
+        <p className="text-[13.5px] text-text-secondary leading-relaxed">
+          一键规范化标点、间距、段落，29 条排版规则让小说格式更规范。
+        </p>
+      </div>
+
       <div className="grid grid-cols-1 md:grid-cols-2 gap-5 h-[600px] max-md:h-auto">
         <EditorPanel
           textareaRef={textareaRef}

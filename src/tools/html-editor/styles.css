@@ -1,0 +1,168 @@
+/* ===== 编辑器内容区域 ===== */
+.editor-content {
+  min-height: 500px;
+  max-height: 70vh;
+  overflow-y: auto;
+  padding: 16px 20px;
+  font-size: 16px;
+  line-height: 1.7;
+  color: #1f2937;
+  outline: none;
+}
+
+@media (min-width: 640px) {
+  .editor-content {
+    padding: 24px 32px;
+  }
+}
+
+@media (min-width: 1024px) {
+  .editor-content {
+    padding: 32px 40px;
+  }
+}
+
+.editor-content:empty::before {
+  content: attr(data-placeholder);
+  color: #d1d5db;
+  pointer-events: none;
+}
+
+.editor-content h1 {
+  font-size: 2em;
+  font-weight: 700;
+  margin: 0.67em 0;
+  line-height: 1.3;
+}
+
+.editor-content h2 {
+  font-size: 1.5em;
+  font-weight: 600;
+  margin: 0.75em 0;
+  line-height: 1.35;
+}
+
+.editor-content h3 {
+  font-size: 1.25em;
+  font-weight: 600;
+  margin: 0.83em 0;
+  line-height: 1.4;
+}
+
+.editor-content p {
+  margin: 0.5em 0;
+}
+
+.editor-content ul,
+.editor-content ol {
+  margin: 0.5em 0;
+  padding-left: 2em;
+}
+
+.editor-content li {
+  margin: 0.25em 0;
+}
+
+.editor-content blockquote {
+  margin: 1em 0;
+  padding: 0.5em 1em;
+  border-left: 4px solid #e5e7eb;
+  color: #6b7280;
+  background: #f9fafb;
+}
+
+.editor-content code {
+  background: #f3f4f6;
+  padding: 0.2em 0.4em;
+  border-radius: 3px;
+  font-size: 0.9em;
+  font-family: 'Courier New', monospace;
+}
+
+.editor-content pre {
+  background: #f3f4f6;
+  padding: 1em;
+  border-radius: 6px;
+  overflow-x: auto;
+  margin: 1em 0;
+}
+
+.editor-content pre code {
+  background: transparent;
+  padding: 0;
+}
+
+.editor-content a {
+  color: #3b82f6;
+  text-decoration: underline;
+}
+
+.editor-content img {
+  max-width: 100%;
+  height: auto;
+  margin: 1em 0;
+}
+
+.editor-content table {
+  border-collapse: collapse;
+  width: 100%;
+  margin: 1em 0;
+}
+
+.editor-content th,
+.editor-content td {
+  border: 1px solid #e5e7eb;
+  padding: 0.5em 0.75em;
+  text-align: left;
+}
+
+.editor-content th {
+  background: #f9fafb;
+  font-weight: 600;
+}
+
+.editor-content hr {
+  border: none;
+  border-top: 2px solid #e5e7eb;
+  margin: 1.5em 0;
+}
+
+/* ===== 滚动条美化 ===== */
+.editor-content::-webkit-scrollbar {
+  width: 8px;
+}
+
+.editor-content::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+.editor-content::-webkit-scrollbar-thumb {
+  background: #d1d5db;
+  border-radius: 4px;
+}
+
+.editor-content::-webkit-scrollbar-thumb:hover {
+  background: #9ca3af;
+}
+
+/* ===== 代码视图 ===== */
+.code-view textarea {
+  tab-size: 2;
+}
+
+.code-view textarea::-webkit-scrollbar {
+  width: 8px;
+}
+
+.code-view textarea::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+.code-view textarea::-webkit-scrollbar-thumb {
+  background: #d1d5db;
+  border-radius: 4px;
+}
+
+.code-view textarea::-webkit-scrollbar-thumb:hover {
+  background: #9ca3af;
+}

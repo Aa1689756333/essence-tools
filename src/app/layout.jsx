@@ -2,6 +2,7 @@ import './globals.css';
 import Sidebar from '@/shell/Sidebar';
 import Topbar from '@/shell/Topbar';
 import ThemeProvider from '@/shell/ThemeProvider';
+import { SidebarProvider } from '@/shell/useSidebar';
 import { tools, getToolsByCategory } from '@/tools/registry';
 
 export const metadata = {
@@ -16,15 +17,17 @@ export default function RootLayout({ children }) {
     <html lang="zh-CN">
       <body className="bg-bg antialiased">
         <ThemeProvider>
-          <div className="flex h-screen overflow-hidden">
-            <Sidebar tools={tools} toolsByCategory={toolsByCategory} />
-            <div className="flex flex-col flex-1 min-w-0 overflow-hidden">
-              <Topbar />
-              <main className="flex-1 overflow-y-auto p-9 px-10">
-                {children}
-              </main>
+          <SidebarProvider>
+            <div className="flex h-screen overflow-hidden">
+              <Sidebar tools={tools} toolsByCategory={toolsByCategory} />
+              <div className="flex flex-col flex-1 min-w-0 overflow-hidden">
+                <Topbar />
+                <main className="flex-1 overflow-y-auto p-4 sm:p-5 md:p-6 lg:p-8">
+                  {children}
+                </main>
+              </div>
             </div>
-          </div>
+          </SidebarProvider>
         </ThemeProvider>
       </body>
     </html>

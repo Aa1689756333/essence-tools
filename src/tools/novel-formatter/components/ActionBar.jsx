@@ -6,11 +6,11 @@ export default function ActionBar({ onFormat, onSample, onClear, onCopy, canCopy
   const { theme } = useTheme();
 
   return (
-    <div className="flex gap-2.5 justify-center mt-[18px]">
+    <div className="flex gap-2 sm:gap-2.5 justify-center mt-[18px] flex-wrap">
       <button
         onClick={onFormat}
         disabled={disabled}
-        className="px-7 py-[9px] rounded-[9px] text-[13px] font-semibold cursor-pointer transition-all text-white hover:-translate-y-px disabled:opacity-60 disabled:cursor-not-allowed"
+        className="px-4 sm:px-7 py-[9px] rounded-[9px] text-[13px] font-semibold cursor-pointer transition-all text-white hover:-translate-y-px disabled:opacity-60 disabled:cursor-not-allowed"
         style={{
           backgroundColor: theme.accent,
           boxShadow: `0 1px 3px rgba(${theme.shadow}, 0.25)`,
@@ -28,20 +28,20 @@ export default function ActionBar({ onFormat, onSample, onClear, onCopy, canCopy
       </button>
       <button
         onClick={onSample}
-        className="px-7 py-[9px] rounded-[9px] text-[13px] font-semibold cursor-pointer transition-all bg-transparent text-gray-600 border border-dashed border-gray-300 hover:bg-gray-50 hover:border-solid hover:border-gray-400"
+        className="px-4 sm:px-7 py-[9px] rounded-[9px] text-[13px] font-semibold cursor-pointer transition-all bg-transparent text-gray-600 border border-dashed border-gray-300 hover:bg-gray-50 hover:border-solid hover:border-gray-400"
       >
         测试文本
       </button>
       <button
         onClick={onClear}
-        className="px-7 py-[9px] rounded-[9px] text-[13px] font-semibold cursor-pointer transition-all bg-transparent text-gray-600 border border-dashed border-gray-300 hover:bg-gray-50 hover:border-solid hover:border-gray-400"
+        className="px-4 sm:px-7 py-[9px] rounded-[9px] text-[13px] font-semibold cursor-pointer transition-all bg-transparent text-gray-600 border border-dashed border-gray-300 hover:bg-gray-50 hover:border-solid hover:border-gray-400"
       >
         清空
       </button>
       <button
         onClick={onCopy}
         disabled={!canCopy}
-        className="px-7 py-[9px] rounded-[9px] text-[13px] font-semibold cursor-pointer transition-all bg-transparent text-gray-600 border border-dashed border-gray-300 hover:bg-gray-50 hover:border-solid hover:border-gray-400 disabled:opacity-40 disabled:cursor-not-allowed"
+        className="px-4 sm:px-7 py-[9px] rounded-[9px] text-[13px] font-semibold cursor-pointer transition-all bg-transparent text-gray-600 border border-dashed border-gray-300 hover:bg-gray-50 hover:border-solid hover:border-gray-400 disabled:opacity-40 disabled:cursor-not-allowed"
       >
         {copyLabel || '复制结果'}
       </button>

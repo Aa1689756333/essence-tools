@@ -26,13 +26,13 @@ export default function ProgressPanel({ activePhase }) {
   const { theme } = useTheme();
 
   return (
-    <div className="mt-4 px-5 py-4 bg-gray-50 border border-gray-200 rounded-md">
+    <div className="mt-4 px-3 sm:px-5 py-4 bg-gray-50 border border-gray-200 rounded-md">
       <div className="flex items-center gap-2 mb-3">
         <span style={{ color: theme.accent }}>{spinner}</span>
         <span className="text-[13px] font-semibold text-gray-500">排版处理中...</span>
       </div>
 
-      <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
+      <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-3">
         {phaseLabels.map((phase, i) => {
           let icon, nameStyle, descStyle;
 

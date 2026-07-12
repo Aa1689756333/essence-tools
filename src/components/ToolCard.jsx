@@ -17,7 +17,7 @@ export default function ToolCard({ tool, index }) {
   return (
     <Link
       href={tool.path}
-      className="group relative block rounded-[14px] border border-gray-200 bg-white p-6 transition-all duration-[350ms] ease-[cubic-bezier(0.16,1,0.3,1)] hover:-translate-y-[3px] hover:border-gray-300 hover:shadow-[0_1px_2px_rgba(0,0,0,0.03),0_4px_8px_rgba(0,0,0,0.03),0_12px_24px_rgba(0,0,0,0.04)] overflow-hidden animate-fade-up"
+      className="group relative block rounded-[14px] border border-gray-200 bg-white p-4 sm:p-6 transition-all duration-[350ms] ease-[cubic-bezier(0.16,1,0.3,1)] hover:-translate-y-[3px] hover:border-gray-300 hover:shadow-[0_1px_2px_rgba(0,0,0,0.03),0_4px_8px_rgba(0,0,0,0.03),0_12px_24px_rgba(0,0,0,0.04)] overflow-hidden animate-fade-up"
       style={{ animationDelay: `${index * 40}ms` }}
     >
       {/* 底部装饰线 - hover 时淡入 */}

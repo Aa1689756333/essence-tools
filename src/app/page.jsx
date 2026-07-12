@@ -4,9 +4,9 @@ import ToolCard from '@/components/ToolCard';
 
 export default function HomePage() {
   return (
-    <div>
+    <div className="w-full">
       {/* 头部 */}
-      <div className="mb-8">
+      <div className="mb-4 md:mb-5 lg:mb-6">
         <h1 className="text-[22px] font-bold text-text mb-1.5 tracking-tight">工具箱</h1>
         <p className="text-[13.5px] text-text-secondary leading-relaxed">
           选择一个工具开始使用，所有工具在浏览器本地运行，不上传任何数据。
