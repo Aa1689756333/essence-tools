@@ -1,5 +1,7 @@
 'use client';
 
+import { useTheme } from '@/shell/ThemeProvider';
+
 const phaseLabels = [
   { name: '字符级转换', desc: '全角/半角统一 · 间隔号规范' },
   { name: '标点统一', desc: '标点转换 · 省略号 · 破折号 · 引号状态机' },
@@ -21,25 +23,27 @@ const check = (
 );
 
 export default function ProgressPanel({ activePhase }) {
+  const { theme } = useTheme();
+
   return (
     <div className="mt-4 px-5 py-4 bg-gray-50 border border-gray-200 rounded-md">
       <div className="flex items-center gap-2 mb-3">
-        <span className="text-emerald-600">{spinner}</span>
+        <span style={{ color: theme.accent }}>{spinner}</span>
         <span className="text-[13px] font-semibold text-gray-500">排版处理中...</span>
       </div>
 
       <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
         {phaseLabels.map((phase, i) => {
-          let icon, nameClass, descClass;
+          let icon, nameStyle, descStyle;
 
           if (i < activePhase) {
-            icon = <span className="text-emerald-600">{check}</span>;
-            nameClass = 'text-gray-900';
-            descClass = 'text-gray-500';
+            icon = <span style={{ color: theme.accent }}>{check}</span>;
+            nameStyle = { color: '#111827' };
+            descStyle = { color: '#6b7280' };
           } else if (i === activePhase) {
-            icon = <span className="text-emerald-600">{spinner}</span>;
-            nameClass = 'text-emerald-600 font-semibold';
-            descClass = 'text-emerald-600/60';
+            icon = <span style={{ color: theme.accent }}>{spinner}</span>;
+            nameStyle = { color: theme.accent, fontWeight: 600 };
+            descStyle = { color: theme.accent, opacity: 0.6 };
           } else {
             icon = (
               <span className="text-gray-300">
@@ -48,16 +52,16 @@ export default function ProgressPanel({ activePhase }) {
                 </svg>
               </span>
             );
-            nameClass = 'text-gray-400';
-            descClass = 'text-gray-300';
+            nameStyle = { color: '#9ca3af' };
+            descStyle = { color: '#d1d5db' };
           }
 
           return (
             <div key={i} className="flex items-start gap-2">
               <span className="mt-0.5 shrink-0">{icon}</span>
               <div className="min-w-0">
-                <div className={`text-[13px] leading-tight ${nameClass}`}>{phase.name}</div>
-                <div className={`text-[11px] leading-tight mt-0.5 ${descClass}`}>{phase.desc}</div>
+                <div className="text-[13px] leading-tight" style={nameStyle}>{phase.name}</div>
+                <div className="text-[11px] leading-tight mt-0.5" style={descStyle}>{phase.desc}</div>
               </div>
             </div>
           );
@@ -67,8 +71,11 @@ export default function ProgressPanel({ activePhase }) {
       {/* 进度条 */}
       <div className="mt-3 h-1 bg-gray-200 rounded-full overflow-hidden">
         <div
-          className="h-full bg-emerald-600 rounded-full transition-all duration-500 ease-out"
-          style={{ width: `${((activePhase + 1) / 4) * 100}%` }}
+          className="h-full rounded-full transition-all duration-500 ease-out"
+          style={{
+            width: `${((activePhase + 1) / 4) * 100}%`,
+            backgroundColor: theme.accent,
+          }}
         />
       </div>
     </div>

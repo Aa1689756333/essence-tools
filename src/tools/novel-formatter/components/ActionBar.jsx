@@ -1,12 +1,28 @@
 'use client';
 
+import { useTheme } from '@/shell/ThemeProvider';
+
 export default function ActionBar({ onFormat, onSample, onClear, onCopy, canCopy, copyLabel, disabled }) {
+  const { theme } = useTheme();
+
   return (
     <div className="flex gap-2.5 justify-center mt-[18px]">
       <button
         onClick={onFormat}
         disabled={disabled}
-        className="px-7 py-[9px] rounded-[9px] text-[13px] font-semibold cursor-pointer transition-all bg-emerald-600 text-white shadow-[0_1px_3px_rgba(5,150,105,0.25)] hover:bg-emerald-700 hover:shadow-[0_4px_12px_rgba(5,150,105,0.3)] hover:-translate-y-px disabled:opacity-60 disabled:cursor-not-allowed"
+        className="px-7 py-[9px] rounded-[9px] text-[13px] font-semibold cursor-pointer transition-all text-white hover:-translate-y-px disabled:opacity-60 disabled:cursor-not-allowed"
+        style={{
+          backgroundColor: theme.accent,
+          boxShadow: `0 1px 3px rgba(${theme.shadow}, 0.25)`,
+        }}
+        onMouseEnter={(e) => {
+          e.currentTarget.style.backgroundColor = theme.hover;
+          e.currentTarget.style.boxShadow = `0 4px 12px rgba(${theme.shadow}, 0.3)`;
+        }}
+        onMouseLeave={(e) => {
+          e.currentTarget.style.backgroundColor = theme.accent;
+          e.currentTarget.style.boxShadow = `0 1px 3px rgba(${theme.shadow}, 0.25)`;
+        }}
       >
         一键排版
       </button>

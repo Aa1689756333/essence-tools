@@ -1,6 +1,7 @@
 import './globals.css';
 import Sidebar from '@/shell/Sidebar';
 import Topbar from '@/shell/Topbar';
+import ThemeProvider from '@/shell/ThemeProvider';
 import { tools, getToolsByCategory } from '@/tools/registry';
 
 export const metadata = {
@@ -14,15 +15,17 @@ export default function RootLayout({ children }) {
   return (
     <html lang="zh-CN">
       <body className="bg-bg antialiased">
-        <div className="flex h-screen overflow-hidden">
-          <Sidebar tools={tools} toolsByCategory={toolsByCategory} />
-          <div className="flex flex-col flex-1 min-w-0 overflow-hidden">
-            <Topbar />
-            <main className="flex-1 overflow-y-auto p-9 px-10">
-              {children}
-            </main>
+        <ThemeProvider>
+          <div className="flex h-screen overflow-hidden">
+            <Sidebar tools={tools} toolsByCategory={toolsByCategory} />
+            <div className="flex flex-col flex-1 min-w-0 overflow-hidden">
+              <Topbar />
+              <main className="flex-1 overflow-y-auto p-9 px-10">
+                {children}
+              </main>
+            </div>
           </div>
-        </div>
+        </ThemeProvider>
       </body>
     </html>
   );

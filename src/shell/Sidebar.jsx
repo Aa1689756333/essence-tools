@@ -3,11 +3,13 @@
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import { useSidebar } from './useSidebar';
+import { useTheme } from './ThemeProvider';
 import { LayoutGrid, ChevronLeft, Wrench } from 'lucide-react';
 
 export default function Sidebar({ tools, toolsByCategory }) {
   const pathname = usePathname();
   const { collapsed, toggle } = useSidebar();
+  const { theme } = useTheme();
 
   const isActive = (path) => pathname === path;
 
@@ -19,7 +21,13 @@ export default function Sidebar({ tools, toolsByCategory }) {
     >
       {/* 品牌区 */}
       <div className={`h-[52px] flex items-center border-b border-gray-200 ${collapsed ? 'justify-center' : 'px-4 gap-2.5'}`}>
-        <div className="w-7 h-7 rounded-lg bg-gradient-to-br from-emerald-500 to-sky-400 flex items-center justify-center shrink-0 shadow-[0_2px_6px_rgba(16,185,129,0.2)]">
+        <div
+          className="w-7 h-7 rounded-lg flex items-center justify-center shrink-0"
+          style={{
+            background: `linear-gradient(135deg, ${theme.accent}, ${theme.light})`,
+            boxShadow: `0 2px 6px rgba(${theme.shadow}, 0.2)`,
+          }}
+        >
           <Wrench className="w-3.5 h-3.5 text-white" />
         </div>
         <span className={`text-[16.5px] font-bold text-gray-900 tracking-tight whitespace-nowrap transition-all duration-200 ${collapsed ? 'opacity-0 w-0 overflow-hidden' : 'opacity-100'}`}>
@@ -32,7 +40,12 @@ export default function Sidebar({ tools, toolsByCategory }) {
         onClick={toggle}
         className="absolute top-1/2 -translate-y-1/2 -right-3 w-6 h-10 rounded-md bg-white border border-gray-200 flex flex-col items-center justify-center gap-0.5 z-30 shadow-[0_1px_3px_rgba(0,0,0,0.04),0_2px_6px_rgba(0,0,0,0.06)] hover:shadow-[0_2px_6px_rgba(0,0,0,0.06),0_4px_12px_rgba(0,0,0,0.1)] hover:border-gray-300 transition-all duration-200 cursor-pointer overflow-hidden group"
       >
-        <span className="absolute left-0 top-1.5 bottom-1.5 w-[2.5px] rounded-r-[2.5px] bg-gray-300 group-hover:bg-emerald-500 transition-colors duration-200" />
+        <span
+          className="absolute left-0 top-1.5 bottom-1.5 w-[2.5px] rounded-r-[2.5px] bg-gray-300 transition-colors duration-200"
+          style={{ backgroundColor: 'var(--theme-accent)' }}
+          onMouseEnter={(e) => e.target.style.backgroundColor = theme.accent}
+          onMouseLeave={(e) => e.target.style.backgroundColor = '#d1d5db'}
+        />
         <ChevronLeft
           className={`w-2.5 h-2.5 text-gray-400 group-hover:text-gray-700 transition-all duration-300 relative z-10 ${collapsed ? 'rotate-180' : ''}`}
         />
@@ -59,14 +72,18 @@ export default function Sidebar({ tools, toolsByCategory }) {
           }`}
         >
           {isActive('/') && (
-            <span className={`absolute top-1/2 -translate-y-1/2 w-[3px] h-[16px] rounded-r-[3px] bg-emerald-600 ${collapsed ? 'left-0' : '-left-2.5'}`} />
+            <span
+              className={`absolute top-1/2 -translate-y-1/2 w-[3px] h-[16px] rounded-r-[3px] ${collapsed ? 'left-0' : '-left-2.5'}`}
+              style={{ backgroundColor: theme.accent }}
+            />
           )}
-          <span className={`w-7 h-7 rounded-md flex items-center justify-center shrink-0 transition-all duration-200 bg-gray-50 border border-gray-100 ${
-            isActive('/')
-              ? '!bg-emerald-50 !border-emerald-600/10'
-              : ''
-          }`}>
-            <LayoutGrid className={`w-3.5 h-3.5 ${isActive('/') ? 'text-emerald-600' : 'text-gray-400'}`} />
+          <span
+            className={`w-7 h-7 rounded-md flex items-center justify-center shrink-0 transition-all duration-200 ${
+              isActive('/') ? '' : 'bg-gray-50 border border-gray-100'
+            }`}
+            style={isActive('/') ? { backgroundColor: theme.subtle, border: `1px solid ${theme.accent}1a` } : {}}
+          >
+            <LayoutGrid className={`w-3.5 h-3.5 ${isActive('/') ? '' : 'text-gray-400'}`} style={isActive('/') ? { color: theme.accent } : {}} />
           </span>
           <span className={`text-[13.5px] font-medium whitespace-nowrap overflow-hidden transition-all duration-200 tracking-tight ${
             collapsed ? 'opacity-0 w-0' : 'opacity-100'
@@ -96,13 +113,17 @@ export default function Sidebar({ tools, toolsByCategory }) {
                   }`}
                 >
                   {active && (
-                    <span className={`absolute top-1/2 -translate-y-1/2 w-[3px] h-[16px] rounded-r-[3px] bg-emerald-600 ${collapsed ? 'left-0' : '-left-2.5'}`} />
+                    <span
+                      className={`absolute top-1/2 -translate-y-1/2 w-[3px] h-[16px] rounded-r-[3px] ${collapsed ? 'left-0' : '-left-2.5'}`}
+                      style={{ backgroundColor: theme.accent }}
+                    />
                   )}
-                  <span className={`w-7 h-7 rounded-md flex items-center justify-center shrink-0 text-sm transition-all duration-200 bg-gray-50 border border-gray-100 ${
-                    active
-                      ? '!bg-emerald-50 !border-emerald-600/10'
-                      : ''
-                  }`}>
+                  <span
+                    className={`w-7 h-7 rounded-md flex items-center justify-center shrink-0 text-sm transition-all duration-200 ${
+                      active ? '' : 'bg-gray-50 border border-gray-100'
+                    }`}
+                    style={active ? { backgroundColor: theme.subtle, border: `1px solid ${theme.accent}1a` } : {}}
+                  >
                     {tool.emoji || ''}
                   </span>
                   <span className={`text-[13.5px] whitespace-nowrap overflow-hidden transition-all duration-200 tracking-tight ${
