@@ -12,9 +12,9 @@ export default function Topbar() {
   const currentPageName = currentTool ? currentTool.name : '工具总览';
 
   return (
-    <header className="h-[52px] px-7 flex items-center justify-between border-b border-gray-200 bg-white shrink-0">
+    <header className="h-[54px] px-8 flex items-center justify-between border-b border-gray-200 bg-white shrink-0">
       <div className="flex items-center gap-2 text-[13px]">
-        <span className="text-gray-400">ToolBox</span>
+        <span className="text-gray-400 font-medium">ToolBox</span>
         <span className="text-gray-300 text-base">/</span>
         <span className="text-gray-900 font-semibold">{currentPageName}</span>
       </div>

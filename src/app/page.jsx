@@ -7,21 +7,21 @@ export default function HomePage() {
     <div>
       {/* 头部 */}
       <div className="mb-8">
-        <h1 className="text-[26px] font-bold text-text mb-1.5">工具箱</h1>
-        <p className="text-sm text-text-secondary">
+        <h1 className="text-[22px] font-bold text-text mb-1.5 tracking-tight">工具箱</h1>
+        <p className="text-[13.5px] text-text-secondary leading-relaxed">
           选择一个工具开始使用，所有工具在浏览器本地运行，不上传任何数据。
         </p>
       </div>
 
       {/* 分类标签 */}
-      <div className="flex gap-1 mb-6">
+      <div className="flex gap-0.5 mb-7 bg-gray-100 rounded-[10px] p-[3px] w-fit">
         {categories.map((cat, i) => (
           <button
             key={cat}
-            className={`px-4 py-1.5 rounded-lg text-[13px] font-medium cursor-pointer transition-all duration-150 ${
+            className={`px-[18px] py-[7px] rounded-lg text-[13px] font-medium cursor-pointer transition-all duration-200 ${
               i === 0
-                ? 'bg-gray-100 text-gray-900 font-semibold'
-                : 'text-gray-400 hover:text-gray-600 hover:bg-gray-50'
+                ? 'bg-white text-gray-900 font-semibold shadow-[0_1px_3px_rgba(0,0,0,0.06)]'
+                : 'text-gray-500 hover:text-gray-700'
             }`}
           >
             {cat}

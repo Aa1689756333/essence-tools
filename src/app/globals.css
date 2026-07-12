@@ -1,8 +1,9 @@
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap');
 @import "tailwindcss";
 
 @theme {
   /* 背景层 */
-  --color-bg: #fafafa;
+  --color-bg: #f8f9fb;
   --color-bg-sidebar: #ffffff;
   --color-card: #ffffff;
   --color-card-bg: #ffffff;
@@ -28,11 +29,12 @@
 /* ===== 基础 ===== */
 
 body {
-  font-family: "PingFang SC", "Noto Sans SC", "Microsoft YaHei", system-ui, sans-serif;
+  font-family: "Inter", "PingFang SC", "Noto Sans SC", "Microsoft YaHei", system-ui, sans-serif;
   color: var(--color-text);
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
-  letter-spacing: 0.01em;
+  letter-spacing: -0.01em;
+  font-feature-settings: "cv02", "cv03", "cv04", "cv11";
 }
 
 /* ===== 动画 ===== */

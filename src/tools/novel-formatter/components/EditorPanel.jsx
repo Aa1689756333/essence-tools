@@ -9,10 +9,10 @@ export default function EditorPanel({
   onMouseLeave,
 }) {
   return (
-    <div className="flex flex-col bg-white border border-gray-200 rounded-lg overflow-hidden">
-      <div className="flex justify-between items-center px-4 py-2.5 bg-gray-50 border-b border-gray-200 text-[13px] font-semibold text-gray-500">
+    <div className="flex flex-col bg-white border border-gray-200 rounded-xl overflow-hidden">
+      <div className="flex justify-between items-center px-4 py-2.5 bg-gray-50 border-b border-gray-200 text-[13px] font-semibold text-gray-600">
         <span>原文输入</span>
-        <span className="text-xs text-gray-400 font-normal">{inputCount} 字</span>
+        <span className="text-[11.5px] text-gray-400 font-normal bg-gray-100 px-2 py-0.5 rounded-[5px]">{inputCount} 字</span>
       </div>
       <div className="relative flex-1 overflow-hidden">
         <div
