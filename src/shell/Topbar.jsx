@@ -12,18 +12,18 @@ export default function Topbar() {
   const currentPageName = currentTool ? currentTool.name : '工具总览';
 
   return (
-    <header className="h-[52px] px-7 flex items-center justify-between border-b border-border bg-card shrink-0">
+    <header className="h-[52px] px-7 flex items-center justify-between border-b border-gray-200 bg-white shrink-0">
       <div className="flex items-center gap-2 text-[13px]">
-        <span className="text-text-secondary">ToolBox</span>
-        <span className="text-border-light text-base">/</span>
-        <span className="text-text font-semibold">{currentPageName}</span>
+        <span className="text-gray-400">ToolBox</span>
+        <span className="text-gray-300 text-base">/</span>
+        <span className="text-gray-900 font-semibold">{currentPageName}</span>
       </div>
 
       <div className="flex items-center gap-2">
-        <button className="w-[34px] h-[34px] rounded-lg border border-border bg-card flex items-center justify-center text-text-secondary hover:bg-bg hover:border-[#d1d5db] hover:text-text transition-all duration-150 cursor-pointer">
+        <button className="w-[34px] h-[34px] rounded-lg border border-gray-200 bg-white flex items-center justify-center text-gray-400 hover:bg-gray-50 hover:border-gray-300 hover:text-gray-600 transition-all duration-150 cursor-pointer">
           <Search className="w-4 h-4" />
         </button>
-        <button className="w-[34px] h-[34px] rounded-lg border border-border bg-card flex items-center justify-center text-text-secondary hover:bg-bg hover:border-[#d1d5db] hover:text-text transition-all duration-150 cursor-pointer">
+        <button className="w-[34px] h-[34px] rounded-lg border border-gray-200 bg-white flex items-center justify-center text-gray-400 hover:bg-gray-50 hover:border-gray-300 hover:text-gray-600 transition-all duration-150 cursor-pointer">
           <Bell className="w-4 h-4" />
         </button>
       </div>

@@ -5,7 +5,7 @@ export const tools = [
     desc: '一键规范化标点、间距、段落，29 条排版规则',
     icon: 'BookOpen',
     emoji: '📖',
-    color: 'amber',
+    color: 'mint',
     path: '/novel-formatter',
     category: '文本',
     tags: ['写作', '排版'],

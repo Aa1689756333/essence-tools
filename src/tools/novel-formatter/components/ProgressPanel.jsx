@@ -22,10 +22,10 @@ const check = (
 
 export default function ProgressPanel({ activePhase }) {
   return (
-    <div className="mt-4 px-5 py-4 bg-[#faf7f0] border border-border rounded-md">
+    <div className="mt-4 px-5 py-4 bg-gray-50 border border-gray-200 rounded-md">
       <div className="flex items-center gap-2 mb-3">
-        <span className="text-accent">{spinner}</span>
-        <span className="text-[13px] font-semibold text-text-secondary">排版处理中...</span>
+        <span className="text-emerald-600">{spinner}</span>
+        <span className="text-[13px] font-semibold text-gray-500">排版处理中...</span>
       </div>
 
       <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
@@ -33,23 +33,23 @@ export default function ProgressPanel({ activePhase }) {
           let icon, nameClass, descClass;
 
           if (i < activePhase) {
-            icon = <span className="text-success">{check}</span>;
-            nameClass = 'text-text';
-            descClass = 'text-text-secondary';
+            icon = <span className="text-emerald-600">{check}</span>;
+            nameClass = 'text-gray-900';
+            descClass = 'text-gray-500';
           } else if (i === activePhase) {
-            icon = <span className="text-accent">{spinner}</span>;
-            nameClass = 'text-accent font-semibold';
-            descClass = 'text-accent/60';
+            icon = <span className="text-emerald-600">{spinner}</span>;
+            nameClass = 'text-emerald-600 font-semibold';
+            descClass = 'text-emerald-600/60';
           } else {
             icon = (
-              <span className="text-[#d4c5b2]">
+              <span className="text-gray-300">
                 <svg className="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
                   <circle cx="12" cy="12" r="9" />
                 </svg>
               </span>
             );
-            nameClass = 'text-[#c5b8a5]';
-            descClass = 'text-[#d4c5b2]';
+            nameClass = 'text-gray-400';
+            descClass = 'text-gray-300';
           }
 
           return (
@@ -65,9 +65,9 @@ export default function ProgressPanel({ activePhase }) {
       </div>
 
       {/* 进度条 */}
-      <div className="mt-3 h-1 bg-[#e8e0d4] rounded-full overflow-hidden">
+      <div className="mt-3 h-1 bg-gray-200 rounded-full overflow-hidden">
         <div
-          className="h-full bg-accent rounded-full transition-all duration-500 ease-out"
+          className="h-full bg-emerald-600 rounded-full transition-all duration-500 ease-out"
           style={{ width: `${((activePhase + 1) / 4) * 100}%` }}
         />
       </div>

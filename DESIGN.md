@@ -185,7 +185,7 @@ export const tools = [
     name: '小说排版器',
     desc: '一键规范化标点、间距、段落，29 条排版规则',
     icon: 'BookOpen',              // lucide-react 图标名
-    color: 'amber',                // 主题色标识
+    color: 'mint',                // 主题色标识（马卡龙色系）
     path: '/novel-formatter',
     category: '文本',
     tags: ['写作', '排版'],
@@ -300,33 +300,37 @@ registry 中的 `clientOnly` 字段标识工具是否需要后端：
 
 ```
 背景层
-  --bg-primary:      #f6f5f2        主背景（暖灰，非纯白/纯灰）
-  --bg-sidebar:      #1b1b1f        侧边栏（近黑，带微弱暖调）
+  --bg:              #fafafa        主背景（极浅灰，非纯白）
+  --bg-sidebar:      #ffffff        侧边栏（白色，与主背景形成微妙层次）
   --bg-card:         #ffffff        卡片/面板背景
-  --bg-card-alt:     #faf9f7        卡片头部等次要区域
+  --bg-card-bg:      #ffffff        工具面板背景
 
 文字层
-  --text-primary:    #1a1a1e        正文标题
-  --text-secondary:  #6b6b73        辅助文字
-  --text-tertiary:   #a0a0a8        占位符、禁用态
-  --text-sidebar:    rgba(255,255,255,0.45)   侧边栏默认
-  --text-sidebar-active: #ffffff               侧边栏选中
+  --text:            #111827        正文标题（gray-900）
+  --text-secondary:  #6b7280        辅助文字（gray-500）
+  --text-tertiary:   #9ca3af        占位符、禁用态（gray-400）
 
 品牌色
-  --accent:          #d97706        琥珀色（主强调色，延续原排版器调性）
-  --accent-hover:    #b45309
-  --accent-subtle:   #fef3c7       极浅底色（标签、徽标）
+  --accent:          #059669        翡翠绿/emerald-600（主强调色）
+  --accent-hover:    #047857        emerald-700
+  --accent-subtle:   #ecfdf5       极浅底色（emerald-50）
+
+功能色
+  --success:         #059669        成功状态
 
 边框
-  --border:          #e8e6e1        默认边框（暖灰）
-  --border-light:    #f0eee9        极细分割线
+  --border:          #e5e7eb        默认边框（gray-200）
+  --border-light:    #f3f4f6        极细分割线（gray-100）
 
-工具卡片各有独立的主题色（通过 data-color 属性），用于卡片顶部装饰线和图标背景：
-  amber:   #d97706    emerald:  #059669    indigo:  #4f46e5
-  rose:    #e11d48    cyan:     #0891b2    violet:  #7c3aed
+工具卡片各有独立的主题色（马卡龙/小清新配色），用于图标背景和标签着色：
+  mint:    #ecfdf5 / #059669      薄荷绿
+  pink:    #fdf2f8 / #db2777      淡粉
+  lemon:   #fefce8 / #ca8a04      柠檬黄
+  sky:     #ecfeff / #0891b2      天蓝
+  lilac:   #f5f3ff / #7c3aed      丁香紫
 ```
 
-选琥珀色作为全局强调色的原因：延续小说排版器原有的暖调气质，在深色侧边栏上辨识度高，且不同于常见的蓝紫色 AI 工具站。
+选翡翠绿（emerald）作为全局强调色的原因：清新、年轻、不沉闷，区别于常见的蓝紫色 AI 工具站。配合马卡龙色系的工具卡片（薄荷、淡粉、柠檬、天蓝、丁香），整体呈现轻松明快的工具集气质。侧边栏采用白色背景 + 1px 灰色边框，与 #fafafa 主背景形成微妙区分，不使用深色侧边栏。
 
 #### 8.3 排版
 
@@ -348,18 +352,18 @@ registry 中的 `clientOnly` 字段标识工具是否需要后端：
 
 #### 8.4 侧边栏
 
-宽度 240px（展开）/ 64px（收起），深色背景 #1b1b1f。
+宽度 240px（展开）/ 64px（收起），白色背景 + 右侧 1px 灰色边框（#e5e7eb），与 #fafafa 主背景形成微妙区分。
 
 ```
 ┌──────────────────────┐
-│  [logo] ToolBox      │  ← 品牌区，logo 32x32 圆角方块
-├──────────────────────┤  ← 分隔线 rgba(255,255,255,0.06)
+│  [logo] ToolBox      │  ← 品牌区，logo 32x32 圆角方块（薄荷绿渐变）
+├──────────────────────┤  ← 分隔线 gray-100
 │                      │
-│  导航                 │  ← 分类标题（10px uppercase）
+│  导航                 │  ← 分类标题（11px，gray-400）
 │  [■] 工具总览         │  ← 导航项，图标 32x32 方块 + 文字
 │                      │
 │  文本工具             │  ← 第二组分类
-│  [📖] 小说排版器      │  ← 选中态：左侧 3px 竖线 + 浅色背景
+│  [📖] 小说排版器      │  ← 选中态：左侧 3px 绿色竖线 + gray-100 背景
 │  [📝] Markdown 转换   │
 │  [🔍] 文本对比        │
 │                      │
@@ -376,8 +380,8 @@ registry 中的 `clientOnly` 字段标识工具是否需要后端：
 交互细节：
 - 折叠按钮在侧边栏右边缘居中偏上位置，28px 圆形白底，hover 微放大 + 阴影加深
 - 收起后导航项只显示图标，居中对齐，hover 显示 tooltip
-- 选中项左侧 3px 琥珀色竖条 + `rgba(217,119,6,0.12)` 背景色
-- 图标区 32x32 方块，圆角 8px，默认背景 `rgba(255,255,255,0.04)`，选中时 `rgba(217,119,6,0.15)`
+- 选中项左侧 3px 翡翠绿竖条 + `bg-gray-100` 背景色
+- 图标区 32x32 方块，圆角 8px，默认背景 `bg-gray-50`，选中时 `bg-emerald-500/10`
 - 分类标题在收起时隐藏
 - 导航切换使用 Next.js `<Link>` 组件，无刷新跳转
 - 所有过渡 0.25s cubic-bezier(0.16, 1, 0.3, 1)
@@ -419,13 +423,13 @@ registry 中的 `clientOnly` 字段标识工具是否需要后端：
 ```
 
 卡片规格：
-- 尺寸：280px 最小宽度，grid 自适应列数
+- 尺寸：260px 最小宽度，grid 自适应列数
 - 内边距：24px
 - 圆角：12px
-- 边框：1px var(--border)，hover 时边框变品牌色 25% 透明度
-- hover 效果：translateY(-2px) + 中等阴影 + 顶部 3px 彩色装饰线淡入
-- 图标区：48x48 方块，圆角 12px，与工具主题色对应的浅色背景
-- 标题 15px/600，描述 13px/text-secondary，标签 11px 胶囊形灰底
+- 边框：1px gray-200，hover 时边框变 gray-300
+- hover 效果：translateY(-2px) + 轻柔阴影 + 底部 2px 彩色装饰线淡入
+- 图标区：44x44 方块，圆角 12px，与工具主题色对应的马卡龙浅色背景
+- 标题 15px/600，描述 13px/gray-400，标签 11px 与图标同色系的浅色背景
 - 卡片使用 Next.js `<Link>` 组件，点击无刷新跳转
 - 入场动画：fade-up 依次延迟 40ms
 - 首页为 Server Component，registry 数据在服务端读取，SEO 友好

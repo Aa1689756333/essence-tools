@@ -14,14 +14,18 @@ export default function HomePage() {
       </div>
 
       {/* 分类标签 */}
-      <div className="flex gap-1.5 mb-6">
-        {categories.map((cat) => (
-          <span
+      <div className="flex gap-1 mb-6">
+        {categories.map((cat, i) => (
+          <button
             key={cat}
-            className="px-4 py-1.5 rounded-full text-[13px] font-medium cursor-pointer transition-all duration-150 bg-accent-subtle text-accent border border-accent/15 font-semibold"
+            className={`px-4 py-1.5 rounded-lg text-[13px] font-medium cursor-pointer transition-all duration-150 ${
+              i === 0
+                ? 'bg-gray-100 text-gray-900 font-semibold'
+                : 'text-gray-400 hover:text-gray-600 hover:bg-gray-50'
+            }`}
           >
             {cat}
-          </span>
+          </button>
         ))}
       </div>
 

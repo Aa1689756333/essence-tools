@@ -7,13 +7,13 @@
 .textarea-invisible {
   color: transparent;
   -webkit-text-fill-color: transparent;
-  caret-color: #4a3728;
+  caret-color: #374151;
   background: transparent;
 }
 
 .textarea-invisible::placeholder {
-  color: #c5b8a5;
-  -webkit-text-fill-color: #c5b8a5;
+  color: #d1d5db;
+  -webkit-text-fill-color: #d1d5db;
 }
 
 /* ===== 高亮覆盖层 ===== */
@@ -24,8 +24,8 @@
 }
 
 .highlight-overlay .line.active {
-  background: rgba(139, 94, 60, 0.28);
-  box-shadow: inset 0 0 0 1px rgba(139, 94, 60, 0.15);
+  background: rgba(5, 150, 105, 0.15);
+  box-shadow: inset 0 0 0 1px rgba(5, 150, 105, 0.1);
 }
 
 /* ===== 输出面板段落 ===== */
@@ -38,9 +38,9 @@
 }
 
 .output-paragraph:hover {
-  background: rgba(139, 94, 60, 0.12);
+  background: rgba(5, 150, 105, 0.08);
 }
 
 .output-paragraph.active {
-  background: rgba(139, 94, 60, 0.28);
+  background: rgba(5, 150, 105, 0.15);
 }
