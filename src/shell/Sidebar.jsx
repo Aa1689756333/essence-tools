@@ -42,9 +42,9 @@ export default function Sidebar({ tools, toolsByCategory }) {
       >
         <span
           className="absolute left-0 top-1.5 bottom-1.5 w-[2.5px] rounded-r-[2.5px] bg-gray-300 transition-colors duration-200"
-          style={{ backgroundColor: 'var(--theme-accent)' }}
+          style={{ backgroundColor: theme.accent }}
           onMouseEnter={(e) => e.target.style.backgroundColor = theme.accent}
-          onMouseLeave={(e) => e.target.style.backgroundColor = '#d1d5db'}
+          onMouseLeave={(e) => e.target.style.backgroundColor = theme.accent}
         />
         <ChevronLeft
           className={`w-2.5 h-2.5 text-gray-400 group-hover:text-gray-700 transition-all duration-300 relative z-10 ${collapsed ? 'rotate-180' : ''}`}
