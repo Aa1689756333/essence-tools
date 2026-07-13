@@ -15,7 +15,8 @@ import {
   Minus,
   Type,
   Link, Image, Table,
-  X, Upload, Globe, Sparkles,
+  X, Upload, Globe, Sparkles, Quote, Terminal,
+  Maximize, Minimize, Search, Replace, ChevronDown, ChevronUp,
 } from 'lucide-react';
 
 // HTML 格式化函数：美化代码结构，添加缩进和换行
@@ -279,12 +280,53 @@ export default function HtmlEditor() {
   const [imageSize, setImageSize] = useState({ width: 0, height: 0 });
   const dragStateRef = useRef(null);
   const imageToolbarRef = useRef(null);
+  const autoSaveTimerRef = useRef(null);
+  const [lastSavedTime, setLastSavedTime] = useState(null);
+  const [isFullscreen, setIsFullscreen] = useState(false);
+  const [showFindReplace, setShowFindReplace] = useState(false);
+  const [findText, setFindText] = useState('');
+  const [replaceText, setReplaceText] = useState('');
+  const [findMatches, setFindMatches] = useState([]);
+  const [currentMatchIndex, setCurrentMatchIndex] = useState(-1);
+  const [caseSensitive, setCaseSensitive] = useState(false);
+  const findInputRef = useRef(null);
 
   useEffect(() => {
     if (editorRef.current) {
       editorRef.current.focus();
     }
+    // 检查是否有未保存的内容
+    const savedContent = localStorage.getItem('html-editor-content');
+    if (savedContent && editorRef.current) {
+      const shouldRestore = window.confirm('检测到未保存的内容，是否恢复？');
+      if (shouldRestore) {
+        editorRef.current.innerHTML = savedContent;
+        updateEmptyState();
+      } else {
+        localStorage.removeItem('html-editor-content');
+      }
+    }
   }, []);
+
+  // 自动保存：内容变化时防抖写入 localStorage
+  useEffect(() => {
+    if (autoSaveTimerRef.current) {
+      clearTimeout(autoSaveTimerRef.current);
+    }
+    autoSaveTimerRef.current = setTimeout(() => {
+      if (editorRef.current && !isEmpty) {
+        const content = editorRef.current.innerHTML;
+        localStorage.setItem('html-editor-content', content);
+        setLastSavedTime(new Date());
+      }
+    }, 2000); // 2秒防抖
+
+    return () => {
+      if (autoSaveTimerRef.current) {
+        clearTimeout(autoSaveTimerRef.current);
+      }
+    };
+  }, [isEmpty, wordCount]); // 监听内容变化
 
   // 检测当前格式状态
   useEffect(() => {
@@ -420,6 +462,7 @@ ${html}
       editorRef.current.focus();
       setIsEmpty(true);
       setHtmlCode('');
+      localStorage.removeItem('html-editor-content');
     }
   }, []);
 
@@ -829,18 +872,193 @@ ${html}
   const fontSizeOptions = FONT_SIZES.map(s => ({ label: s, value: s }));
   const fontFamilyOptions = FONT_FAMILIES.map(f => ({ label: f.label, value: f.value }));
 
+  // 全屏切换
+  const toggleFullscreen = useCallback(() => {
+    setIsFullscreen(!isFullscreen);
+  }, [isFullscreen]);
+
+  // 高亮匹配项
+  const highlightMatch = useCallback((match) => {
+    if (!editorRef.current) return;
+
+    const editor = editorRef.current;
+    const text = editor.innerText || '';
+    const beforeText = text.substring(0, match.index);
+    const lines = beforeText.split('\n');
+    const lineIndex = lines.length - 1;
+    const charIndex = lines[lineIndex].length;
+
+    // 使用 Range API 定位并滚动到匹配项
+    const range = document.createRange();
+    const walker = document.createTreeWalker(editor, NodeFilter.SHOW_TEXT);
+    let currentOffset = 0;
+    let targetNode = null;
+    let targetOffset = 0;
+
+    while (walker.nextNode()) {
+      const node = walker.currentNode;
+      const nodeLength = node.textContent.length;
+
+      if (currentOffset + nodeLength > match.index) {
+        targetNode = node;
+        targetOffset = match.index - currentOffset;
+        break;
+      }
+      currentOffset += nodeLength;
+    }
+
+    if (targetNode) {
+      try {
+        range.setStart(targetNode, targetOffset);
+        range.setEnd(targetNode, targetOffset + match.length);
+        const selection = window.getSelection();
+        selection.removeAllRanges();
+        selection.addRange(range);
+
+        // 滚动到可见区域
+        const rect = range.getBoundingClientRect();
+        const editorRect = editor.getBoundingClientRect();
+        if (rect.top < editorRect.top || rect.bottom > editorRect.bottom) {
+          range.startContainer.parentElement?.scrollIntoView({
+            behavior: 'smooth',
+            block: 'center'
+          });
+        }
+      } catch (e) {
+        console.error('Highlight error:', e);
+      }
+    }
+  }, []);
+
+  // 查找文本
+  const performFind = useCallback(() => {
+    if (!findText || !editorRef.current) {
+      setFindMatches([]);
+      setCurrentMatchIndex(-1);
+      return;
+    }
+
+    const editor = editorRef.current;
+    const text = editor.innerText || '';
+    const flags = caseSensitive ? 'g' : 'gi';
+    const regex = new RegExp(findText.replace(/[.*+?^${}()|[\]\\]/g, '\\$&'), flags);
+    const matches = [];
+    let match;
+
+    while ((match = regex.exec(text)) !== null) {
+      matches.push({
+        index: match.index,
+        length: match[0].length,
+        text: match[0]
+      });
+    }
+
+    setFindMatches(matches);
+    setCurrentMatchIndex(matches.length > 0 ? 0 : -1);
+
+    // 高亮第一个匹配
+    if (matches.length > 0) {
+      highlightMatch(matches[0]);
+    }
+  }, [findText, caseSensitive, highlightMatch]);
+
+  // 上一个匹配项
+  const findPrevious = useCallback(() => {
+    if (findMatches.length === 0) return;
+    const newIndex = currentMatchIndex <= 0 ? findMatches.length - 1 : currentMatchIndex - 1;
+    setCurrentMatchIndex(newIndex);
+    highlightMatch(findMatches[newIndex]);
+  }, [findMatches, currentMatchIndex, highlightMatch]);
+
+  // 下一个匹配项
+  const findNext = useCallback(() => {
+    if (findMatches.length === 0) return;
+    const newIndex = currentMatchIndex >= findMatches.length - 1 ? 0 : currentMatchIndex + 1;
+    setCurrentMatchIndex(newIndex);
+    highlightMatch(findMatches[newIndex]);
+  }, [findMatches, currentMatchIndex, highlightMatch]);
+
+  // 替换当前匹配项
+  const replaceCurrent = useCallback(() => {
+    if (currentMatchIndex < 0 || !editorRef.current) return;
+
+    const editor = editorRef.current;
+    const selection = window.getSelection();
+    if (!selection.rangeCount) return;
+
+    const range = selection.getRangeAt(0);
+    const selectedText = range.toString();
+    const match = findMatches[currentMatchIndex];
+
+    if (selectedText === match.text) {
+      range.deleteContents();
+      range.insertNode(document.createTextNode(replaceText));
+      performFind(); // 重新查找
+    }
+  }, [currentMatchIndex, findMatches, replaceText, performFind]);
+
+  // 替换所有匹配项
+  const replaceAll = useCallback(() => {
+    if (findMatches.length === 0 || !editorRef.current) return;
+
+    const editor = editorRef.current;
+    const text = editor.innerText || '';
+    const flags = caseSensitive ? 'g' : 'gi';
+    const regex = new RegExp(findText.replace(/[.*+?^${}()|[\]\\]/g, '\\$&'), flags);
+    const newText = text.replace(regex, replaceText);
+
+    editor.innerText = newText;
+    updateEmptyState();
+    setFindMatches([]);
+    setCurrentMatchIndex(-1);
+  }, [findMatches, findText, replaceText, caseSensitive, updateEmptyState]);
+
+  // 关闭查找替换面板
+  const closeFindReplace = useCallback(() => {
+    setShowFindReplace(false);
+    setFindText('');
+    setReplaceText('');
+    setFindMatches([]);
+    setCurrentMatchIndex(-1);
+  }, []);
+
+  // 键盘快捷键
+  useEffect(() => {
+    const handleKeyDown = (e) => {
+      // Ctrl+F 打开查找
+      if (e.ctrlKey && e.key === 'f') {
+        e.preventDefault();
+        setShowFindReplace(true);
+        setTimeout(() => findInputRef.current?.focus(), 100);
+      }
+      // Esc 退出全屏或关闭查找面板
+      if (e.key === 'Escape') {
+        if (showFindReplace) {
+          closeFindReplace();
+        } else if (isFullscreen) {
+          setIsFullscreen(false);
+        }
+      }
+    };
+
+    document.addEventListener('keydown', handleKeyDown);
+    return () => document.removeEventListener('keydown', handleKeyDown);
+  }, [showFindReplace, isFullscreen, closeFindReplace]);
+
   return (
     <div className="w-full">
       {/* 页面标题 */}
-      <div className="mb-4 md:mb-5 lg:mb-6">
-        <h1 className="text-[22px] font-bold text-text mb-1.5 tracking-tight">HTML 编辑器</h1>
-        <p className="text-[13.5px] text-text-secondary leading-relaxed">
-          像 Word 一样编辑富文本内容，支持导出为 HTML 代码。
-        </p>
-      </div>
+      {!isFullscreen && (
+        <div className="mb-4 md:mb-5 lg:mb-6">
+          <h1 className="text-[22px] font-bold text-text mb-1.5 tracking-tight">HTML 编辑器</h1>
+          <p className="text-[13.5px] text-text-secondary leading-relaxed">
+            像 Word 一样编辑富文本内容，支持导出为 HTML 代码。
+          </p>
+        </div>
+      )}
 
       {/* 编辑器容器 */}
-      <div className="rounded-xl border border-gray-200 bg-white overflow-hidden shadow-[0_1px_3px_rgba(0,0,0,0.04)]">
+      <div className={`rounded-xl border border-gray-200 bg-white overflow-hidden shadow-[0_1px_3px_rgba(0,0,0,0.04)] ${isFullscreen ? 'fixed inset-0 z-[9999] rounded-none' : ''}`}>
         {/* 工具栏 */}
         <div className="border-b border-gray-200 bg-gray-50/80 px-2 sm:px-3 py-2">
           <div className="flex items-center gap-0.5 flex-wrap">
@@ -888,6 +1106,10 @@ ${html}
             <ToolbarBtn icon={Indent} onClick={() => exec('indent')} title="增加缩进" />
             <ToolbarDivider />
 
+            <ToolbarBtn icon={Quote} onClick={() => exec('formatBlock', 'blockquote')} title="引用块" />
+            <ToolbarBtn icon={Terminal} onClick={() => exec('formatBlock', 'pre')} title="代码块" />
+            <ToolbarDivider />
+
             <ToolbarBtn icon={Minus} onClick={handleInsertHr} title="分割线" />
             <ToolbarBtn icon={Code} onClick={toggleCodeView} active={showCode} title="HTML 源码" />
             <ToolbarDivider />
@@ -898,22 +1120,113 @@ ${html}
             <ToolbarBtn icon={Link} onClick={handleInsertLink} title="插入链接" />
             <ToolbarBtn icon={Image} onClick={handleInsertImage} title="插入图片" />
             <ToolbarBtn icon={Table} onClick={handleInsertTable} title="插入表格" />
+            <ToolbarDivider />
+            <ToolbarBtn icon={Search} onClick={() => setShowFindReplace(!showFindReplace)} active={showFindReplace} title="查找替换 (Ctrl+F)" />
+            <ToolbarBtn icon={isFullscreen ? Minimize : Maximize} onClick={toggleFullscreen} active={isFullscreen} title={isFullscreen ? "退出全屏 (Esc)" : "全屏编辑"} />
           </div>
         </div>
 
+        {/* 查找替换面板 */}
+        {showFindReplace && (
+          <div className="border-b border-gray-200 bg-gray-50 px-4 py-3">
+            <div className="flex items-center gap-3 mb-2">
+              <div className="flex-1 flex items-center gap-2">
+                <input
+                  ref={findInputRef}
+                  type="text"
+                  value={findText}
+                  onChange={(e) => {
+                    setFindText(e.target.value);
+                    setTimeout(performFind, 100);
+                  }}
+                  placeholder="查找内容"
+                  className="flex-1 h-[32px] px-3 rounded-md border border-gray-200 text-[13px] focus:outline-none focus:border-gray-300"
+                />
+                <button
+                  onClick={findPrevious}
+                  disabled={findMatches.length === 0}
+                  className="px-2 py-1 text-[12px] text-gray-600 bg-white border border-gray-200 rounded-md hover:bg-gray-50 disabled:opacity-40 disabled:cursor-not-allowed"
+                  title="上一个"
+                >
+                  <ChevronUp className="w-4 h-4" />
+                </button>
+                <button
+                  onClick={findNext}
+                  disabled={findMatches.length === 0}
+                  className="px-2 py-1 text-[12px] text-gray-600 bg-white border border-gray-200 rounded-md hover:bg-gray-50 disabled:opacity-40 disabled:cursor-not-allowed"
+                  title="下一个"
+                >
+                  <ChevronDown className="w-4 h-4" />
+                </button>
+              </div>
+              <div className="flex items-center gap-2 text-[12px] text-gray-500">
+                <label className="flex items-center gap-1 cursor-pointer">
+                  <input
+                    type="checkbox"
+                    checked={caseSensitive}
+                    onChange={(e) => {
+                      setCaseSensitive(e.target.checked);
+                      setTimeout(performFind, 100);
+                    }}
+                    className="w-3.5 h-3.5"
+                  />
+                  区分大小写
+                </label>
+                {findMatches.length > 0 && (
+                  <span className="text-gray-400">
+                    {currentMatchIndex + 1} / {findMatches.length}
+                  </span>
+                )}
+              </div>
+            </div>
+            <div className="flex items-center gap-2">
+              <input
+                type="text"
+                value={replaceText}
+                onChange={(e) => setReplaceText(e.target.value)}
+                placeholder="替换为"
+                className="flex-1 h-[32px] px-3 rounded-md border border-gray-200 text-[13px] focus:outline-none focus:border-gray-300"
+              />
+              <button
+                onClick={replaceCurrent}
+                disabled={currentMatchIndex < 0}
+                className="px-3 py-1 text-[12px] text-white rounded-md disabled:opacity-40 disabled:cursor-not-allowed"
+                style={{ backgroundColor: theme.accent }}
+              >
+                替换
+              </button>
+              <button
+                onClick={replaceAll}
+                disabled={findMatches.length === 0}
+                className="px-3 py-1 text-[12px] text-white rounded-md disabled:opacity-40 disabled:cursor-not-allowed"
+                style={{ backgroundColor: theme.accent }}
+              >
+                全部替换
+              </button>
+              <button
+                onClick={closeFindReplace}
+                className="px-2 py-1 text-[12px] text-gray-500 hover:text-gray-700"
+                title="关闭"
+              >
+                <X className="w-4 h-4" />
+              </button>
+            </div>
+          </div>
+        )}
+
         {/* 编辑区域 */}
-        <div className="relative">
+        <div className={`relative ${isFullscreen ? 'flex-1 overflow-hidden flex flex-col' : ''}`}>
           {isEmpty && !showCode && (
             <div className="absolute inset-0 flex items-center justify-center pointer-events-none z-10">
               <span className="text-[14px] text-gray-300">点击此处开始编辑内容...</span>
             </div>
           )}
           {showCode ? (
-            <div className="code-view">
+            <div className={`code-view ${isFullscreen ? 'flex-1 flex flex-col' : ''}`}>
               <textarea
                 value={htmlCode}
                 onChange={handleCodeChange}
-                className="w-full h-[400px] sm:h-[500px] p-3 sm:p-4 font-mono text-[13px] text-gray-700 bg-gray-50 resize-none focus:outline-none border-none leading-relaxed"
+                className={`w-full p-3 sm:p-4 font-mono text-[13px] text-gray-700 bg-gray-50 resize-none focus:outline-none border-none leading-relaxed ${isFullscreen ? 'flex-1' : 'h-[400px] sm:h-[500px]'}`}
                 spellCheck={false}
               />
               <div className="flex gap-2 px-4 py-2 border-t border-gray-200 bg-gray-50">
@@ -941,7 +1254,7 @@ ${html}
               onPaste={handlePaste}
               onContextMenu={handleContextMenu}
               onClick={handleEditorClick}
-              className="editor-content"
+              className={`editor-content ${isFullscreen ? 'flex-1 max-h-none' : ''}`}
               spellCheck={false}
             />
           )}
@@ -992,6 +1305,90 @@ ${html}
               </>
             );
           })()}
+        </div>
+
+        {/* 底部操作栏 */}
+        <div className={`flex items-center justify-between flex-wrap gap-2 ${isFullscreen ? 'px-4 py-3 border-t border-gray-200 bg-gray-50' : 'mt-4'}`}>
+          <div className="text-[12px] text-gray-400 flex items-center gap-3">
+            {isEmpty ? '暂无内容' : `${wordCount.words} 字 / ${wordCount.chars} 字符`}
+            {lastSavedTime && !isEmpty && (
+              <span className="text-gray-300">
+                · 自动保存于 {lastSavedTime.toLocaleTimeString('zh-CN', { hour: '2-digit', minute: '2-digit' })}
+              </span>
+            )}
+          </div>
+          <div className="flex gap-2 flex-wrap">
+            <button
+              onClick={handleOptimizeHtml}
+              disabled={isEmpty}
+              className="flex items-center gap-1.5 px-3 sm:px-4 py-[7px] rounded-lg text-[12.5px] font-medium text-gray-500 border border-gray-200 bg-white cursor-pointer hover:bg-gray-50 hover:border-gray-300 transition-all disabled:opacity-40 disabled:cursor-not-allowed"
+              title="格式化 HTML 代码，添加缩进和换行"
+            >
+              <Sparkles className="w-3.5 h-3.5" />
+              <span className="hidden sm:inline">格式化代码</span>
+            </button>
+            {isOptimized && (
+              <button
+                onClick={handleRestoreHtml}
+                className="flex items-center gap-1.5 px-3 sm:px-4 py-[7px] rounded-lg text-[12.5px] font-medium text-orange-600 border border-orange-200 bg-orange-50 cursor-pointer hover:bg-orange-100 hover:border-orange-300 transition-all"
+                title="恢复到格式化前的代码"
+              >
+                <Undo2 className="w-3.5 h-3.5" />
+                <span className="hidden sm:inline">恢复</span>
+              </button>
+            )}
+            <button
+              onClick={handleClear}
+              disabled={isEmpty}
+              className="flex items-center gap-1.5 px-3 sm:px-4 py-[7px] rounded-lg text-[12.5px] font-medium text-gray-500 border border-gray-200 bg-white cursor-pointer hover:bg-gray-50 hover:border-gray-300 transition-all disabled:opacity-40 disabled:cursor-not-allowed"
+            >
+              <Trash2 className="w-3.5 h-3.5" />
+              <span className="hidden sm:inline">清空</span>
+            </button>
+            <button
+              onClick={handleCopyHtml}
+              disabled={isEmpty}
+              className="flex items-center gap-1.5 px-3 sm:px-4 py-[7px] rounded-lg text-[12.5px] font-medium text-gray-500 border border-gray-200 bg-white cursor-pointer hover:bg-gray-50 hover:border-gray-300 transition-all disabled:opacity-40 disabled:cursor-not-allowed"
+            >
+              <Code className="w-3.5 h-3.5" />
+              <span className="hidden sm:inline">{copied ? '已复制!' : '复制 HTML'}</span>
+            </button>
+            <button
+              onClick={() => {
+                if (showCode) {
+                  setShowCode(false);
+                } else {
+                  toggleCodeView();
+                }
+              }}
+              className="flex items-center gap-1.5 px-3 sm:px-4 py-[7px] rounded-lg text-[12.5px] font-medium text-gray-500 border border-gray-200 bg-white cursor-pointer hover:bg-gray-50 hover:border-gray-300 transition-all"
+            >
+              {showCode ? <Eye className="w-3.5 h-3.5" /> : <EyeOff className="w-3.5 h-3.5" />}
+              <span className="hidden sm:inline">{showCode ? '预览' : '查看源码'}</span>
+            </button>
+            <button
+              onClick={handleExport}
+              disabled={isEmpty}
+              className="flex items-center gap-1.5 px-4 sm:px-5 py-[7px] rounded-lg text-[12.5px] font-semibold text-white cursor-pointer transition-all hover:-translate-y-px disabled:opacity-40 disabled:cursor-not-allowed disabled:translate-y-0"
+              style={{
+                backgroundColor: theme.accent,
+                boxShadow: `0 1px 3px rgba(${theme.shadow}, 0.25)`,
+              }}
+              onMouseEnter={(e) => {
+                if (!isEmpty) {
+                  e.currentTarget.style.backgroundColor = theme.hover;
+                  e.currentTarget.style.boxShadow = `0 4px 12px rgba(${theme.shadow}, 0.3)`;
+                }
+              }}
+              onMouseLeave={(e) => {
+                e.currentTarget.style.backgroundColor = theme.accent;
+                e.currentTarget.style.boxShadow = `0 1px 3px rgba(${theme.shadow}, 0.25)`;
+              }}
+            >
+              <Download className="w-3.5 h-3.5" />
+              导出 HTML
+            </button>
+          </div>
         </div>
       </div>
 
@@ -1128,84 +1525,7 @@ ${html}
         </div>
       )}
 
-      {/* 底部操作栏 */}
-      <div className="flex items-center justify-between mt-4 flex-wrap gap-2">
-        <div className="text-[12px] text-gray-400">
-          {isEmpty ? '暂无内容' : `${wordCount.words} 字 / ${wordCount.chars} 字符`}
-        </div>
-        <div className="flex gap-2 flex-wrap">
-          <button
-            onClick={handleOptimizeHtml}
-            disabled={isEmpty}
-            className="flex items-center gap-1.5 px-3 sm:px-4 py-[7px] rounded-lg text-[12.5px] font-medium text-gray-500 border border-gray-200 bg-white cursor-pointer hover:bg-gray-50 hover:border-gray-300 transition-all disabled:opacity-40 disabled:cursor-not-allowed"
-            title="格式化 HTML 代码，添加缩进和换行"
-          >
-            <Sparkles className="w-3.5 h-3.5" />
-            <span className="hidden sm:inline">格式化代码</span>
-          </button>
-          {isOptimized && (
-            <button
-              onClick={handleRestoreHtml}
-              className="flex items-center gap-1.5 px-3 sm:px-4 py-[7px] rounded-lg text-[12.5px] font-medium text-orange-600 border border-orange-200 bg-orange-50 cursor-pointer hover:bg-orange-100 hover:border-orange-300 transition-all"
-              title="恢复到格式化前的代码"
-            >
-              <Undo2 className="w-3.5 h-3.5" />
-              <span className="hidden sm:inline">恢复</span>
-            </button>
-          )}
-          <button
-            onClick={handleClear}
-            disabled={isEmpty}
-            className="flex items-center gap-1.5 px-3 sm:px-4 py-[7px] rounded-lg text-[12.5px] font-medium text-gray-500 border border-gray-200 bg-white cursor-pointer hover:bg-gray-50 hover:border-gray-300 transition-all disabled:opacity-40 disabled:cursor-not-allowed"
-          >
-            <Trash2 className="w-3.5 h-3.5" />
-            <span className="hidden sm:inline">清空</span>
-          </button>
-          <button
-            onClick={handleCopyHtml}
-            disabled={isEmpty}
-            className="flex items-center gap-1.5 px-3 sm:px-4 py-[7px] rounded-lg text-[12.5px] font-medium text-gray-500 border border-gray-200 bg-white cursor-pointer hover:bg-gray-50 hover:border-gray-300 transition-all disabled:opacity-40 disabled:cursor-not-allowed"
-          >
-            <Code className="w-3.5 h-3.5" />
-            <span className="hidden sm:inline">{copied ? '已复制!' : '复制 HTML'}</span>
-          </button>
-          <button
-            onClick={() => {
-              if (showCode) {
-                setShowCode(false);
-              } else {
-                toggleCodeView();
-              }
-            }}
-            className="flex items-center gap-1.5 px-3 sm:px-4 py-[7px] rounded-lg text-[12.5px] font-medium text-gray-500 border border-gray-200 bg-white cursor-pointer hover:bg-gray-50 hover:border-gray-300 transition-all"
-          >
-            {showCode ? <Eye className="w-3.5 h-3.5" /> : <EyeOff className="w-3.5 h-3.5" />}
-            <span className="hidden sm:inline">{showCode ? '预览' : '查看源码'}</span>
-          </button>
-          <button
-            onClick={handleExport}
-            disabled={isEmpty}
-            className="flex items-center gap-1.5 px-4 sm:px-5 py-[7px] rounded-lg text-[12.5px] font-semibold text-white cursor-pointer transition-all hover:-translate-y-px disabled:opacity-40 disabled:cursor-not-allowed disabled:translate-y-0"
-            style={{
-              backgroundColor: theme.accent,
-              boxShadow: `0 1px 3px rgba(${theme.shadow}, 0.25)`,
-            }}
-            onMouseEnter={(e) => {
-              if (!isEmpty) {
-                e.currentTarget.style.backgroundColor = theme.hover;
-                e.currentTarget.style.boxShadow = `0 4px 12px rgba(${theme.shadow}, 0.3)`;
-              }
-            }}
-            onMouseLeave={(e) => {
-              e.currentTarget.style.backgroundColor = theme.accent;
-              e.currentTarget.style.boxShadow = `0 1px 3px rgba(${theme.shadow}, 0.25)`;
-            }}
-          >
-            <Download className="w-3.5 h-3.5" />
-            导出 HTML
-          </button>
-        </div>
-      </div>
+
 
       {/* 模态框 */}
       <Modal isOpen={modalType === 'link'} onClose={handleModalCancel} title="插入链接" theme={theme}>
