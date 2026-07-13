@@ -171,6 +171,27 @@ function countWords(text) {
   return { words, chars };
 }
 
+// HTML 实体转义（防止 XSS）
+function escapeHtml(str) {
+  if (!str) return '';
+  return str
+    .replace(/&/g, '&amp;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;')
+    .replace(/"/g, '&quot;')
+    .replace(/'/g, '&#39;');
+}
+
+// URL 安全检查（防止 javascript: 等危险协议）
+function isSafeUrl(url) {
+  if (!url) return false;
+  const trimmed = url.trim().toLowerCase();
+  if (trimmed.startsWith('javascript:') || trimmed.startsWith('data:') || trimmed.startsWith('vbscript:')) {
+    return false;
+  }
+  return true;
+}
+
 const FONT_SIZES = ['12px','14px','16px','18px','20px','24px','28px','32px','36px','48px'];
 const FONT_FAMILIES = [
   { label: '默认', value: '' },
@@ -280,6 +301,7 @@ export default function HtmlEditor() {
   const [imageSize, setImageSize] = useState({ width: 0, height: 0 });
   const dragStateRef = useRef(null);
   const imageToolbarRef = useRef(null);
+  const [scrollTick, setScrollTick] = useState(0);
   const autoSaveTimerRef = useRef(null);
   const [lastSavedTime, setLastSavedTime] = useState(null);
   const [isFullscreen, setIsFullscreen] = useState(false);
@@ -290,6 +312,8 @@ export default function HtmlEditor() {
   const [currentMatchIndex, setCurrentMatchIndex] = useState(-1);
   const [caseSensitive, setCaseSensitive] = useState(false);
   const findInputRef = useRef(null);
+  const [showRestoreModal, setShowRestoreModal] = useState(false);
+  const savedContentRef = useRef(null);
 
   useEffect(() => {
     if (editorRef.current) {
@@ -298,14 +322,24 @@ export default function HtmlEditor() {
     // 检查是否有未保存的内容
     const savedContent = localStorage.getItem('html-editor-content');
     if (savedContent && editorRef.current) {
-      const shouldRestore = window.confirm('检测到未保存的内容，是否恢复？');
-      if (shouldRestore) {
-        editorRef.current.innerHTML = savedContent;
-        updateEmptyState();
-      } else {
-        localStorage.removeItem('html-editor-content');
-      }
+      savedContentRef.current = savedContent;
+      setShowRestoreModal(true);
     }
+  }, []);
+
+  const handleRestoreConfirm = useCallback(() => {
+    if (editorRef.current && savedContentRef.current) {
+      editorRef.current.innerHTML = savedContentRef.current;
+      updateEmptyState();
+    }
+    setShowRestoreModal(false);
+    savedContentRef.current = null;
+  }, [updateEmptyState]);
+
+  const handleRestoreDismiss = useCallback(() => {
+    localStorage.removeItem('html-editor-content');
+    setShowRestoreModal(false);
+    savedContentRef.current = null;
   }, []);
 
   // 自动保存：内容变化时防抖写入 localStorage
@@ -326,7 +360,7 @@ export default function HtmlEditor() {
         clearTimeout(autoSaveTimerRef.current);
       }
     };
-  }, [isEmpty, wordCount]); // 监听内容变化
+  }, [isEmpty, wordCount.words, wordCount.chars]); // 监听内容变化（使用原始值避免对象引用问题）
 
   // 检测当前格式状态
   useEffect(() => {
@@ -397,7 +431,7 @@ export default function HtmlEditor() {
 
   const applyCode = useCallback(() => {
     if (editorRef.current) {
-      editorRef.current.innerHTML = htmlCode;
+      editorRef.current.innerHTML = cleanHtml(htmlCode);
       updateEmptyState();
       setShowCode(false);
     }
@@ -462,6 +496,24 @@ ${html}
       editorRef.current.focus();
       setIsEmpty(true);
       setHtmlCode('');
+      setFormatState({
+        bold: false,
+        italic: false,
+        underline: false,
+        strikethrough: false,
+        alignLeft: false,
+        alignCenter: false,
+        alignRight: false,
+        alignJustify: false,
+        unorderedList: false,
+        orderedList: false,
+        h1: false,
+        h2: false,
+        h3: false,
+        p: false,
+      });
+      setFontSize('');
+      setFontFamily('');
       localStorage.removeItem('html-editor-content');
     }
   }, []);
@@ -492,8 +544,8 @@ ${html}
         editorRef.current.innerHTML = originalHtml;
         updateEmptyState();
       }
+      setShowCode(false);
       setIsOptimized(false);
-      setOriginalHtml('');
     }
   }, [originalHtml, updateEmptyState]);
 
@@ -513,6 +565,8 @@ ${html}
     setFontFamily(family);
     if (family) {
       exec('fontName', family);
+    } else {
+      exec('removeFormat');
     }
   }, [exec]);
 
@@ -606,17 +660,17 @@ ${html}
 
     if (modalType === 'link') {
       const { url, text } = modalData;
-      if (url && url !== 'https://') {
+      if (url && url !== 'https://' && isSafeUrl(url)) {
         if (text) {
-          exec('insertHTML', `<a href="${url}" target="_blank">${text}</a>`);
+          exec('insertHTML', `<a href="${escapeHtml(url)}" target="_blank" rel="noopener noreferrer">${escapeHtml(text)}</a>`);
         } else {
           exec('createLink', url);
         }
       }
     } else if (modalType === 'image') {
       const { url, alt } = modalData;
-      if (url && url !== 'https://') {
-        exec('insertHTML', `<img src="${url}" alt="${alt || ''}" style="max-width:100%;height:auto" />`);
+      if (url && url !== 'https://' && isSafeUrl(url)) {
+        exec('insertHTML', `<img src="${escapeHtml(url)}" alt="${escapeHtml(alt || '')}" style="max-width:100%;height:auto" />`);
       }
     } else if (modalType === 'table') {
       const r = parseInt(modalData.rows);
@@ -653,7 +707,7 @@ ${html}
     
     if (html) {
       // 清理 HTML 并插入
-      const cleanedHtml = cleanHtml(html, true);
+      const cleanedHtml = cleanHtml(html);
       if (cleanedHtml) {
         exec('insertHTML', cleanedHtml);
       } else {
@@ -770,6 +824,12 @@ ${html}
       setSelectedImage(null);
     }
   }, []);
+
+  const handleEditorScroll = useCallback(() => {
+    if (selectedImage) {
+      setScrollTick(t => t + 1);
+    }
+  }, [selectedImage]);
 
   // 开始拖拽调整图片大小
   const handleResizeStart = useCallback((e, corner) => {
@@ -962,6 +1022,12 @@ ${html}
     }
   }, [findText, caseSensitive, highlightMatch]);
 
+  // 自动查找：findText 或 caseSensitive 变化时触发（修复 stale closure）
+  useEffect(() => {
+    if (!showFindReplace) return;
+    performFind();
+  }, [findText, caseSensitive, showFindReplace, performFind]);
+
   // 上一个匹配项
   const findPrevious = useCallback(() => {
     if (findMatches.length === 0) return;
@@ -997,17 +1063,26 @@ ${html}
     }
   }, [currentMatchIndex, findMatches, replaceText, performFind]);
 
-  // 替换所有匹配项
+  // 替换所有匹配项（保留 HTML 格式）
   const replaceAll = useCallback(() => {
     if (findMatches.length === 0 || !editorRef.current) return;
 
     const editor = editorRef.current;
-    const text = editor.innerText || '';
     const flags = caseSensitive ? 'g' : 'gi';
     const regex = new RegExp(findText.replace(/[.*+?^${}()|[\]\\]/g, '\\$&'), flags);
-    const newText = text.replace(regex, replaceText);
 
-    editor.innerText = newText;
+    const walker = document.createTreeWalker(editor, NodeFilter.SHOW_TEXT);
+    const textNodes = [];
+    while (walker.nextNode()) textNodes.push(walker.currentNode);
+
+    textNodes.forEach(node => {
+      const original = node.textContent;
+      const replaced = original.replace(regex, replaceText);
+      if (replaced !== original) {
+        node.textContent = replaced;
+      }
+    });
+
     updateEmptyState();
     setFindMatches([]);
     setCurrentMatchIndex(-1);
@@ -1137,7 +1212,6 @@ ${html}
                   value={findText}
                   onChange={(e) => {
                     setFindText(e.target.value);
-                    setTimeout(performFind, 100);
                   }}
                   placeholder="查找内容"
                   className="flex-1 h-[32px] px-3 rounded-md border border-gray-200 text-[13px] focus:outline-none focus:border-gray-300"
@@ -1166,7 +1240,6 @@ ${html}
                     checked={caseSensitive}
                     onChange={(e) => {
                       setCaseSensitive(e.target.checked);
-                      setTimeout(performFind, 100);
                     }}
                     className="w-3.5 h-3.5"
                   />
@@ -1254,6 +1327,7 @@ ${html}
               onPaste={handlePaste}
               onContextMenu={handleContextMenu}
               onClick={handleEditorClick}
+              onScroll={handleEditorScroll}
               className={`editor-content ${isFullscreen ? 'flex-1 max-h-none' : ''}`}
               spellCheck={false}
             />
@@ -1527,6 +1601,28 @@ ${html}
 
 
 
+      {/* 恢复确认模态框 */}
+      <Modal isOpen={showRestoreModal} onClose={handleRestoreDismiss} title="恢复内容" theme={theme}>
+        <div className="space-y-4">
+          <p className="text-sm text-gray-700">检测到未保存的内容，是否恢复？</p>
+          <div className="flex gap-2">
+            <button
+              onClick={handleRestoreConfirm}
+              className="flex-1 h-9 rounded-lg text-sm font-semibold text-white cursor-pointer transition-all"
+              style={{ backgroundColor: theme.accent }}
+            >
+              恢复
+            </button>
+            <button
+              onClick={handleRestoreDismiss}
+              className="flex-1 h-9 rounded-lg text-sm font-semibold text-gray-500 bg-white border border-gray-200 cursor-pointer hover:bg-gray-50 transition-all"
+            >
+              丢弃
+            </button>
+          </div>
+        </div>
+      </Modal>
+
       {/* 模态框 */}
       <Modal isOpen={modalType === 'link'} onClose={handleModalCancel} title="插入链接" theme={theme}>
         <div className="space-y-3">
@@ -1764,8 +1860,8 @@ function ColorPicker({ icon, label, colors, onSelect, theme, isBg }) {
         setOpen(false);
       }
     };
-    document.addEventListener('mousedown', handler);
-    return () => document.removeEventListener('mousedown', handler);
+    document.addEventListener('mousedown', handler, true);
+    return () => document.removeEventListener('mousedown', handler, true);
   }, []);
 
   return (
