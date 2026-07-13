@@ -2,6 +2,7 @@
 
 import './styles.css';
 import { useState, useRef, useCallback, useEffect } from 'react';
+import { createPortal } from 'react-dom';
 import { useTheme } from '@/shell/ThemeProvider';
 import {
   Bold, Italic, Underline, Strikethrough,
@@ -14,8 +15,160 @@ import {
   Minus,
   Type,
   Link, Image, Table,
-  X,
+  X, Upload, Globe, Sparkles,
 } from 'lucide-react';
+
+// HTML 格式化函数：美化代码结构，添加缩进和换行
+function formatHtml(html) {
+  if (!html) return '';
+  
+  // 块级标签（需要独占一行）
+  const blockTags = new Set([
+    'div', 'p', 'h1', 'h2', 'h3', 'h4', 'h5', 'h6',
+    'ul', 'ol', 'li', 'table', 'tr', 'tbody', 'thead', 'tfoot',
+    'blockquote', 'pre', 'hr', 'section', 'article', 'aside',
+    'header', 'footer', 'nav', 'main', 'figure', 'figcaption',
+    'dl', 'dt', 'dd', 'form', 'fieldset', 'legend'
+  ]);
+  
+  // 自闭合标签
+  const selfClosingTags = new Set(['br', 'hr', 'img', 'input', 'meta', 'link']);
+  
+  let result = '';
+  let indent = 0;
+  const indentStr = '  ';
+  
+  // 先将所有标签统一格式（小写）
+  const tokens = html.match(/<[^>]+>|[^<]+/g) || [];
+  
+  for (let i = 0; i < tokens.length; i++) {
+    const token = tokens[i];
+    
+    // 文本节点
+    if (!token.startsWith('<')) {
+      const trimmed = token.trim();
+      if (trimmed) {
+        result += indentStr.repeat(indent) + trimmed + '\n';
+      }
+      continue;
+    }
+    
+    // 注释
+    if (token.startsWith('<!--')) {
+      result += indentStr.repeat(indent) + token + '\n';
+      continue;
+    }
+    
+    // 自闭合标签
+    if (selfClosingTags.has(token.match(/^<\/?(\w+)/)?.[1]?.toLowerCase()) || token.endsWith('/>')) {
+      result += indentStr.repeat(indent) + token + '\n';
+      continue;
+    }
+    
+    // 结束标签
+    if (token.startsWith('</')) {
+      indent = Math.max(0, indent - 1);
+      result += indentStr.repeat(indent) + token + '\n';
+      continue;
+    }
+    
+    // 开始标签
+    const tagName = token.match(/^<(\w+)/)?.[1]?.toLowerCase();
+    result += indentStr.repeat(indent) + token + '\n';
+    
+    // 如果是块级标签，增加缩进
+    if (tagName && blockTags.has(tagName)) {
+      indent++;
+    }
+  }
+  
+  return result.trim();
+}
+
+// HTML 清理函数：用于粘贴和输出时清理垃圾
+function cleanHtml(html) {
+  if (!html) return '';
+  
+  const container = document.createElement('div');
+  container.innerHTML = html;
+  
+  // 1. 移除所有事件属性（onclick, onerror 等）
+  container.querySelectorAll('*').forEach(el => {
+    Array.from(el.attributes).forEach(attr => {
+      if (attr.name.startsWith('on')) {
+        el.removeAttribute(attr.name);
+      }
+    });
+  });
+  
+  // 2. 将废弃的 <font> 标签转换为 <span> + inline style
+  container.querySelectorAll('font').forEach(font => {
+    const span = document.createElement('span');
+    const size = font.getAttribute('size');
+    const color = font.getAttribute('color');
+    const face = font.getAttribute('face');
+    const existingStyle = font.getAttribute('style') || '';
+    let style = existingStyle;
+    if (size) {
+      const sizeMap = { '1': '10px', '2': '13px', '3': '16px', '4': '18px', '5': '24px', '6': '32px', '7': '48px' };
+      style += `font-size:${sizeMap[size] || '16px'};`;
+    }
+    if (color) style += `color:${color};`;
+    if (face) style += `font-family:${face};`;
+    if (style) span.setAttribute('style', style);
+    Array.from(font.attributes).forEach(attr => {
+      if (!['size', 'color', 'face', 'style'].includes(attr.name)) {
+        span.setAttribute(attr.name, attr.value);
+      }
+    });
+    while (font.firstChild) span.appendChild(font.firstChild);
+    font.replaceWith(span);
+  });
+  
+  // 3. 将 <center> 标签转换为 <div style="text-align:center">
+  container.querySelectorAll('center').forEach(center => {
+    const div = document.createElement('div');
+    const existingStyle = center.getAttribute('style') || '';
+    div.setAttribute('style', `text-align:center;${existingStyle}`);
+    while (center.firstChild) div.appendChild(center.firstChild);
+    center.replaceWith(div);
+  });
+  
+  // 4. 移除空的 style 属性
+  container.querySelectorAll('[style=""]').forEach(el => {
+    el.removeAttribute('style');
+  });
+  
+  // 5. 移除空的行内包装元素（不含文本、不含图片/br/hr）
+  const inlineTags = ['b', 'i', 'u', 's', 'strong', 'em', 'span'];
+  let changed = true;
+  while (changed) {
+    changed = false;
+    container.querySelectorAll(inlineTags.join(',')).forEach(el => {
+      if (!el.textContent.trim() && !el.querySelector('img, br, hr, table') && el.children.length === 0) {
+        el.remove();
+        changed = true;
+      }
+    });
+  }
+  
+  return container.innerHTML;
+}
+
+// 字数统计函数
+function countWords(text) {
+  if (!text) return { words: 0, chars: 0 };
+  
+  // 字符数（含空格和标点）
+  const chars = text.length;
+  
+  // 字数：中文单字 + 英文单词
+  const chineseChars = (text.match(/[\u4e00-\u9fa5]/g) || []).length;
+  const englishWords = (text.replace(/[\u4e00-\u9fa5]/g, ' ').match(/[a-zA-Z0-9-]+/g) || []).length;
+  const words = chineseChars + englishWords;
+  
+  return { words, chars };
+}
 
 const FONT_SIZES = ['12px','14px','16px','18px','20px','24px','28px','32px','36px','48px'];
 const FONT_FAMILIES = [
@@ -116,6 +269,16 @@ export default function HtmlEditor() {
   const [modalData, setModalData] = useState({});
   const [tableMenu, setTableMenu] = useState(null);
   const [selectedCell, setSelectedCell] = useState(null);
+  const [wordCount, setWordCount] = useState({ words: 0, chars: 0 });
+  const [imageTab, setImageTab] = useState('upload'); // 'upload' | 'url'
+  const [isOptimized, setIsOptimized] = useState(false);
+  const [originalHtml, setOriginalHtml] = useState('');
+  const fileInputRef = useRef(null);
+  const savedRangeRef = useRef(null);
+  const [selectedImage, setSelectedImage] = useState(null);
+  const [imageSize, setImageSize] = useState({ width: 0, height: 0 });
+  const dragStateRef = useRef(null);
+  const imageToolbarRef = useRef(null);
 
   useEffect(() => {
     if (editorRef.current) {
@@ -166,6 +329,10 @@ export default function HtmlEditor() {
     if (!editorRef.current) return;
     const content = editorRef.current.innerHTML;
     setIsEmpty(!content || content === '<br>' || content === '<div><br></div>');
+    
+    // 更新字数统计
+    const text = editorRef.current.innerText || '';
+    setWordCount(countWords(text));
   }, []);
 
   const handleInput = useCallback(() => {
@@ -195,8 +362,9 @@ export default function HtmlEditor() {
   }, [htmlCode, updateEmptyState]);
 
   const handleExport = useCallback(() => {
-    if (!editorRef.current) return;
-    const html = editorRef.current.innerHTML;
+    // 在源码模式下使用 htmlCode，在预览模式下使用 editorRef.current.innerHTML
+    const rawHtml = showCode ? htmlCode : (editorRef.current?.innerHTML || '');
+    const html = cleanHtml(rawHtml); // 清洁 HTML 输出
     const fullHtml = `<!DOCTYPE html>
 <html lang="zh-CN">
 <head>
@@ -225,11 +393,12 @@ ${html}
     a.download = 'document.html';
     a.click();
     URL.revokeObjectURL(url);
-  }, []);
+  }, [showCode, htmlCode]);
 
   const handleCopyHtml = useCallback(() => {
-    if (!editorRef.current) return;
-    const html = editorRef.current.innerHTML;
+    // 在源码模式下使用 htmlCode，在预览模式下使用 editorRef.current.innerHTML
+    const rawHtml = showCode ? htmlCode : (editorRef.current?.innerHTML || '');
+    const html = cleanHtml(rawHtml); // 清洁 HTML 输出
     navigator.clipboard.writeText(html).then(() => {
       setCopied(true);
       setTimeout(() => setCopied(false), 1500);
@@ -243,7 +412,7 @@ ${html}
       setCopied(true);
       setTimeout(() => setCopied(false), 1500);
     });
-  }, []);
+  }, [showCode, htmlCode]);
 
   const handleClear = useCallback(() => {
     if (editorRef.current) {
@@ -253,6 +422,37 @@ ${html}
       setHtmlCode('');
     }
   }, []);
+
+  const handleOptimizeHtml = useCallback(() => {
+    if (showCode) {
+      // 源码模式下格式化 htmlCode
+      setOriginalHtml(htmlCode);
+      const formatted = formatHtml(htmlCode);
+      setHtmlCode(formatted);
+      setIsOptimized(true);
+    } else if (editorRef.current) {
+      // 预览模式下先清理再格式化
+      const rawHtml = editorRef.current.innerHTML;
+      setOriginalHtml(rawHtml);
+      const cleaned = cleanHtml(rawHtml);
+      const formatted = formatHtml(cleaned);
+      setHtmlCode(formatted);
+      setShowCode(true);
+      setIsOptimized(true);
+    }
+  }, [showCode, htmlCode]);
+
+  const handleRestoreHtml = useCallback(() => {
+    if (originalHtml) {
+      setHtmlCode(originalHtml);
+      if (editorRef.current) {
+        editorRef.current.innerHTML = originalHtml;
+        updateEmptyState();
+      }
+      setIsOptimized(false);
+      setOriginalHtml('');
+    }
+  }, [originalHtml, updateEmptyState]);
 
   const handleFontSize = useCallback((size) => {
     setFontSize(size);
@@ -281,28 +481,86 @@ ${html}
     exec('hiliteColor', color);
   }, [exec]);
 
+  const saveSelection = useCallback(() => {
+    const editor = editorRef.current;
+    if (!editor) return;
+    const selection = window.getSelection();
+    if (selection.rangeCount > 0) {
+      const range = selection.getRangeAt(0);
+      if (editor.contains(range.commonAncestorContainer) || editor === range.commonAncestorContainer) {
+        savedRangeRef.current = range.cloneRange();
+        return;
+      }
+    }
+    if (!savedRangeRef.current) {
+      editor.focus();
+      const newSelection = window.getSelection();
+      if (newSelection.rangeCount > 0) {
+        savedRangeRef.current = newSelection.getRangeAt(0).cloneRange();
+      } else {
+        const range = document.createRange();
+        range.selectNodeContents(editor);
+        range.collapse(false);
+        savedRangeRef.current = range;
+      }
+    }
+  }, []);
+
+  const restoreSelection = useCallback(() => {
+    const editor = editorRef.current;
+    if (!editor) return;
+    editor.focus();
+    if (savedRangeRef.current) {
+      try {
+        const selection = window.getSelection();
+        selection.removeAllRanges();
+        selection.addRange(savedRangeRef.current);
+      } catch {
+        const range = document.createRange();
+        range.selectNodeContents(editor);
+        range.collapse(false);
+        savedRangeRef.current = range;
+        window.getSelection().addRange(range);
+      }
+    } else {
+      const range = document.createRange();
+      range.selectNodeContents(editor);
+      range.collapse(false);
+      savedRangeRef.current = range;
+      const selection = window.getSelection();
+      selection.removeAllRanges();
+      selection.addRange(range);
+    }
+  }, []);
+
   const handleInsertLink = useCallback(() => {
+    saveSelection();
     const selection = window.getSelection();
     const selectedText = selection.toString();
     setModalData({ type: 'link', url: 'https://', text: selectedText });
     setModalType('link');
-  }, []);
+  }, [saveSelection]);
 
   const handleInsertImage = useCallback(() => {
-    setModalData({ type: 'image', url: 'https://', alt: '' });
+    saveSelection();
+    setModalData({ type: 'image', url: 'https://', alt: '', isBase64: false });
+    setImageTab('upload');
     setModalType('image');
-  }, []);
+  }, [saveSelection]);
 
   const handleInsertHr = useCallback(() => {
     exec('insertHorizontalRule');
   }, [exec]);
 
   const handleInsertTable = useCallback(() => {
+    saveSelection();
     setModalData({ type: 'table', rows: 3, cols: 3 });
     setModalType('table');
-  }, []);
+  }, [saveSelection]);
 
   const handleModalConfirm = useCallback(() => {
+    restoreSelection();
+
     if (modalType === 'link') {
       const { url, text } = modalData;
       if (url && url !== 'https://') {
@@ -336,18 +594,31 @@ ${html}
     }
     setModalType(null);
     setModalData({});
-  }, [modalType, modalData, exec]);
+    savedRangeRef.current = null;
+  }, [modalType, modalData, exec, restoreSelection]);
 
   const handleModalCancel = useCallback(() => {
     setModalType(null);
     setModalData({});
   }, []);
 
-  // 粘贴处理：默认清理格式
+  // 粘贴处理：智能保留格式并清理垃圾代码
   const handlePaste = useCallback((e) => {
     e.preventDefault();
+    const html = e.clipboardData.getData('text/html');
     const text = e.clipboardData.getData('text/plain');
-    exec('insertText', text);
+    
+    if (html) {
+      // 清理 HTML 并插入
+      const cleanedHtml = cleanHtml(html, true);
+      if (cleanedHtml) {
+        exec('insertHTML', cleanedHtml);
+      } else {
+        exec('insertText', text);
+      }
+    } else {
+      exec('insertText', text);
+    }
   }, [exec]);
 
   // 表格右键菜单处理
@@ -442,6 +713,118 @@ ${html}
       return () => document.removeEventListener('click', handleClick);
     }
   }, [tableMenu]);
+
+  // 图片点击处理
+  const handleEditorClick = useCallback((e) => {
+    const target = e.target;
+    if (target.tagName === 'IMG' && editorRef.current?.contains(target)) {
+      setSelectedImage(target);
+      setImageSize({
+        width: target.offsetWidth,
+        height: target.offsetHeight
+      });
+    } else {
+      setSelectedImage(null);
+    }
+  }, []);
+
+  // 开始拖拽调整图片大小
+  const handleResizeStart = useCallback((e, corner) => {
+    e.preventDefault();
+    e.stopPropagation();
+
+    if (!selectedImage) return;
+
+    const rect = selectedImage.getBoundingClientRect();
+    const aspectRatio = rect.width / rect.height;
+
+    dragStateRef.current = {
+      startX: e.clientX,
+      startY: e.clientY,
+      startWidth: rect.width,
+      startHeight: rect.height,
+      aspectRatio,
+      corner
+    };
+
+    const handleMouseMove = (moveEvent) => {
+      if (!dragStateRef.current || !selectedImage) return;
+
+      const { startX, startY, startWidth, startHeight, aspectRatio, corner } = dragStateRef.current;
+      const deltaX = moveEvent.clientX - startX;
+      const deltaY = moveEvent.clientY - startY;
+
+      let newWidth, newHeight;
+
+      // 根据拖拽角落计算新尺寸
+      if (corner === 'se' || corner === 'ne') {
+        newWidth = startWidth + deltaX;
+      } else {
+        newWidth = startWidth - deltaX;
+      }
+
+      // 保持宽高比
+      newHeight = newWidth / aspectRatio;
+
+      // 最小尺寸约束
+      const minWidth = 50;
+      const maxWidth = editorRef.current?.offsetWidth || 800;
+      newWidth = Math.max(minWidth, Math.min(newWidth, maxWidth));
+      newHeight = newWidth / aspectRatio;
+
+      // 应用新尺寸
+      selectedImage.style.width = `${newWidth}px`;
+      selectedImage.style.height = `${newHeight}px`;
+
+      // 更新显示尺寸
+      setImageSize({
+        width: Math.round(newWidth),
+        height: Math.round(newHeight)
+      });
+    };
+
+    const handleMouseUp = () => {
+      dragStateRef.current = null;
+      document.removeEventListener('mousemove', handleMouseMove);
+      document.removeEventListener('mouseup', handleMouseUp);
+      updateEmptyState();
+    };
+
+    document.addEventListener('mousemove', handleMouseMove);
+    document.addEventListener('mouseup', handleMouseUp);
+  }, [selectedImage, updateEmptyState]);
+
+  const handleImagePresetSize = useCallback((percent) => {
+    if (!selectedImage || !editorRef.current) return;
+    const editorWidth = editorRef.current.clientWidth;
+    const newWidth = Math.max(50, editorWidth * percent / 100);
+    const aspectRatio = selectedImage.offsetWidth / selectedImage.offsetHeight;
+    const newHeight = newWidth / aspectRatio;
+    selectedImage.style.width = `${newWidth}px`;
+    selectedImage.style.height = `${newHeight}px`;
+    setImageSize({ width: Math.round(newWidth), height: Math.round(newHeight) });
+    updateEmptyState();
+  }, [selectedImage, updateEmptyState]);
+
+  const handleImageAlign = useCallback((align) => {
+    if (!selectedImage) return;
+    const img = selectedImage;
+    img.removeAttribute('align');
+    if (align === 'left') {
+      img.style.cssText = img.style.cssText.replace(/margin[^;]+;?/g, '').replace(/display[^;]+;?/g, '');
+      img.style.float = 'left';
+      img.style.margin = '0 12px 8px 0';
+    } else if (align === 'right') {
+      img.style.cssText = img.style.cssText.replace(/margin[^;]+;?/g, '').replace(/display[^;]+;?/g, '');
+      img.style.float = 'right';
+      img.style.margin = '0 0 8px 12px';
+    } else {
+      img.style.cssText = img.style.cssText.replace(/float[^;]+;?/g, '').replace(/margin[^;]+;?/g, '');
+      img.style.display = 'block';
+      img.style.margin = '1em auto';
+    }
+    updateEmptyState();
+  }, [selectedImage, updateEmptyState]);
 
   const fontSizeOptions = FONT_SIZES.map(s => ({ label: s, value: s }));
   const fontFamilyOptions = FONT_FAMILIES.map(f => ({ label: f.label, value: f.value }));
@@ -557,12 +940,166 @@ ${html}
               onInput={handleInput}
               onPaste={handlePaste}
               onContextMenu={handleContextMenu}
+              onClick={handleEditorClick}
               className="editor-content"
               spellCheck={false}
             />
           )}
+
+          {/* 图片调整手柄 */}
+          {selectedImage && !showCode && (() => {
+            const imgRect = selectedImage.getBoundingClientRect();
+            const editorRect = editorRef.current?.getBoundingClientRect();
+            if (!editorRect) return null;
+
+            const left = imgRect.left - editorRect.left;
+            const top = imgRect.top - editorRect.top + editorRef.current.scrollTop;
+            const width = imgRect.width;
+            const height = imgRect.height;
+
+            return (
+              <>
+                {/* 选中边框 */}
+                <div
+                  className="absolute pointer-events-none border-2 border-blue-500 z-40"
+                  style={{
+                    left: `${left}px`,
+                    top: `${top}px`,
+                    width: `${width}px`,
+                    height: `${height}px`
+                  }}
+                />
+                {/* 四角手柄 */}
+                {['nw', 'ne', 'sw', 'se'].map(corner => {
+                  const isTop = corner.includes('n');
+                  const isLeft = corner.includes('w');
+                  const cursor = corner === 'nw' || corner === 'se' ? 'nwse-resize' : 'nesw-resize';
+
+                  return (
+                    <div
+                      key={corner}
+                      onMouseDown={(e) => handleResizeStart(e, corner)}
+                      onClick={(e) => e.stopPropagation()}
+                      className="absolute w-3 h-3 bg-white border-2 border-blue-500 rounded-sm z-50 hover:bg-blue-100"
+                      style={{
+                        left: isLeft ? `${left - 6}px` : `${left + width - 6}px`,
+                        top: isTop ? `${top - 6}px` : `${top + height - 6}px`,
+                        cursor
+                      }}
+                    />
+                  );
+                })}
+              </>
+            );
+          })()}
         </div>
       </div>
+
+      {/* 图片浮动工具栏 - 使用 Portal 渲染到 body 避免被裁剪 */}
+      {selectedImage && !showCode && createPortal(
+        (() => {
+          const imgRect = selectedImage.getBoundingClientRect();
+          const toolbarHeight = 36;
+          const margin = 12;
+          const viewportHeight = window.innerHeight;
+          const viewportWidth = window.innerWidth;
+
+          // 判断下方是否有足够空间
+          const spaceBelow = viewportHeight - imgRect.bottom;
+          const showBelow = spaceBelow >= toolbarHeight + margin;
+
+          // 计算垂直位置
+          const toolbarTop = showBelow
+            ? imgRect.bottom + margin
+            : imgRect.top - toolbarHeight - margin;
+
+          // 计算水平位置，居中对准图片
+          let toolbarLeft = imgRect.left + imgRect.width / 2;
+
+          // 使用实际工具栏宽度（如果可用），否则使用估算值
+          const estimatedToolbarWidth = 280;
+          const actualToolbarWidth = imageToolbarRef.current?.offsetWidth || estimatedToolbarWidth;
+          const halfWidth = actualToolbarWidth / 2;
+          const padding = 8;
+
+          // 确保不超出视口边界
+          const toolbarLeftEdge = toolbarLeft - halfWidth;
+          const toolbarRightEdge = toolbarLeft + halfWidth;
+
+          if (toolbarLeftEdge < padding) {
+            toolbarLeft = halfWidth + padding;
+          } else if (toolbarRightEdge > viewportWidth - padding) {
+            toolbarLeft = viewportWidth - halfWidth - padding;
+          }
+
+          return (
+            <div
+              ref={imageToolbarRef}
+              className="fixed bg-white border border-gray-200 rounded-lg shadow-lg px-2 py-1.5 flex items-center gap-2 z-[9999]"
+              style={{
+                left: `${toolbarLeft}px`,
+                top: `${toolbarTop}px`,
+                transform: 'translateX(-50%)'
+              }}
+              onClick={(e) => e.stopPropagation()}
+            >
+              {/* 尺寸显示 */}
+              <span className="text-xs text-gray-500 px-1">
+                {imageSize.width}×{imageSize.height}
+              </span>
+              {/* 分隔线 */}
+              <div className="w-px h-4 bg-gray-200" />
+              {/* 预设尺寸 */}
+              {[25, 50, 75, 100].map(percent => (
+                <button
+                  key={percent}
+                  onMouseDown={(e) => {
+                    e.preventDefault();
+                    handleImagePresetSize(percent);
+                  }}
+                  className="px-2 py-1 text-xs text-gray-700 bg-gray-50 rounded hover:bg-gray-100 transition-colors"
+                >
+                  {percent}%
+                </button>
+              ))}
+              {/* 分隔线 */}
+              <div className="w-px h-4 bg-gray-200" />
+              {/* 对齐按钮 */}
+              <button
+                onMouseDown={(e) => {
+                  e.preventDefault();
+                  handleImageAlign('left');
+                }}
+                className="p-1 text-gray-600 hover:bg-gray-100 rounded transition-colors"
+                title="左对齐"
+              >
+                <AlignLeft className="w-4 h-4" />
+              </button>
+              <button
+                onMouseDown={(e) => {
+                  e.preventDefault();
+                  handleImageAlign('center');
+                }}
+                className="p-1 text-gray-600 hover:bg-gray-100 rounded transition-colors"
+                title="居中"
+              >
+                <AlignCenter className="w-4 h-4" />
+              </button>
+              <button
+                onMouseDown={(e) => {
+                  e.preventDefault();
+                  handleImageAlign('right');
+                }}
+                className="p-1 text-gray-600 hover:bg-gray-100 rounded transition-colors"
+                title="右对齐"
+              >
+                <AlignRight className="w-4 h-4" />
+              </button>
+            </div>
+          );
+        })(),
+        document.body
+      )}
 
       {/* 表格右键菜单 */}
       {tableMenu && (
@@ -594,9 +1131,28 @@ ${html}
       {/* 底部操作栏 */}
       <div className="flex items-center justify-between mt-4 flex-wrap gap-2">
         <div className="text-[12px] text-gray-400">
-          {isEmpty ? '暂无内容' : '编辑中...'}
+          {isEmpty ? '暂无内容' : `${wordCount.words} 字 / ${wordCount.chars} 字符`}
         </div>
         <div className="flex gap-2 flex-wrap">
+          <button
+            onClick={handleOptimizeHtml}
+            disabled={isEmpty}
+            className="flex items-center gap-1.5 px-3 sm:px-4 py-[7px] rounded-lg text-[12.5px] font-medium text-gray-500 border border-gray-200 bg-white cursor-pointer hover:bg-gray-50 hover:border-gray-300 transition-all disabled:opacity-40 disabled:cursor-not-allowed"
+            title="格式化 HTML 代码，添加缩进和换行"
+          >
+            <Sparkles className="w-3.5 h-3.5" />
+            <span className="hidden sm:inline">格式化代码</span>
+          </button>
+          {isOptimized && (
+            <button
+              onClick={handleRestoreHtml}
+              className="flex items-center gap-1.5 px-3 sm:px-4 py-[7px] rounded-lg text-[12.5px] font-medium text-orange-600 border border-orange-200 bg-orange-50 cursor-pointer hover:bg-orange-100 hover:border-orange-300 transition-all"
+              title="恢复到格式化前的代码"
+            >
+              <Undo2 className="w-3.5 h-3.5" />
+              <span className="hidden sm:inline">恢复</span>
+            </button>
+          )}
           <button
             onClick={handleClear}
             disabled={isEmpty}
@@ -695,16 +1251,115 @@ ${html}
 
       <Modal isOpen={modalType === 'image'} onClose={handleModalCancel} title="插入图片" theme={theme}>
         <div className="space-y-3">
-          <div>
-            <label className="block text-[13px] text-gray-600 mb-1.5">图片地址</label>
-            <input
-              type="text"
-              value={modalData.url || ''}
-              onChange={(e) => setModalData({ ...modalData, url: e.target.value })}
-              className="w-full h-[36px] px-3 rounded-lg border border-gray-200 text-[13px] focus:outline-none focus:border-gray-300"
-              placeholder="https://"
-            />
+          {/* Tab 切换 */}
+          <div className="flex gap-1 p-1 bg-gray-100 rounded-lg">
+            <button
+              onClick={() => setImageTab('upload')}
+              className={`flex-1 py-1.5 text-[13px] font-medium rounded-md transition-all ${
+                imageTab === 'upload'
+                  ? 'bg-white text-gray-800 shadow-sm'
+                  : 'text-gray-500 hover:text-gray-700'
+              }`}
+            >
+              本地上传
+            </button>
+            <button
+              onClick={() => setImageTab('url')}
+              className={`flex-1 py-1.5 text-[13px] font-medium rounded-md transition-all ${
+                imageTab === 'url'
+                  ? 'bg-white text-gray-800 shadow-sm'
+                  : 'text-gray-500 hover:text-gray-700'
+              }`}
+            >
+              网络图片
+            </button>
           </div>
+
+          {/* 本地上传 */}
+          {imageTab === 'upload' && (
+            <div>
+              <input
+                ref={fileInputRef}
+                type="file"
+                accept="image/*"
+                onChange={(e) => {
+                  const file = e.target.files?.[0];
+                  if (file) {
+                    const reader = new FileReader();
+                    reader.onload = (event) => {
+                      const base64 = event.target?.result;
+                      setModalData({ ...modalData, url: base64, isBase64: true });
+                    };
+                    reader.readAsDataURL(file);
+                  }
+                }}
+                className="hidden"
+              />
+              <div
+                onClick={() => fileInputRef.current?.click()}
+                onDragOver={(e) => {
+                  e.preventDefault();
+                  e.stopPropagation();
+                }}
+                onDrop={(e) => {
+                  e.preventDefault();
+                  e.stopPropagation();
+                  const file = e.dataTransfer.files?.[0];
+                  if (file && file.type.startsWith('image/')) {
+                    const reader = new FileReader();
+                    reader.onload = (event) => {
+                      const base64 = event.target?.result;
+                      setModalData({ ...modalData, url: base64, isBase64: true });
+                    };
+                    reader.readAsDataURL(file);
+                  }
+                }}
+                className="border-2 border-dashed border-gray-300 rounded-lg p-8 text-center cursor-pointer hover:border-gray-400 transition-colors"
+              >
+                <Upload className="w-8 h-8 mx-auto mb-2 text-gray-400" />
+                <p className="text-[13px] text-gray-600 mb-1">
+                  {modalData.url && modalData.isBase64 ? '已选择图片' : '点击选择或拖拽图片到此处'}
+                </p>
+                <p className="text-[12px] text-gray-400">支持 JPG、PNG、GIF 等格式</p>
+                {modalData.url && modalData.isBase64 && (
+                  <div className="mt-3">
+                    <img
+                      src={modalData.url}
+                      alt="预览"
+                      className="max-w-[200px] max-h-[150px] mx-auto rounded border border-gray-200"
+                    />
+                  </div>
+                )}
+              </div>
+            </div>
+          )}
+
+          {/* 网络图片 */}
+          {imageTab === 'url' && (
+            <div>
+              <label className="block text-[13px] text-gray-600 mb-1.5">图片地址</label>
+              <input
+                type="text"
+                value={modalData.url || ''}
+                onChange={(e) => setModalData({ ...modalData, url: e.target.value, isBase64: false })}
+                className="w-full h-[36px] px-3 rounded-lg border border-gray-200 text-[13px] focus:outline-none focus:border-gray-300"
+                placeholder="https://"
+              />
+              {modalData.url && !modalData.isBase64 && modalData.url !== 'https://' && (
+                <div className="mt-3">
+                  <img
+                    src={modalData.url}
+                    alt="预览"
+                    className="max-w-[200px] max-h-[150px] mx-auto rounded border border-gray-200"
+                    onError={(e) => {
+                      e.target.style.display = 'none';
+                    }}
+                  />
+                </div>
+              )}
+            </div>
+          )}
+
           <div>
             <label className="block text-[13px] text-gray-600 mb-1.5">替代文本 (可选)</label>
             <input
@@ -718,7 +1373,8 @@ ${html}
           <div className="flex gap-2 pt-2">
             <button
               onClick={handleModalConfirm}
-              className="flex-1 h-[36px] rounded-lg text-[13px] font-semibold text-white cursor-pointer transition-all"
+              disabled={!modalData.url || (imageTab === 'url' && modalData.url === 'https://')}
+              className="flex-1 h-[36px] rounded-lg text-[13px] font-semibold text-white cursor-pointer transition-all disabled:opacity-40 disabled:cursor-not-allowed"
               style={{ backgroundColor: theme.accent }}
             >
               确定
