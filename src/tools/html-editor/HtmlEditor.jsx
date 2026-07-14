@@ -18,6 +18,33 @@ import {
   X, Upload, Globe, Sparkles, Quote, Terminal,
   Maximize, Minimize, Search, Replace, ChevronDown, ChevronUp,
 } from 'lucide-react';
+import DOMPurify from 'dompurify';
+import { safeGetItem, safeSetItemWithRetry, safeRemoveItem } from '@/lib/storage';
+
+// DOMPurify 白名单配置：富文本编辑器允许的标签与属性
+// 先用白名单过滤危险标签/属性/协议，再做格式清理（font→span 等）
+const PURIFY_CONFIG = {
+  ALLOWED_TAGS: [
+    'p', 'div', 'span', 'b', 'i', 'u', 's', 'strong', 'em', 'br', 'hr',
+    'h1', 'h2', 'h3', 'h4', 'h5', 'h6', 'ul', 'ol', 'li', 'blockquote', 'pre', 'code',
+    'a', 'img', 'table', 'thead', 'tbody', 'tfoot', 'tr', 'td', 'th', 'caption', 'colgroup', 'col',
+  ],
+  ALLOWED_ATTR: [
+    'href', 'src', 'alt', 'title', 'style', 'align', 'colspan', 'rowspan',
+    'target', 'rel', 'width', 'height',
+  ],
+  ALLOW_DATA_ATTR: false,
+  FORBID_TAGS: ['script', 'iframe', 'object', 'embed', 'svg', 'form', 'input', 'textarea', 'select', 'button', 'style', 'link', 'meta', 'base'],
+  // DOMPurify 默认已拦截 javascript:/vbscript: 协议；data: 仅允许图片
+  ALLOWED_URI_REGEXP: /^(?:(?:https?|mailto|tel|ftp):|[^a-z]|[a-z+.-]+(?:[^a-z+.-:]|$))/i,
+};
+
+// 安全过滤：移除危险标签、事件属性、危险协议（XSS 防护主力）
+function sanitizeHtml(html) {
+  if (!html) return '';
+  if (typeof window === 'undefined') return html; // SSR 防护：DOMPurify 依赖 window
+  return DOMPurify.sanitize(html, PURIFY_CONFIG);
+}
 
 // HTML 格式化函数：美化代码结构，添加缩进和换行
 function formatHtml(html) {
@@ -87,16 +114,21 @@ function formatHtml(html) {
 }
 
 // HTML 清理函数：用于粘贴和输出时清理垃圾
+// 安全过滤由 sanitizeHtml（DOMPurify）负责，本函数仅做格式清理
 function cleanHtml(html) {
   if (!html) return '';
-  
+
   const container = document.createElement('div');
-  container.innerHTML = html;
-  
-  // 1. 移除所有事件属性（onclick, onerror 等）
+  container.innerHTML = sanitizeHtml(html);
+
+  // 1. 移除残留事件属性（双保险，DOMPurify 已处理大部分）
   container.querySelectorAll('*').forEach(el => {
     Array.from(el.attributes).forEach(attr => {
       if (attr.name.startsWith('on')) {
+        el.removeAttribute(attr.name);
+      }
+      // 校验 href/src 协议：拦截残留的 javascript:/vbscript:
+      if ((attr.name === 'href' || attr.name === 'src') && !isSafeUrl(attr.value)) {
         el.removeAttribute(attr.name);
       }
     });
@@ -304,6 +336,7 @@ export default function HtmlEditor() {
   const [scrollTick, setScrollTick] = useState(0);
   const autoSaveTimerRef = useRef(null);
   const [lastSavedTime, setLastSavedTime] = useState(null);
+  const [saveError, setSaveError] = useState(false);
   const [isFullscreen, setIsFullscreen] = useState(false);
   const [showFindReplace, setShowFindReplace] = useState(false);
   const [findText, setFindText] = useState('');
@@ -320,7 +353,7 @@ export default function HtmlEditor() {
       editorRef.current.focus();
     }
     // 检查是否有未保存的内容
-    const savedContent = localStorage.getItem('html-editor-content');
+    const savedContent = safeGetItem('html-editor-content');
     if (savedContent && editorRef.current) {
       savedContentRef.current = savedContent;
       setShowRestoreModal(true);
@@ -346,7 +379,7 @@ export default function HtmlEditor() {
   }, [updateEmptyState]);
 
   const handleRestoreDismiss = useCallback(() => {
-    localStorage.removeItem('html-editor-content');
+    safeRemoveItem('html-editor-content');
     setShowRestoreModal(false);
     savedContentRef.current = null;
   }, []);
@@ -359,8 +392,14 @@ export default function HtmlEditor() {
     autoSaveTimerRef.current = setTimeout(() => {
       if (editorRef.current && !isEmpty) {
         const content = editorRef.current.innerHTML;
-        localStorage.setItem('html-editor-content', content);
-        setLastSavedTime(new Date());
+        const result = safeSetItemWithRetry('html-editor-content', content);
+        if (result.ok) {
+          setLastSavedTime(new Date());
+          setSaveError(false);
+        } else {
+          // 配额超限或隐私模式：不中断编辑，仅提示
+          setSaveError(true);
+        }
       }
     }, 2000); // 2秒防抖
 
@@ -1384,7 +1423,11 @@ ${html}
         <div className={`flex items-center justify-between flex-wrap gap-2 ${isFullscreen ? 'px-4 py-3 border-t border-gray-200 bg-gray-50' : 'mt-4'}`}>
           <div className="text-[12px] text-gray-400 flex items-center gap-3">
             {isEmpty ? '暂无内容' : `${wordCount.words} 字 / ${wordCount.chars} 字符`}
-            {lastSavedTime && !isEmpty && (
+            {saveError && !isEmpty ? (
+              <span className="text-amber-500" title="localStorage 配额超限或被禁用，内容不会自动保存，请及时导出">
+                · 自动保存已暂停（存储空间不足）
+              </span>
+            ) : lastSavedTime && !isEmpty && (
               <span className="text-gray-300">
                 · 自动保存于 {lastSavedTime.toLocaleTimeString('zh-CN', { hour: '2-digit', minute: '2-digit' })}
               </span>

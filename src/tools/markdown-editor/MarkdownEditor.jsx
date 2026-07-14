@@ -19,6 +19,7 @@ import { Marked } from 'marked';
 import DOMPurify from 'dompurify';
 import hljs from 'highlight.js';
 import 'highlight.js/styles/github.css';
+import { safeGetItem, safeSetItemWithRetry, safeRemoveItem } from '@/lib/storage';
 
 // 使用实例而非全局配置，避免污染其他使用 marked 的代码
 const md = new Marked({ breaks: true, gfm: true });
@@ -88,6 +89,7 @@ export default function MarkdownEditor() {
   const [copiedMd, setCopiedMd] = useState(false);
   const [isFullscreen, setIsFullscreen] = useState(false);
   const [lastSavedTime, setLastSavedTime] = useState(null);
+  const [saveError, setSaveError] = useState(false);
   const [showRestoreModal, setShowRestoreModal] = useState(false);
   const savedContentRef = useRef(null);
   const autoSaveTimerRef = useRef(null);
@@ -185,7 +187,7 @@ export default function MarkdownEditor() {
 
   // 启动时检测未保存的内容
   useEffect(() => {
-    const saved = localStorage.getItem('md-editor-content');
+    const saved = safeGetItem('md-editor-content');
     if (saved) {
       savedContentRef.current = saved;
       setShowRestoreModal(true);
@@ -202,7 +204,7 @@ export default function MarkdownEditor() {
   }, [commitHistory]);
 
   const handleRestoreDismiss = useCallback(() => {
-    localStorage.removeItem('md-editor-content');
+    safeRemoveItem('md-editor-content');
     setShowRestoreModal(false);
     savedContentRef.current = null;
   }, []);
@@ -212,8 +214,14 @@ export default function MarkdownEditor() {
     if (autoSaveTimerRef.current) clearTimeout(autoSaveTimerRef.current);
     autoSaveTimerRef.current = setTimeout(() => {
       if (!isEmpty) {
-        localStorage.setItem('md-editor-content', markdown);
-        setLastSavedTime(new Date());
+        const result = safeSetItemWithRetry('md-editor-content', markdown);
+        if (result.ok) {
+          setLastSavedTime(new Date());
+          setSaveError(false);
+        } else {
+          // 配额超限或隐私模式：不中断编辑，仅提示
+          setSaveError(true);
+        }
       }
     }, 2000);
     return () => {
@@ -650,7 +658,11 @@ export default function MarkdownEditor() {
         <div className={`flex items-center justify-between flex-wrap gap-2 ${isFullscreen ? 'px-3 py-2 border-t border-gray-200 bg-gray-50' : 'mt-4'}`}>
           <div className="flex items-center gap-3 text-[12px] text-gray-400">
             <span>{isEmpty ? '暂无内容' : `${wordCount.words} 字 / ${wordCount.chars} 字符`}</span>
-            {lastSavedTime && !isEmpty && (
+            {saveError && !isEmpty ? (
+              <span className="text-amber-500" title="localStorage 配额超限或被禁用，内容不会自动保存，请及时导出">
+                · 自动保存已暂停（存储空间不足）
+              </span>
+            ) : lastSavedTime && !isEmpty && (
               <span className="text-gray-300">
                 · 自动保存于 {lastSavedTime.toLocaleTimeString('zh-CN', { hour: '2-digit', minute: '2-digit' })}
               </span>

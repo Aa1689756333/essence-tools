@@ -20,7 +20,7 @@ export default function OutputPanel({
       </div>
       <div
         ref={outputRef}
-        className={`flex-1 overflow-y-auto p-3 sm:p-5 font-serif-cjk text-[15px] leading-[1.9] whitespace-pre-wrap break-all ${isEmpty ? 'text-gray-300' : ''}`}
+        className={`relative flex-1 overflow-y-auto p-3 sm:p-5 font-serif-cjk text-[15px] leading-[1.9] whitespace-pre-wrap break-all ${isEmpty ? 'text-gray-300' : ''}`}
         onMouseOver={onMouseOver}
         onMouseLeave={onMouseLeave}
       >
