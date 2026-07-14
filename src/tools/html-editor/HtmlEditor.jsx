@@ -327,6 +327,15 @@ export default function HtmlEditor() {
     }
   }, []);
 
+  // 更新空状态与字数统计（提前定义，供 handleRestoreConfirm 引用）
+  const updateEmptyState = useCallback(() => {
+    if (!editorRef.current) return;
+    const content = editorRef.current.innerHTML;
+    setIsEmpty(!content || content === '<br>' || content === '<div><br></div>');
+    const text = editorRef.current.innerText || '';
+    setWordCount(countWords(text));
+  }, []);
+
   const handleRestoreConfirm = useCallback(() => {
     if (editorRef.current && savedContentRef.current) {
       editorRef.current.innerHTML = savedContentRef.current;
@@ -399,16 +408,6 @@ export default function HtmlEditor() {
     document.execCommand(cmd, false, value || null);
     editorRef.current?.focus();
     updateEmptyState();
-  }, []);
-
-  const updateEmptyState = useCallback(() => {
-    if (!editorRef.current) return;
-    const content = editorRef.current.innerHTML;
-    setIsEmpty(!content || content === '<br>' || content === '<div><br></div>');
-    
-    // 更新字数统计
-    const text = editorRef.current.innerText || '';
-    setWordCount(countWords(text));
   }, []);
 
   const handleInput = useCallback(() => {

@@ -6,6 +6,12 @@
   position: relative;
 }
 
+/* 全屏模式：取消高度限制，填满空间 */
+.md-editor-body.flex-1 {
+  max-height: none;
+  flex: 1;
+}
+
 @media (min-width: 640px) {
   .md-editor-body {
     min-height: 500px;

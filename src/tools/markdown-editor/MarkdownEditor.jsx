@@ -11,23 +11,27 @@ import {
   Link, Image, Minus,
   Undo2, Redo2,
   Download, Copy, Check, Trash2,
-  Eye, EyeOff, Columns,
-  CheckSquare,
+  Eye, Columns,
+  CheckSquare, Maximize, Minimize,
+  X, ChevronUp, ChevronDown,
 } from 'lucide-react';
-import { marked } from 'marked';
+import { Marked } from 'marked';
 import DOMPurify from 'dompurify';
+import hljs from 'highlight.js';
+import 'highlight.js/styles/github.css';
 
-marked.setOptions({
-  breaks: true,
-  gfm: true,
-});
+// 使用实例而非全局配置，避免污染其他使用 marked 的代码
+const md = new Marked({ breaks: true, gfm: true });
 
 function ToolbarBtn({ icon: Icon, onClick, active, title }) {
   return (
     <button
+      type="button"
       onMouseDown={(e) => { e.preventDefault(); onClick(); }}
       title={title}
-      className={`w-[30px] h-[30px] rounded-md flex items-center justify-center cursor-pointer transition-all duration-150 shrink-0 ${
+      aria-label={title}
+      aria-pressed={active}
+      className={`w-[30px] h-[30px] rounded-md flex items-center justify-center cursor-pointer transition-all duration-150 shrink-0 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-gray-300 ${
         active
           ? 'bg-gray-200 text-gray-800'
           : 'text-gray-500 hover:bg-gray-100 hover:text-gray-700'
@@ -42,38 +46,278 @@ function ToolbarDivider() {
   return <div className="w-px h-5 bg-gray-200 mx-1 shrink-0" />;
 }
 
+// 通用模态框（与 html-editor 对齐）
+function Modal({ isOpen, onClose, title, children, theme }) {
+  if (!isOpen) return null;
+  return (
+    <div className="fixed inset-0 z-[100] flex items-center justify-center bg-black/30 backdrop-blur-sm" onClick={onClose}>
+      <div className="bg-white rounded-xl shadow-2xl min-w-[320px] max-w-[90vw] max-h-[80vh] overflow-hidden" onClick={(e) => e.stopPropagation()}>
+        <div className="flex items-center justify-between px-5 py-3 border-b border-gray-100">
+          <h3 className="text-[15px] font-semibold text-gray-800">{title}</h3>
+          <button onClick={onClose} className="w-7 h-7 rounded-lg flex items-center justify-center text-gray-400 hover:bg-gray-100 hover:text-gray-600 transition-colors">
+            <X className="w-4 h-4" />
+          </button>
+        </div>
+        <div className="p-5">{children}</div>
+      </div>
+    </div>
+  );
+}
+
+// 字数统计：中文单字 + 英文单词（与 html-editor 对齐）
+function countWords(text) {
+  if (!text) return { words: 0, chars: 0 };
+  const chars = text.length;
+  const chineseChars = (text.match(/[\u4e00-\u9fa5]/g) || []).length;
+  const englishWords = (text.replace(/[\u4e00-\u9fa5]/g, ' ').match(/[a-zA-Z0-9-]+/g) || []).length;
+  const words = chineseChars + englishWords;
+  return { words, chars };
+}
+
+// 历史记录配置
+const HISTORY_LIMIT = 200;
+const HISTORY_DEBOUNCE_MS = 500;
+
 export default function MarkdownEditor() {
   const { theme } = useTheme();
   const textareaRef = useRef(null);
+  const previewRef = useRef(null);
+  const isSyncingScroll = useRef(false);
   const [markdown, setMarkdown] = useState('');
   const [viewMode, setViewMode] = useState('split'); // 'edit' | 'preview' | 'split'
   const [copiedMd, setCopiedMd] = useState(false);
-  const [copiedHtml, setCopiedHtml] = useState(false);
+  const [isFullscreen, setIsFullscreen] = useState(false);
+  const [lastSavedTime, setLastSavedTime] = useState(null);
+  const [showRestoreModal, setShowRestoreModal] = useState(false);
+  const savedContentRef = useRef(null);
+  const autoSaveTimerRef = useRef(null);
+  // 查找替换
+  const [showFindReplace, setShowFindReplace] = useState(false);
+  const [findText, setFindText] = useState('');
+  const [replaceText, setReplaceText] = useState('');
+  const [findMatches, setFindMatches] = useState([]);
+  const [currentMatchIndex, setCurrentMatchIndex] = useState(-1);
+  const [caseSensitive, setCaseSensitive] = useState(false);
+  const findInputRef = useRef(null);
   const [history, setHistory] = useState(['']);
   const [historyIndex, setHistoryIndex] = useState(0);
-  const [isUndoRedo, setIsUndoRedo] = useState(false);
+  // 历史记录防抖：连续输入 500ms 合并为一条，避免逐字符/逐 Tab 污染
+  const historyIndexRef = useRef(0);
+  historyIndexRef.current = historyIndex;
+  const historyTimerRef = useRef(null);
+  const pendingValueRef = useRef(null);
 
   const renderedHtml = useMemo(() => {
     if (!markdown.trim()) return '';
-    const raw = marked.parse(markdown);
+    // SSR 防护：DOMPurify 依赖 window，在服务端预渲染时 sanitize 不可用
+    if (typeof window === 'undefined') return '';
+    const raw = md.parse(markdown);
     return DOMPurify.sanitize(raw);
   }, [markdown]);
 
   const isEmpty = !markdown.trim();
 
-  const pushHistory = useCallback((value) => {
-    if (isUndoRedo) return;
+  // 立即提交一条历史记录（用于工具栏操作、清空等原子动作）
+  const commitHistory = useCallback((value) => {
+    const idx = historyIndexRef.current;
     setHistory(prev => {
-      const newHistory = prev.slice(0, historyIndex + 1);
+      const newHistory = prev.slice(0, idx + 1);
       newHistory.push(value);
-      if (newHistory.length > 200) newHistory.shift();
+      if (newHistory.length > HISTORY_LIMIT) newHistory.shift();
       return newHistory;
     });
-    setHistoryIndex(prev => {
-      const newIndex = Math.min(prev + 1, 199);
-      return newIndex;
+    setHistoryIndex(prev => Math.min(prev + 1, HISTORY_LIMIT - 1));
+  }, []);
+
+  // 防抖提交：500ms 内的连续输入合并为一条历史
+  const pushHistory = useCallback((value) => {
+    pendingValueRef.current = value;
+    if (historyTimerRef.current) clearTimeout(historyTimerRef.current);
+    historyTimerRef.current = setTimeout(() => {
+      historyTimerRef.current = null;
+      if (pendingValueRef.current !== null) {
+        commitHistory(pendingValueRef.current);
+        pendingValueRef.current = null;
+      }
+    }, HISTORY_DEBOUNCE_MS);
+  }, [commitHistory]);
+
+  // 立即冲刷待处理的防抖历史（撤销/重做/工具栏操作前调用）
+  const flushHistory = useCallback(() => {
+    if (historyTimerRef.current) {
+      clearTimeout(historyTimerRef.current);
+      historyTimerRef.current = null;
+      if (pendingValueRef.current !== null) {
+        commitHistory(pendingValueRef.current);
+        pendingValueRef.current = null;
+      }
+    }
+  }, [commitHistory]);
+
+  // 组件卸载时冲刷，避免丢失最后一段未提交的历史
+  useEffect(() => {
+    return () => flushHistory();
+  }, [flushHistory]);
+
+  // 关闭查找替换面板（提前定义，供 Esc useEffect 引用）
+  const closeFindReplace = useCallback(() => {
+    setShowFindReplace(false);
+    setFindMatches([]);
+    setCurrentMatchIndex(-1);
+  }, []);
+
+  // Esc：关闭查找替换面板 / 退出全屏
+  useEffect(() => {
+    if (!isFullscreen && !showFindReplace) return;
+    const handler = (e) => {
+      if (e.key === 'Escape') {
+        if (showFindReplace) closeFindReplace();
+        else if (isFullscreen) setIsFullscreen(false);
+      }
+    };
+    document.addEventListener('keydown', handler);
+    return () => document.removeEventListener('keydown', handler);
+  }, [isFullscreen, showFindReplace, closeFindReplace]);
+
+  const toggleFullscreen = useCallback(() => {
+    setIsFullscreen(prev => !prev);
+  }, []);
+
+  // 启动时检测未保存的内容
+  useEffect(() => {
+    const saved = localStorage.getItem('md-editor-content');
+    if (saved) {
+      savedContentRef.current = saved;
+      setShowRestoreModal(true);
+    }
+  }, []);
+
+  const handleRestoreConfirm = useCallback(() => {
+    if (savedContentRef.current !== null) {
+      setMarkdown(savedContentRef.current);
+      commitHistory(savedContentRef.current);
+    }
+    setShowRestoreModal(false);
+    savedContentRef.current = null;
+  }, [commitHistory]);
+
+  const handleRestoreDismiss = useCallback(() => {
+    localStorage.removeItem('md-editor-content');
+    setShowRestoreModal(false);
+    savedContentRef.current = null;
+  }, []);
+
+  // 自动保存：内容变化 2 秒防抖写入 localStorage
+  useEffect(() => {
+    if (autoSaveTimerRef.current) clearTimeout(autoSaveTimerRef.current);
+    autoSaveTimerRef.current = setTimeout(() => {
+      if (!isEmpty) {
+        localStorage.setItem('md-editor-content', markdown);
+        setLastSavedTime(new Date());
+      }
+    }, 2000);
+    return () => {
+      if (autoSaveTimerRef.current) clearTimeout(autoSaveTimerRef.current);
+    };
+  }, [markdown, isEmpty]);
+
+  // 代码语法高亮：渲染后对 <pre><code> 元素调用 hljs
+  useEffect(() => {
+    if (!previewRef.current || !renderedHtml) return;
+    previewRef.current.querySelectorAll('pre code').forEach((block) => {
+      if (!block.dataset.highlighted) {
+        hljs.highlightElement(block);
+        block.dataset.highlighted = 'true';
+      }
     });
-  }, [historyIndex, isUndoRedo]);
+  }, [renderedHtml, viewMode]);
+
+  // 编辑区 ↔ 预览区 滚动同步（分屏模式，比例映射）
+  const syncScroll = useCallback((source) => {
+    if (isSyncingScroll.current || viewMode !== 'split') return;
+    const editor = textareaRef.current;
+    const preview = previewRef.current;
+    if (!editor || !preview) return;
+    isSyncingScroll.current = true;
+    const maxSrc = source.scrollHeight - source.clientHeight;
+    const ratio = maxSrc > 0 ? source.scrollTop / maxSrc : 0;
+    if (source === editor) {
+      const maxPreview = preview.scrollHeight - preview.clientHeight;
+      preview.scrollTop = ratio * maxPreview;
+    } else {
+      const maxEditor = editor.scrollHeight - editor.clientHeight;
+      editor.scrollTop = ratio * maxEditor;
+    }
+    requestAnimationFrame(() => { isSyncingScroll.current = false; });
+  }, [viewMode]);
+
+  // ===== 查找替换 =====
+  const performFind = useCallback(() => {
+    if (!findText) { setFindMatches([]); setCurrentMatchIndex(-1); return; }
+    const escaped = findText.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+    const flags = caseSensitive ? 'g' : 'gi';
+    const regex = new RegExp(escaped, flags);
+    const matches = [];
+    let m;
+    while ((m = regex.exec(markdown)) !== null) {
+      matches.push({ index: m.index, length: m[0].length });
+      if (m.index === regex.lastIndex) regex.lastIndex++;
+    }
+    setFindMatches(matches);
+    setCurrentMatchIndex(matches.length > 0 ? 0 : -1);
+  }, [findText, caseSensitive, markdown]);
+
+  // 匹配变化时重新查找
+  useEffect(() => {
+    if (showFindReplace) performFind();
+  }, [showFindReplace, findText, caseSensitive, performFind]);
+
+  // 高亮当前匹配项
+  useEffect(() => {
+    if (currentMatchIndex < 0 || !findMatches[currentMatchIndex]) return;
+    const match = findMatches[currentMatchIndex];
+    const ta = textareaRef.current;
+    if (!ta) return;
+    ta.focus();
+    ta.setSelectionRange(match.index, match.index + match.length);
+    const linesBefore = markdown.substring(0, match.index).split('\n').length;
+    const lineHeight = 24;
+    ta.scrollTop = Math.max(0, (linesBefore - 1) * lineHeight - ta.clientHeight / 3);
+  }, [currentMatchIndex, findMatches, markdown]);
+
+  const findNext = useCallback(() => {
+    if (findMatches.length === 0) return;
+    setCurrentMatchIndex(prev => (prev + 1) % findMatches.length);
+  }, [findMatches]);
+
+  const findPrev = useCallback(() => {
+    if (findMatches.length === 0) return;
+    setCurrentMatchIndex(prev => (prev - 1 + findMatches.length) % findMatches.length);
+  }, [findMatches]);
+
+  const replaceCurrent = useCallback(() => {
+    if (currentMatchIndex < 0 || !findMatches[currentMatchIndex]) return;
+    const match = findMatches[currentMatchIndex];
+    const newText = markdown.substring(0, match.index) + replaceText + markdown.substring(match.index + match.length);
+    setMarkdown(newText);
+    flushHistory();
+    commitHistory(newText);
+  }, [currentMatchIndex, findMatches, replaceText, markdown, flushHistory, commitHistory]);
+
+  const replaceAll = useCallback(() => {
+    if (!findText) return;
+    const escaped = findText.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+    const flags = caseSensitive ? 'g' : 'gi';
+    const regex = new RegExp(escaped, flags);
+    const newText = markdown.replace(regex, replaceText);
+    if (newText !== markdown) {
+      setMarkdown(newText);
+      flushHistory();
+      commitHistory(newText);
+    }
+    setFindMatches([]);
+    setCurrentMatchIndex(-1);
+  }, [findText, replaceText, caseSensitive, markdown, flushHistory, commitHistory]);
 
   const handleChange = useCallback((e) => {
     const value = e.target.value;
@@ -82,22 +326,20 @@ export default function MarkdownEditor() {
   }, [pushHistory]);
 
   const handleUndo = useCallback(() => {
+    flushHistory();
     if (historyIndex <= 0) return;
-    setIsUndoRedo(true);
     const newIndex = historyIndex - 1;
     setHistoryIndex(newIndex);
     setMarkdown(history[newIndex]);
-    setTimeout(() => setIsUndoRedo(false), 0);
-  }, [historyIndex, history]);
+  }, [historyIndex, history, flushHistory]);
 
   const handleRedo = useCallback(() => {
+    flushHistory();
     if (historyIndex >= history.length - 1) return;
-    setIsUndoRedo(true);
     const newIndex = historyIndex + 1;
     setHistoryIndex(newIndex);
     setMarkdown(history[newIndex]);
-    setTimeout(() => setIsUndoRedo(false), 0);
-  }, [historyIndex, history]);
+  }, [historyIndex, history, flushHistory]);
 
   const insertAtCursor = useCallback((before, after = '', placeholder = '') => {
     const ta = textareaRef.current;
@@ -108,13 +350,15 @@ export default function MarkdownEditor() {
     const text = selected || placeholder;
     const newText = markdown.substring(0, start) + before + text + after + markdown.substring(end);
     setMarkdown(newText);
-    pushHistory(newText);
+    // 工具栏操作是原子动作：先冲刷待处理的输入历史，再立即提交
+    flushHistory();
+    commitHistory(newText);
     setTimeout(() => {
       ta.focus();
       const cursorPos = start + before.length;
       ta.setSelectionRange(cursorPos, cursorPos + text.length);
     }, 0);
-  }, [markdown, pushHistory]);
+  }, [markdown, flushHistory, commitHistory]);
 
   const insertAtLineStart = useCallback((prefix) => {
     const ta = textareaRef.current;
@@ -123,12 +367,13 @@ export default function MarkdownEditor() {
     const lineStart = markdown.lastIndexOf('\n', start - 1) + 1;
     const newText = markdown.substring(0, lineStart) + prefix + markdown.substring(lineStart);
     setMarkdown(newText);
-    pushHistory(newText);
+    flushHistory();
+    commitHistory(newText);
     setTimeout(() => {
       ta.focus();
       ta.setSelectionRange(start + prefix.length, start + prefix.length);
     }, 0);
-  }, [markdown, pushHistory]);
+  }, [markdown, flushHistory, commitHistory]);
 
   const handleBold = useCallback(() => insertAtCursor('**', '**', '粗体文本'), [insertAtCursor]);
   const handleItalic = useCallback(() => insertAtCursor('*', '*', '斜体文本'), [insertAtCursor]);
@@ -140,17 +385,33 @@ export default function MarkdownEditor() {
   const handleOl = useCallback(() => insertAtLineStart('1. '), [insertAtLineStart]);
   const handleQuote = useCallback(() => insertAtLineStart('> '), [insertAtLineStart]);
   const handleInlineCode = useCallback(() => insertAtCursor('`', '`', '代码'), [insertAtCursor]);
-  const handleCodeBlock = useCallback(() => insertAtCursor('\n```\n', '\n```\n', '代码块'), [insertAtCursor]);
+  const handleCodeBlock = useCallback(() => {
+    // 智能换行：光标不在行首时前置换行，避免代码块紧贴上一行
+    const ta = textareaRef.current;
+    const start = ta?.selectionStart ?? 0;
+    const needsNewline = start > 0 && markdown[start - 1] !== '\n';
+    insertAtCursor(needsNewline ? '\n```\n' : '```\n', '\n```\n', '代码块');
+  }, [insertAtCursor, markdown]);
   const handleLink = useCallback(() => insertAtCursor('[', '](https://)', '链接文本'), [insertAtCursor]);
   const handleImage = useCallback(() => insertAtCursor('![', '](https://)', '图片描述'), [insertAtCursor]);
-  const handleHr = useCallback(() => insertAtCursor('\n---\n', '', ''), [insertAtCursor]);
+  const handleHr = useCallback(() => {
+    // 智能换行：光标不在行首时前置换行，避免分割线紧贴上一行
+    const ta = textareaRef.current;
+    const start = ta?.selectionStart ?? 0;
+    const needsNewline = start > 0 && markdown[start - 1] !== '\n';
+    insertAtCursor(needsNewline ? '\n---\n' : '---\n', '', '');
+  }, [insertAtCursor, markdown]);
   const handleTask = useCallback(() => insertAtLineStart('- [ ] '), [insertAtLineStart]);
 
   const handleClear = useCallback(() => {
     setMarkdown('');
-    pushHistory('');
+    // 清空是原子操作：先冲刷待处理历史，再立即提交空字符串
+    flushHistory();
+    commitHistory('');
+    localStorage.removeItem('md-editor-content');
+    setLastSavedTime(null);
     textareaRef.current?.focus();
-  }, [pushHistory]);
+  }, [flushHistory, commitHistory]);
 
   const handleCopyMarkdown = useCallback(() => {
     navigator.clipboard.writeText(markdown).then(() => {
@@ -168,23 +429,6 @@ export default function MarkdownEditor() {
     });
   }, [markdown]);
 
-  const handleCopyHtml = useCallback(() => {
-    const html = renderedHtml;
-    navigator.clipboard.writeText(html).then(() => {
-      setCopiedHtml(true);
-      setTimeout(() => setCopiedHtml(false), 1500);
-    }).catch(() => {
-      const ta = document.createElement('textarea');
-      ta.value = html;
-      document.body.appendChild(ta);
-      ta.select();
-      document.execCommand('copy');
-      document.body.removeChild(ta);
-      setCopiedHtml(true);
-      setTimeout(() => setCopiedHtml(false), 1500);
-    });
-  }, [renderedHtml]);
-
   const handleExportMd = useCallback(() => {
     const blob = new Blob([markdown], { type: 'text/markdown;charset=utf-8' });
     const url = URL.createObjectURL(blob);
@@ -195,49 +439,11 @@ export default function MarkdownEditor() {
     URL.revokeObjectURL(url);
   }, [markdown]);
 
-  const handleExportHtml = useCallback(() => {
-    const fullHtml = `<!DOCTYPE html>
-<html lang="zh-CN">
-<head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Document</title>
-  <style>
-    body {
-      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
-      max-width: 800px;
-      margin: 0 auto;
-      padding: 40px 20px;
-      line-height: 1.6;
-      color: #333;
-    }
-    pre { background: #f6f8fa; padding: 1em; border-radius: 6px; overflow-x: auto; }
-    code { background: #f6f8fa; padding: 0.2em 0.4em; border-radius: 3px; font-size: 0.9em; }
-    pre code { background: transparent; padding: 0; }
-    blockquote { border-left: 4px solid #ddd; margin: 0; padding-left: 1em; color: #666; }
-    table { border-collapse: collapse; width: 100%; }
-    th, td { border: 1px solid #ddd; padding: 8px; text-align: left; }
-    th { background: #f6f8fa; }
-    img { max-width: 100%; }
-  </style>
-</head>
-<body>
-${renderedHtml}
-</body>
-</html>`;
-    const blob = new Blob([fullHtml], { type: 'text/html;charset=utf-8' });
-    const url = URL.createObjectURL(blob);
-    const a = document.createElement('a');
-    a.href = url;
-    a.download = 'document.html';
-    a.click();
-    URL.revokeObjectURL(url);
-  }, [renderedHtml]);
-
   const handleKeyDown = useCallback((e) => {
     if (e.ctrlKey || e.metaKey) {
       if (e.key === 'b') { e.preventDefault(); handleBold(); }
       else if (e.key === 'i') { e.preventDefault(); handleItalic(); }
+      else if (e.key === 'f') { e.preventDefault(); setShowFindReplace(true); setTimeout(() => findInputRef.current?.focus(), 100); }
       else if (e.key === 'z' && !e.shiftKey) { e.preventDefault(); handleUndo(); }
       else if ((e.key === 'z' && e.shiftKey) || e.key === 'y') { e.preventDefault(); handleRedo(); }
     }
@@ -247,31 +453,25 @@ ${renderedHtml}
     }
   }, [handleBold, handleItalic, handleUndo, handleRedo, insertAtCursor]);
 
-  const wordCount = useMemo(() => {
-    if (!markdown.trim()) return 0;
-    return markdown.trim().split(/\s+/).length;
-  }, [markdown]);
-
-  const lineCount = useMemo(() => {
-    if (!markdown) return 1;
-    return markdown.split('\n').length;
-  }, [markdown]);
+  const wordCount = useMemo(() => countWords(markdown), [markdown]);
 
   return (
     <div className="w-full">
-      {/* 页面标题 */}
-      <div className="mb-4 md:mb-5 lg:mb-6">
-        <h1 className="text-[22px] font-bold text-text mb-1.5 tracking-tight">Markdown 编辑器</h1>
-        <p className="text-[13.5px] text-text-secondary leading-relaxed">
-          编写 Markdown 语法，实时预览渲染效果，支持导出为 Markdown 或 HTML 文件。
-        </p>
-      </div>
+      {/* 页面标题（全屏时隐藏） */}
+      {!isFullscreen && (
+        <div className="mb-4 md:mb-5 lg:mb-6">
+          <h1 className="text-[22px] font-bold text-text mb-1.5 tracking-tight">Markdown 编辑器</h1>
+          <p className="text-[13.5px] text-text-secondary leading-relaxed">
+            编写 Markdown 语法，实时预览渲染效果，支持导出为 Markdown 文件。
+          </p>
+        </div>
+      )}
 
       {/* 编辑器容器 */}
-      <div className="rounded-xl border border-gray-200 bg-white overflow-hidden shadow-[0_1px_3px_rgba(0,0,0,0.04)]">
+      <div className={`rounded-xl border border-gray-200 bg-white overflow-hidden shadow-[0_1px_3px_rgba(0,0,0,0.04)] ${isFullscreen ? 'fixed inset-0 z-[9999] rounded-none flex flex-col' : ''}`}>
         {/* 工具栏 */}
         <div className="border-b border-gray-200 bg-gray-50/80 px-2 sm:px-3 py-2">
-          <div className="flex items-center gap-0.5 flex-wrap">
+          <div className="flex items-center gap-0.5 overflow-x-auto scrollbar-hide" role="toolbar" aria-label="Markdown 编辑工具栏">
             <ToolbarBtn icon={Undo2} onClick={handleUndo} title="撤销 (Ctrl+Z)" />
             <ToolbarBtn icon={Redo2} onClick={handleRedo} title="恢复 (Ctrl+Y)" />
             <ToolbarDivider />
@@ -300,7 +500,7 @@ ${renderedHtml}
             <ToolbarDivider />
 
             {/* 视图切换 */}
-            <div className="flex items-center gap-0.5 ml-auto">
+            <div className="flex items-center gap-0.5 ml-auto shrink-0" role="group" aria-label="视图模式">
               <button
                 onMouseDown={(e) => { e.preventDefault(); setViewMode('edit'); }}
                 title="仅编辑"
@@ -331,12 +531,79 @@ ${renderedHtml}
                 <Eye className="w-3.5 h-3.5" />
                 <span className="hidden sm:inline">预览</span>
               </button>
+              <ToolbarDivider />
+              <ToolbarBtn
+                icon={isFullscreen ? Minimize : Maximize}
+                onClick={toggleFullscreen}
+                active={isFullscreen}
+                title={isFullscreen ? '退出全屏 (Esc)' : '全屏编辑'}
+              />
             </div>
           </div>
         </div>
 
+        {/* 查找替换面板 */}
+        {showFindReplace && (
+          <div className="border-b border-gray-200 bg-gray-50/95 px-3 py-2.5 flex flex-col gap-2">
+            <div className="flex items-center gap-2">
+              <input
+                ref={findInputRef}
+                type="text"
+                value={findText}
+                onChange={(e) => setFindText(e.target.value)}
+                onKeyDown={(e) => {
+                  if (e.key === 'Enter') { e.preventDefault(); e.shiftKey ? findPrev() : findNext(); }
+                }}
+                placeholder="查找..."
+                className="flex-1 h-8 px-3 rounded-md text-[13px] bg-white border border-gray-200 focus:outline-none focus:border-gray-400"
+              />
+              <button
+                onClick={() => setCaseSensitive(prev => !prev)}
+                className={`h-8 px-2.5 rounded-md text-[12px] font-medium transition-all ${
+                  caseSensitive ? 'bg-gray-200 text-gray-800' : 'text-gray-400 hover:bg-gray-100'
+                }`}
+                title="区分大小写"
+              >
+                Aa
+              </button>
+              <span className="text-[12px] text-gray-400 min-w-[60px] text-center">
+                {findText ? `${currentMatchIndex + 1}/${findMatches.length}` : ''}
+              </span>
+              <ToolbarBtn icon={ChevronUp} onClick={findPrev} title="上一个 (Shift+Enter)" />
+              <ToolbarBtn icon={ChevronDown} onClick={findNext} title="下一个 (Enter)" />
+              <ToolbarBtn icon={X} onClick={closeFindReplace} title="关闭 (Esc)" />
+            </div>
+            <div className="flex items-center gap-2">
+              <input
+                type="text"
+                value={replaceText}
+                onChange={(e) => setReplaceText(e.target.value)}
+                onKeyDown={(e) => {
+                  if (e.key === 'Enter') { e.preventDefault(); replaceCurrent(); }
+                }}
+                placeholder="替换为..."
+                className="flex-1 h-8 px-3 rounded-md text-[13px] bg-white border border-gray-200 focus:outline-none focus:border-gray-400"
+              />
+              <button
+                onClick={replaceCurrent}
+                disabled={currentMatchIndex < 0}
+                className="h-8 px-3 rounded-md text-[12px] font-medium text-gray-600 bg-white border border-gray-200 hover:bg-gray-50 transition-all disabled:opacity-40 disabled:cursor-not-allowed"
+              >
+                替换
+              </button>
+              <button
+                onClick={replaceAll}
+                disabled={!findText}
+                className="h-8 px-3 rounded-md text-[12px] font-medium text-gray-600 bg-white border border-gray-200 hover:bg-gray-50 transition-all disabled:opacity-40 disabled:cursor-not-allowed"
+              >
+                全部替换
+              </button>
+            </div>
+          </div>
+        )}
+
         {/* 编辑/预览区域 */}
-        <div className="md-editor-body">
+        <div className={`md-editor-body ${isFullscreen ? 'flex-1 max-h-none' : ''}`}>
           {(viewMode === 'edit' || viewMode === 'split') && (
             <div className={`md-editor-pane ${viewMode === 'split' ? 'md-editor-pane--split' : ''}`}>
               {isEmpty && (
@@ -349,14 +616,22 @@ ${renderedHtml}
                 value={markdown}
                 onChange={handleChange}
                 onKeyDown={handleKeyDown}
+                onScroll={() => syncScroll(textareaRef.current)}
                 className="md-textarea"
                 spellCheck={false}
                 placeholder=""
+                aria-label="Markdown 编辑区"
               />
             </div>
           )}
           {(viewMode === 'preview' || viewMode === 'split') && (
-            <div className={`md-preview-pane ${viewMode === 'split' ? 'md-preview-pane--split' : ''}`}>
+            <div
+              ref={previewRef}
+              onScroll={() => syncScroll(previewRef.current)}
+              className={`md-preview-pane ${viewMode === 'split' ? 'md-preview-pane--split' : ''}`}
+              role="region"
+              aria-label="预览区"
+            >
               {isEmpty ? (
                 <div className="flex items-center justify-center h-full">
                   <span className="text-[14px] text-gray-300">预览区域</span>
@@ -370,13 +645,17 @@ ${renderedHtml}
             </div>
           )}
         </div>
-      </div>
 
-      {/* 底部操作栏 */}
-      <div className="flex items-center justify-between mt-4 flex-wrap gap-2">
-        <div className="flex items-center gap-3 text-[12px] text-gray-400">
-          <span>{isEmpty ? '暂无内容' : `${lineCount} 行 · ${wordCount} 词`}</span>
-        </div>
+        {/* 底部操作栏 */}
+        <div className={`flex items-center justify-between flex-wrap gap-2 ${isFullscreen ? 'px-3 py-2 border-t border-gray-200 bg-gray-50' : 'mt-4'}`}>
+          <div className="flex items-center gap-3 text-[12px] text-gray-400">
+            <span>{isEmpty ? '暂无内容' : `${wordCount.words} 字 / ${wordCount.chars} 字符`}</span>
+            {lastSavedTime && !isEmpty && (
+              <span className="text-gray-300">
+                · 自动保存于 {lastSavedTime.toLocaleTimeString('zh-CN', { hour: '2-digit', minute: '2-digit' })}
+              </span>
+            )}
+          </div>
         <div className="flex gap-2 flex-wrap">
           <button
             onClick={handleClear}
@@ -395,23 +674,7 @@ ${renderedHtml}
             <span className="hidden sm:inline">{copiedMd ? '已复制!' : '复制 MD'}</span>
           </button>
           <button
-            onClick={handleCopyHtml}
-            disabled={isEmpty}
-            className="flex items-center gap-1.5 px-3 sm:px-4 py-[7px] rounded-lg text-[12.5px] font-medium text-gray-500 border border-gray-200 bg-white cursor-pointer hover:bg-gray-50 hover:border-gray-300 transition-all disabled:opacity-40 disabled:cursor-not-allowed"
-          >
-            {copiedHtml ? <Check className="w-3.5 h-3.5 text-green-500" /> : <Code2 className="w-3.5 h-3.5" />}
-            <span className="hidden sm:inline">{copiedHtml ? '已复制!' : '复制 HTML'}</span>
-          </button>
-          <button
             onClick={handleExportMd}
-            disabled={isEmpty}
-            className="flex items-center gap-1.5 px-3 sm:px-4 py-[7px] rounded-lg text-[12.5px] font-medium text-gray-500 border border-gray-200 bg-white cursor-pointer hover:bg-gray-50 hover:border-gray-300 transition-all disabled:opacity-40 disabled:cursor-not-allowed"
-          >
-            <Download className="w-3.5 h-3.5" />
-            <span className="hidden sm:inline">导出 MD</span>
-          </button>
-          <button
-            onClick={handleExportHtml}
             disabled={isEmpty}
             className="flex items-center gap-1.5 px-4 sm:px-5 py-[7px] rounded-lg text-[12.5px] font-semibold text-white cursor-pointer transition-all hover:-translate-y-px disabled:opacity-40 disabled:cursor-not-allowed disabled:translate-y-0"
             style={{
@@ -430,10 +693,33 @@ ${renderedHtml}
             }}
           >
             <Download className="w-3.5 h-3.5" />
-            导出 HTML
+            导出 MD
           </button>
         </div>
       </div>
+      </div>
+
+      {/* 恢复内容弹窗 */}
+      <Modal isOpen={showRestoreModal} onClose={handleRestoreDismiss} title="恢复内容" theme={theme}>
+        <div className="space-y-4">
+          <p className="text-sm text-gray-700">检测到未保存的内容，是否恢复？</p>
+          <div className="flex gap-2">
+            <button
+              onClick={handleRestoreConfirm}
+              className="flex-1 h-9 rounded-lg text-sm font-semibold text-white cursor-pointer transition-all"
+              style={{ backgroundColor: theme.accent }}
+            >
+              恢复
+            </button>
+            <button
+              onClick={handleRestoreDismiss}
+              className="flex-1 h-9 rounded-lg text-sm font-semibold text-gray-500 bg-white border border-gray-200 cursor-pointer hover:bg-gray-50 transition-all"
+            >
+              丢弃
+            </button>
+          </div>
+        </div>
+      </Modal>
     </div>
   );
 }
