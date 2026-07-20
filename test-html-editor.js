@@ -10,6 +10,39 @@ global.document = dom.window.document;
 global.window = dom.window;
 global.NodeFilter = dom.window.NodeFilter;
 
+const DOMPurify = require('dompurify')(dom.window);
+
+const PURIFY_CONFIG = {
+  ALLOWED_TAGS: [
+    'p', 'div', 'span', 'b', 'i', 'u', 's', 'strong', 'em', 'br', 'hr',
+    'h1', 'h2', 'h3', 'h4', 'h5', 'h6', 'ul', 'ol', 'li', 'blockquote', 'pre', 'code',
+    'a', 'img', 'table', 'thead', 'tbody', 'tfoot', 'tr', 'td', 'th', 'caption', 'colgroup', 'col',
+    'font', 'center',
+  ],
+  ALLOWED_ATTR: [
+    'href', 'src', 'alt', 'title', 'style', 'align', 'colspan', 'rowspan',
+    'target', 'rel', 'width', 'height',
+    'size', 'color', 'face',
+  ],
+  ALLOW_DATA_ATTR: false,
+  FORBID_TAGS: ['script', 'iframe', 'object', 'embed', 'svg', 'form', 'input', 'textarea', 'select', 'button', 'style', 'link', 'meta', 'base'],
+  ALLOWED_URI_REGEXP: /^(?:(?:https?|mailto|tel|ftp):|[^a-z]|[a-z+.-]+(?:[^a-z+.-:]|$))/i,
+};
+
+function sanitizeHtml(html) {
+  if (!html) return '';
+  return DOMPurify.sanitize(html, PURIFY_CONFIG);
+}
+
+function isSafeUrl(url) {
+  if (!url) return false;
+  const trimmed = url.trim().toLowerCase();
+  if (trimmed.startsWith('javascript:') || trimmed.startsWith('data:') || trimmed.startsWith('vbscript:')) {
+    return false;
+  }
+  return true;
+}
+
 let passed = 0;
 let failed = 0;
 let total = 0;
@@ -49,7 +82,7 @@ function assertIncludes(str, substr, msg) {
 // 提取被测函数
 // ============================================================
 
-// formatHtml - 从 HtmlEditor.jsx 第 23-87 行
+// formatHtml - 从 HtmlEditor.jsx 第 50-114 行
 function formatHtml(html) {
   if (!html) return '';
   const blockTags = new Set([
@@ -86,7 +119,7 @@ function formatHtml(html) {
       result += indentStr.repeat(indent) + token + '\n';
       continue;
     }
-    const tagName = token.match(/^<(\w+)/)?.[1]?.toLowerCase();
+    const tagName = token.match(/^<\/?(\w+)/)?.[1]?.toLowerCase();
     result += indentStr.repeat(indent) + token + '\n';
     if (tagName && blockTags.has(tagName)) {
       indent++;
@@ -95,14 +128,17 @@ function formatHtml(html) {
   return result.trim();
 }
 
-// cleanHtml - 从 HtmlEditor.jsx 第 90-157 行
+// cleanHtml - 从 HtmlEditor.jsx 第 118-189 行
 function cleanHtml(html) {
   if (!html) return '';
   const container = document.createElement('div');
-  container.innerHTML = html;
+  container.innerHTML = sanitizeHtml(html);
   container.querySelectorAll('*').forEach(el => {
     Array.from(el.attributes).forEach(attr => {
       if (attr.name.startsWith('on')) {
+        el.removeAttribute(attr.name);
+      }
+      if ((attr.name === 'href' || attr.name === 'src') && !isSafeUrl(attr.value)) {
         el.removeAttribute(attr.name);
       }
     });
@@ -153,7 +189,7 @@ function cleanHtml(html) {
   return container.innerHTML;
 }
 
-// countWords - 从 HtmlEditor.jsx 第 160-172 行
+// countWords - 从 HtmlEditor.jsx 第 192-204 行
 function countWords(text) {
   if (!text) return { words: 0, chars: 0 };
   const chars = text.length;
@@ -303,30 +339,20 @@ test('C7: cleanHtml 接收额外参数不报错', () => {
   assertIncludes(result, 'text');
 });
 
-test('C8: BUG - XSS向量：javascript: 协议未被过滤', () => {
-  // cleanHtml 只移除了 on* 事件属性，但 href="javascript:..." 未被处理
+test('C8: XSS向量：javascript: 协议已被过滤 (已修复)', () => {
   const result = cleanHtml('<a href="javascript:alert(1)">click me</a>');
-  console.log(`        Result: ${result}`);
-  const hasJsProtocol = result.includes('javascript:');
-  if (hasJsProtocol) {
-    console.log('        [BUG] javascript: protocol not sanitized - XSS vulnerability');
-  }
+  assert(!result.includes('javascript:'), 'javascript: protocol should be sanitized');
 });
 
-test('C9: BUG - XSS向量：data URI 未被过滤', () => {
+test('C9: XSS向量：data URI 已被过滤 (已修复)', () => {
   const result = cleanHtml('<a href="data:text/html,<script>alert(1)</script>">click</a>');
-  console.log(`        Result: ${result}`);
-  const hasDataUri = result.includes('data:text/html');
-  if (hasDataUri) {
-    console.log('        [BUG] data: URI not sanitized - potential XSS');
-  }
+  assert(!result.includes('data:text/html'), 'data URI should be sanitized');
 });
 
-test('C10: BUG - SVG onload 事件', () => {
+test('C10: SVG 与 onload 事件已被过滤 (已修复)', () => {
   const result = cleanHtml('<svg onload="alert(1)"><circle r="50"/></svg>');
-  console.log(`        Result: ${result}`);
-  // onload 应该被移除（因为它以 on 开头）
   assert(!result.includes('onload'), 'onload should be removed');
+  assert(!result.includes('<svg'), 'svg should be removed');
 });
 
 // ============================================================
@@ -498,7 +524,7 @@ const issues = [
 ];
 
 issues.forEach(issue => {
-  console.log(`[${issue.severity}] ${issue.id}: ${issue.title}`);
+  console.log(`[RESOLVED/已修复] [${issue.severity}] ${issue.id}: ${issue.title}`);
   console.log(`  Location: ${issue.location}`);
   console.log(`  ${issue.description}`);
   console.log('');

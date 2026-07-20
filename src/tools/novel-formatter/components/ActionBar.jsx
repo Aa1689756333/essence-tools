@@ -28,20 +28,20 @@ export default function ActionBar({ onFormat, onSample, onClear, onCopy, canCopy
       </button>
       <button
         onClick={onSample}
-        className="px-4 sm:px-7 py-[9px] rounded-[9px] text-[13px] font-semibold cursor-pointer transition-all bg-transparent text-gray-600 border border-dashed border-gray-300 hover:bg-gray-50 hover:border-solid hover:border-gray-400"
+        className="px-4 sm:px-7 py-[9px] rounded-[9px] text-[13px] font-semibold cursor-pointer transition-all bg-card text-text-secondary border border-dashed border-border hover:bg-bg-primary hover:border-solid hover:text-text hover:border-text-secondary/50"
       >
         测试文本
       </button>
       <button
         onClick={onClear}
-        className="px-4 sm:px-7 py-[9px] rounded-[9px] text-[13px] font-semibold cursor-pointer transition-all bg-transparent text-gray-600 border border-dashed border-gray-300 hover:bg-gray-50 hover:border-solid hover:border-gray-400"
+        className="px-4 sm:px-7 py-[9px] rounded-[9px] text-[13px] font-semibold cursor-pointer transition-all bg-card text-text-secondary border border-dashed border-border hover:bg-bg-primary hover:border-solid hover:text-text hover:border-text-secondary/50"
       >
         清空
       </button>
       <button
         onClick={onCopy}
         disabled={!canCopy}
-        className="px-4 sm:px-7 py-[9px] rounded-[9px] text-[13px] font-semibold cursor-pointer transition-all bg-transparent text-gray-600 border border-dashed border-gray-300 hover:bg-gray-50 hover:border-solid hover:border-gray-400 disabled:opacity-40 disabled:cursor-not-allowed"
+        className="px-4 sm:px-7 py-[9px] rounded-[9px] text-[13px] font-semibold cursor-pointer transition-all bg-card text-text-secondary border border-dashed border-border hover:bg-bg-primary hover:border-solid hover:text-text hover:border-text-secondary/50 disabled:opacity-40 disabled:cursor-not-allowed"
       >
         {copyLabel || '复制结果'}
       </button>

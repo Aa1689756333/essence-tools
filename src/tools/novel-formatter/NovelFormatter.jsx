@@ -33,6 +33,7 @@ export default function NovelFormatter() {
   const outputRef = useRef(null);
   const autoSaveTimerRef = useRef(null);
   const savedContentRef = useRef(null);
+  const restoreConfirmBtnRef = useRef(null);
 
   const {
     onInputMouseMove,
@@ -51,6 +52,13 @@ export default function NovelFormatter() {
       setShowRestoreModal(true);
     }
   }, []);
+
+  // 恢复弹窗自动聚焦确认按钮
+  useEffect(() => {
+    if (showRestoreModal) {
+      setTimeout(() => restoreConfirmBtnRef.current?.focus(), 50);
+    }
+  }, [showRestoreModal]);
 
   // 自动保存：输入变化 2 秒防抖写入 localStorage
   useEffect(() => {
@@ -225,6 +233,11 @@ export default function NovelFormatter() {
   }, []);
 
   const handleClear = useCallback(() => {
+    if (inputText.trim()) {
+      if (!window.confirm('确定要清空输入和排版结果吗？')) {
+        return;
+      }
+    }
     if (textareaRef.current) {
       textareaRef.current.value = '';
     }
@@ -238,7 +251,7 @@ export default function NovelFormatter() {
     setIsProcessing(false);
     setSaveError(false);
     safeRemoveItem('nf-input');
-  }, []);
+  }, [inputText]);
 
   // 复制结果
   const handleCopy = useCallback(() => {
@@ -263,6 +276,11 @@ export default function NovelFormatter() {
 
   // 测试文本
   const handleSample = useCallback(() => {
+    if (inputText.trim()) {
+      if (!window.confirm('加载示例会覆盖当前的输入内容，确定要继续吗？')) {
+        return;
+      }
+    }
     if (textareaRef.current) {
       textareaRef.current.value = sampleText;
     }
@@ -272,7 +290,7 @@ export default function NovelFormatter() {
     setOutputCount(0);
     setDiffStats(null);
     setCanCopy(false);
-  }, []);
+  }, [inputText]);
 
   return (
     <div className="w-full">
@@ -314,16 +332,34 @@ export default function NovelFormatter() {
       {isProcessing && <ProgressPanel activePhase={activePhase} />}
 
       {showRestoreModal && (
-        <div className="fixed inset-0 z-[100] flex items-center justify-center bg-black/30 backdrop-blur-sm" onClick={handleRestoreDismiss}>
-          <div className="bg-white rounded-xl shadow-2xl min-w-[320px] max-w-[90vw] overflow-hidden" onClick={(e) => e.stopPropagation()}>
-            <div className="flex items-center justify-between px-5 py-3 border-b border-gray-100">
-              <h3 className="text-[15px] font-semibold text-gray-800">恢复未保存的内容</h3>
+        <div className="fixed inset-0 z-[100] flex items-center justify-center bg-black/40 backdrop-blur-[2px]" onClick={handleRestoreDismiss}>
+          <div
+            className="bg-card border border-border rounded-xl shadow-2xl min-w-[320px] max-w-[90vw] overflow-hidden"
+            onClick={(e) => e.stopPropagation()}
+            role="dialog"
+            aria-modal="true"
+            aria-labelledby="restore-modal-title"
+          >
+            <div className="flex items-center justify-between px-5 py-3 border-b border-border">
+              <h2 id="restore-modal-title" className="text-[15px] font-semibold text-text">恢复未保存的内容</h2>
             </div>
             <div className="p-5">
-              <p className="text-[13px] text-gray-500 mb-4 leading-relaxed">检测到上次未保存的输入内容，是否恢复？</p>
+              <p className="text-[13px] text-text-secondary mb-4 leading-relaxed">检测到上次未保存的输入内容，是否恢复？</p>
               <div className="flex justify-end gap-2">
-                <button onClick={handleRestoreDismiss} className="px-3 py-1.5 rounded-lg text-[12.5px] font-medium text-gray-500 border border-gray-200 bg-white cursor-pointer hover:bg-gray-50 transition-colors">放弃</button>
-                <button onClick={handleRestoreConfirm} className="px-3 py-1.5 rounded-lg text-[12.5px] font-medium text-white cursor-pointer transition-colors" style={{ backgroundColor: 'var(--theme-accent, #34d399)' }}>恢复</button>
+                <button
+                  onClick={handleRestoreDismiss}
+                  className="px-3 py-1.5 rounded-lg text-[12.5px] font-medium text-text-secondary border border-border bg-card cursor-pointer hover:bg-bg-primary hover:text-text transition-colors"
+                >
+                  放弃
+                </button>
+                <button
+                  ref={restoreConfirmBtnRef}
+                  onClick={handleRestoreConfirm}
+                  className="px-3 py-1.5 rounded-lg text-[12.5px] font-medium text-white cursor-pointer transition-colors"
+                  style={{ backgroundColor: 'var(--theme-accent, #34d399)' }}
+                >
+                  恢复
+                </button>
               </div>
             </div>
           </div>

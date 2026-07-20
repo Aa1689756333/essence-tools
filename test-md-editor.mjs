@@ -2,8 +2,14 @@
 // 测试目标：验证 MarkdownEditor.jsx 中可疑的功能点
 // 运行：node test-md-editor.mjs
 
+import { JSDOM } from 'jsdom';
+const dom = new JSDOM('<!DOCTYPE html><html><body></body></html>');
+global.window = dom.window;
+global.document = dom.window.document;
+global.NodeFilter = dom.window.NodeFilter;
+
 import { marked } from 'marked';
-import DOMPurify from 'dompurify';
+const { default: DOMPurify } = await import('dompurify');
 
 // 模拟 marked 配置（与 MarkdownEditor.jsx 一致）
 marked.setOptions({
@@ -93,8 +99,8 @@ function wordCount(md) {
   // 这其实是一个 BUG/不足：对中文文本，词数统计应至少按字符数或使用分词
   const cnMixed = '这是中文 and English 混合';
   assert(
-    '中英混合按空格切分为 3 段',
-    wordCount(cnMixed) === 3,
+    '中英混合按空格切分为 4 段',
+    wordCount(cnMixed) === 4,
     `实际: ${wordCount(cnMixed)}`
   );
 }

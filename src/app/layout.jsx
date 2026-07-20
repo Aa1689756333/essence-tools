@@ -4,6 +4,13 @@ import Topbar from '@/shell/Topbar';
 import ThemeProvider from '@/shell/ThemeProvider';
 import { SidebarProvider } from '@/shell/useSidebar';
 import { tools, getToolsByCategory } from '@/tools/registry';
+import { Inter } from 'next/font/google';
+
+const inter = Inter({
+  subsets: ['latin'],
+  display: 'swap',
+  variable: '--font-inter',
+});
 
 export const metadata = {
   title: 'ToolBox · 在线工具箱',
@@ -13,9 +20,23 @@ export const metadata = {
 export default function RootLayout({ children }) {
   const toolsByCategory = getToolsByCategory();
 
+  const inlineScript = `
+    (function() {
+      try {
+        const isDark = localStorage.getItem('toolbox-dark') === 'true';
+        if (isDark) {
+          document.documentElement.classList.add('dark');
+        }
+      } catch (e) {}
+    })();
+  `;
+
   return (
-    <html lang="zh-CN">
-      <body className="bg-bg antialiased">
+    <html lang="zh-CN" suppressHydrationWarning className={inter.variable}>
+      <head>
+        <script dangerouslySetInnerHTML={{ __html: inlineScript }} />
+      </head>
+      <body className="bg-bg antialiased font-sans" suppressHydrationWarning>
         <ThemeProvider>
           <SidebarProvider>
             <div className="flex h-screen overflow-hidden">

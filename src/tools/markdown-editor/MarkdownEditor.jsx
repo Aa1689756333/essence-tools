@@ -17,8 +17,17 @@ import {
 } from 'lucide-react';
 import { Marked } from 'marked';
 import DOMPurify from 'dompurify';
-import hljs from 'highlight.js';
+import hljs from 'highlight.js/lib/core'; // from 'highlight.js'
+import javascript from 'highlight.js/lib/languages/javascript';
+import css from 'highlight.js/lib/languages/css';
+import xml from 'highlight.js/lib/languages/xml';
+import markdownLang from 'highlight.js/lib/languages/markdown';
+import python from 'highlight.js/lib/languages/python';
+import bash from 'highlight.js/lib/languages/bash';
+import json from 'highlight.js/lib/languages/json';
 import 'highlight.js/styles/github.css';
+
+[['javascript', javascript], ['css', css], ['xml', xml], ['markdown', markdownLang], ['python', python], ['bash', bash], ['json', json]].forEach(([n, l]) => hljs.registerLanguage(n, l));
 import { safeGetItem, safeSetItemWithRetry, safeRemoveItem } from '@/lib/storage';
 
 // 使用实例而非全局配置，避免污染其他使用 marked 的代码
@@ -44,18 +53,28 @@ function ToolbarBtn({ icon: Icon, onClick, active, title }) {
 }
 
 function ToolbarDivider() {
-  return <div className="w-px h-5 bg-gray-200 mx-1 shrink-0" />;
+  return <div className="w-px h-5 bg-border mx-1 shrink-0" />;
 }
 
-// 通用模态框（与 html-editor 对齐）
+// 通用模态框（与 html-editor 对齐，支持暗黑模式和可访问性）
 function Modal({ isOpen, onClose, title, children, theme }) {
   if (!isOpen) return null;
   return (
-    <div className="fixed inset-0 z-[100] flex items-center justify-center bg-black/30 backdrop-blur-sm" onClick={onClose}>
-      <div className="bg-white rounded-xl shadow-2xl min-w-[320px] max-w-[90vw] max-h-[80vh] overflow-hidden" onClick={(e) => e.stopPropagation()}>
-        <div className="flex items-center justify-between px-5 py-3 border-b border-gray-100">
-          <h3 className="text-[15px] font-semibold text-gray-800">{title}</h3>
-          <button onClick={onClose} className="w-7 h-7 rounded-lg flex items-center justify-center text-gray-400 hover:bg-gray-100 hover:text-gray-600 transition-colors">
+    <div className="fixed inset-0 z-[100] flex items-center justify-center bg-black/40 backdrop-blur-[2px]" onClick={onClose}>
+      <div
+        className="bg-card border border-border rounded-xl shadow-2xl min-w-[320px] max-w-[90vw] max-h-[80vh] overflow-hidden"
+        onClick={(e) => e.stopPropagation()}
+        role="dialog"
+        aria-modal="true"
+        aria-labelledby="modal-title"
+      >
+        <div className="flex items-center justify-between px-5 py-3 border-b border-border">
+          <h2 id="modal-title" className="text-[15px] font-semibold text-text">{title}</h2>
+          <button
+            onClick={onClose}
+            aria-label="关闭弹窗"
+            className="w-7 h-7 rounded-lg flex items-center justify-center text-text-secondary hover:bg-bg-primary hover:text-text transition-colors border border-transparent"
+          >
             <X className="w-4 h-4" />
           </button>
         </div>
@@ -101,20 +120,46 @@ export default function MarkdownEditor() {
   const [currentMatchIndex, setCurrentMatchIndex] = useState(-1);
   const [caseSensitive, setCaseSensitive] = useState(false);
   const findInputRef = useRef(null);
-  const [history, setHistory] = useState(['']);
   const [historyIndex, setHistoryIndex] = useState(0);
-  // 历史记录防抖：连续输入 500ms 合并为一条，避免逐字符/逐 Tab 污染
+  // 历史记录使用 Ref 保证同步更新，防止闭包失效
+  const historyRef = useRef(['']);
   const historyIndexRef = useRef(0);
-  historyIndexRef.current = historyIndex;
   const historyTimerRef = useRef(null);
   const pendingValueRef = useRef(null);
+  const [isMobile, setIsMobile] = useState(false);
+
+  // 监听窗口尺寸检测移动端 & 安全配置 DOMPurify 防止 tabnapping
+  useEffect(() => {
+    const checkMobile = () => setIsMobile(window.innerWidth < 768);
+    checkMobile();
+    window.addEventListener('resize', checkMobile);
+    if (typeof window !== 'undefined') {
+      DOMPurify.addHook('afterSanitizeAttributes', (node) => {
+        if ('target' in node) {
+          node.setAttribute('target', '_blank');
+          node.setAttribute('rel', 'noopener noreferrer');
+        }
+      });
+    }
+    return () => window.removeEventListener('resize', checkMobile);
+  }, []);
+
+  // 移动端分屏时强制 fallback 到编辑模式
+  useEffect(() => {
+    if (isMobile && viewMode === 'split') {
+      setViewMode('edit');
+    }
+  }, [isMobile, viewMode]);
 
   const renderedHtml = useMemo(() => {
     if (!markdown.trim()) return '';
-    // SSR 防护：DOMPurify 依赖 window，在服务端预渲染时 sanitize 不可用
     if (typeof window === 'undefined') return '';
     const raw = md.parse(markdown);
-    return DOMPurify.sanitize(raw);
+    return DOMPurify.sanitize(raw, {
+      FORBID_TAGS: ['form', 'style', 'script'],
+      ADD_ATTR: ['target', 'rel'],
+      ALLOW_DATA_ATTR: false
+    });
   }, [markdown]);
 
   const isEmpty = !markdown.trim();
@@ -122,13 +167,15 @@ export default function MarkdownEditor() {
   // 立即提交一条历史记录（用于工具栏操作、清空等原子动作）
   const commitHistory = useCallback((value) => {
     const idx = historyIndexRef.current;
-    setHistory(prev => {
-      const newHistory = prev.slice(0, idx + 1);
-      newHistory.push(value);
-      if (newHistory.length > HISTORY_LIMIT) newHistory.shift();
-      return newHistory;
-    });
-    setHistoryIndex(prev => Math.min(prev + 1, HISTORY_LIMIT - 1));
+    const newHistory = historyRef.current.slice(0, idx + 1);
+    newHistory.push(value);
+    if (newHistory.length > HISTORY_LIMIT) {
+      newHistory.shift();
+    }
+    historyRef.current = newHistory;
+    const nextIdx = newHistory.length - 1;
+    historyIndexRef.current = nextIdx;
+    setHistoryIndex(nextIdx);
   }, []);
 
   // 防抖提交：500ms 内的连续输入合并为一条历史
@@ -162,11 +209,7 @@ export default function MarkdownEditor() {
   }, [flushHistory]);
 
   // 关闭查找替换面板（提前定义，供 Esc useEffect 引用）
-  const closeFindReplace = useCallback(() => {
-    setShowFindReplace(false);
-    setFindMatches([]);
-    setCurrentMatchIndex(-1);
-  }, []);
+  const closeFindReplace = useCallback(() => { setShowFindReplace(false); setFindMatches([]); setCurrentMatchIndex(-1); }, []);
 
   // Esc：关闭查找替换面板 / 退出全屏
   useEffect(() => {
@@ -181,9 +224,7 @@ export default function MarkdownEditor() {
     return () => document.removeEventListener('keydown', handler);
   }, [isFullscreen, showFindReplace, closeFindReplace]);
 
-  const toggleFullscreen = useCallback(() => {
-    setIsFullscreen(prev => !prev);
-  }, []);
+  const toggleFullscreen = useCallback(() => setIsFullscreen(p => !p), []);
 
   // 启动时检测未保存的内容
   useEffect(() => {
@@ -203,11 +244,7 @@ export default function MarkdownEditor() {
     savedContentRef.current = null;
   }, [commitHistory]);
 
-  const handleRestoreDismiss = useCallback(() => {
-    safeRemoveItem('md-editor-content');
-    setShowRestoreModal(false);
-    savedContentRef.current = null;
-  }, []);
+  const handleRestoreDismiss = useCallback(() => { safeRemoveItem('md-editor-content'); setShowRestoreModal(false); savedContentRef.current = null; }, []);
 
   // 自动保存：内容变化 2 秒防抖写入 localStorage
   useEffect(() => {
@@ -335,19 +372,23 @@ export default function MarkdownEditor() {
 
   const handleUndo = useCallback(() => {
     flushHistory();
-    if (historyIndex <= 0) return;
-    const newIndex = historyIndex - 1;
+    const idx = historyIndexRef.current;
+    if (idx <= 0) return;
+    const newIndex = idx - 1;
+    historyIndexRef.current = newIndex;
     setHistoryIndex(newIndex);
-    setMarkdown(history[newIndex]);
-  }, [historyIndex, history, flushHistory]);
+    setMarkdown(historyRef.current[newIndex]);
+  }, [flushHistory]);
 
   const handleRedo = useCallback(() => {
     flushHistory();
-    if (historyIndex >= history.length - 1) return;
-    const newIndex = historyIndex + 1;
+    const idx = historyIndexRef.current;
+    if (idx >= historyRef.current.length - 1) return;
+    const newIndex = idx + 1;
+    historyIndexRef.current = newIndex;
     setHistoryIndex(newIndex);
-    setMarkdown(history[newIndex]);
-  }, [historyIndex, history, flushHistory]);
+    setMarkdown(historyRef.current[newIndex]);
+  }, [flushHistory]);
 
   const insertAtCursor = useCallback((before, after = '', placeholder = '') => {
     const ta = textareaRef.current;
@@ -412,6 +453,11 @@ export default function MarkdownEditor() {
   const handleTask = useCallback(() => insertAtLineStart('- [ ] '), [insertAtLineStart]);
 
   const handleClear = useCallback(() => {
+    if (markdown.trim()) {
+      if (!window.confirm('确定要清空输入内容吗？')) {
+        return;
+      }
+    }
     setMarkdown('');
     // 清空是原子操作：先冲刷待处理历史，再立即提交空字符串
     flushHistory();
@@ -419,7 +465,7 @@ export default function MarkdownEditor() {
     localStorage.removeItem('md-editor-content');
     setLastSavedTime(null);
     textareaRef.current?.focus();
-  }, [flushHistory, commitHistory]);
+  }, [markdown, flushHistory, commitHistory]);
 
   const handleCopyMarkdown = useCallback(() => {
     navigator.clipboard.writeText(markdown).then(() => {
@@ -512,28 +558,36 @@ export default function MarkdownEditor() {
               <button
                 onMouseDown={(e) => { e.preventDefault(); setViewMode('edit'); }}
                 title="仅编辑"
+                aria-label="仅编辑"
+                aria-pressed={viewMode === 'edit'}
                 className={`h-[30px] px-2 rounded-md flex items-center gap-1 cursor-pointer transition-all duration-150 text-[12px] ${
-                  viewMode === 'edit' ? 'bg-gray-200 text-gray-800' : 'text-gray-400 hover:bg-gray-100 hover:text-gray-600'
+                  viewMode === 'edit' ? 'bg-bg-primary border border-border text-text font-semibold' : 'text-text-secondary hover:bg-bg-primary hover:text-text'
                 }`}
               >
                 <Code2 className="w-3.5 h-3.5" />
                 <span className="hidden sm:inline">编辑</span>
               </button>
-              <button
-                onMouseDown={(e) => { e.preventDefault(); setViewMode('split'); }}
-                title="分屏"
-                className={`h-[30px] px-2 rounded-md flex items-center gap-1 cursor-pointer transition-all duration-150 text-[12px] ${
-                  viewMode === 'split' ? 'bg-gray-200 text-gray-800' : 'text-gray-400 hover:bg-gray-100 hover:text-gray-600'
-                }`}
-              >
-                <Columns className="w-3.5 h-3.5" />
-                <span className="hidden sm:inline">分屏</span>
-              </button>
+              {!isMobile && (
+                <button
+                  onMouseDown={(e) => { e.preventDefault(); setViewMode('split'); }}
+                  title="分屏"
+                  aria-label="分屏"
+                  aria-pressed={viewMode === 'split'}
+                  className={`h-[30px] px-2 rounded-md flex items-center gap-1 cursor-pointer transition-all duration-150 text-[12px] ${
+                    viewMode === 'split' ? 'bg-bg-primary border border-border text-text font-semibold' : 'text-text-secondary hover:bg-bg-primary hover:text-text'
+                  }`}
+                >
+                  <Columns className="w-3.5 h-3.5" />
+                  <span className="hidden sm:inline">分屏</span>
+                </button>
+              )}
               <button
                 onMouseDown={(e) => { e.preventDefault(); setViewMode('preview'); }}
                 title="仅预览"
+                aria-label="仅预览"
+                aria-pressed={viewMode === 'preview'}
                 className={`h-[30px] px-2 rounded-md flex items-center gap-1 cursor-pointer transition-all duration-150 text-[12px] ${
-                  viewMode === 'preview' ? 'bg-gray-200 text-gray-800' : 'text-gray-400 hover:bg-gray-100 hover:text-gray-600'
+                  viewMode === 'preview' ? 'bg-bg-primary border border-border text-text font-semibold' : 'text-text-secondary hover:bg-bg-primary hover:text-text'
                 }`}
               >
                 <Eye className="w-3.5 h-3.5" />

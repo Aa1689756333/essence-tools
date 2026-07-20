@@ -10,14 +10,14 @@ const phaseLabels = [
 ];
 
 const spinner = (
-  <svg className="w-4 h-4 animate-spin" viewBox="0 0 24 24" fill="none">
+  <svg className="w-4 h-4 animate-spin" viewBox="0 0 24 24" fill="none" aria-hidden="true">
     <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="3" />
     <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z" />
   </svg>
 );
 
 const check = (
-  <svg className="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round">
+  <svg className="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
     <polyline points="20 6 9 17 4 12" />
   </svg>
 );
@@ -26,10 +26,10 @@ export default function ProgressPanel({ activePhase }) {
   const { theme } = useTheme();
 
   return (
-    <div className="mt-4 px-3 sm:px-5 py-4 bg-gray-50 border border-gray-200 rounded-md">
+    <div className="mt-4 px-3 sm:px-5 py-4 bg-bg-primary border border-border rounded-md" role="progressbar" aria-valuenow={((activePhase + 1) / 4) * 100} aria-valuemin="0" aria-valuemax="100" aria-label="排版进度">
       <div className="flex items-center gap-2 mb-3">
         <span style={{ color: theme.accent }}>{spinner}</span>
-        <span className="text-[13px] font-semibold text-gray-500">排版处理中...</span>
+        <span className="text-[13px] font-semibold text-text-secondary">排版处理中...</span>
       </div>
 
       <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-3">
@@ -38,22 +38,22 @@ export default function ProgressPanel({ activePhase }) {
 
           if (i < activePhase) {
             icon = <span style={{ color: theme.accent }}>{check}</span>;
-            nameStyle = { color: '#111827' };
-            descStyle = { color: '#6b7280' };
+            nameStyle = { color: 'var(--text-primary)' };
+            descStyle = { color: 'var(--text-secondary)' };
           } else if (i === activePhase) {
             icon = <span style={{ color: theme.accent }}>{spinner}</span>;
             nameStyle = { color: theme.accent, fontWeight: 600 };
-            descStyle = { color: theme.accent, opacity: 0.6 };
+            descStyle = { color: theme.accent, opacity: 0.8 };
           } else {
             icon = (
-              <span className="text-gray-300">
-                <svg className="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+              <span className="text-text-tertiary">
+                <svg className="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" aria-hidden="true">
                   <circle cx="12" cy="12" r="9" />
                 </svg>
               </span>
             );
-            nameStyle = { color: '#9ca3af' };
-            descStyle = { color: '#d1d5db' };
+            nameStyle = { color: 'var(--text-tertiary)' };
+            descStyle = { color: 'var(--border-primary)' };
           }
 
           return (
@@ -69,7 +69,7 @@ export default function ProgressPanel({ activePhase }) {
       </div>
 
       {/* 进度条 */}
-      <div className="mt-3 h-1 bg-gray-200 rounded-full overflow-hidden">
+      <div className="mt-3 h-1 bg-border rounded-full overflow-hidden">
         <div
           className="h-full rounded-full transition-all duration-500 ease-out"
           style={{

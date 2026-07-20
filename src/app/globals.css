@@ -1,28 +1,54 @@
-@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap');
 @import "tailwindcss";
 
+@variant dark (&:where(.dark, .dark *));
+
 @theme {
+  --font-sans: var(--font-inter), "PingFang SC", "Noto Sans SC", "Microsoft YaHei", system-ui, sans-serif;
+
   /* 背景层 */
-  --color-bg: #f8f9fb;
-  --color-bg-sidebar: #ffffff;
-  --color-card: #ffffff;
-  --color-card-bg: #ffffff;
+  --color-bg: var(--bg-primary);
+  --color-bg-sidebar: var(--bg-sidebar);
+  --color-card: var(--bg-card);
+  --color-card-bg: var(--bg-card);
 
   /* 文字层 */
-  --color-text: #111827;
-  --color-text-secondary: #6b7280;
-  --color-text-tertiary: #9ca3af;
+  --color-text: var(--text-primary);
+  --color-text-secondary: var(--text-secondary);
+  --color-text-tertiary: var(--text-tertiary);
 
   /* 边框 */
-  --color-border: #e5e7eb;
-  --color-border-light: #f3f4f6;
+  --color-border: var(--border-primary);
+  --color-border-light: var(--border-secondary);
+}
+
+:root {
+  --bg-primary: #f8f9fb;
+  --bg-sidebar: #ffffff;
+  --bg-card: #ffffff;
+  --text-primary: #111827;
+  --text-secondary: #6b7280;
+  --text-tertiary: #9ca3af;
+  --border-primary: #e5e7eb;
+  --border-secondary: #f3f4f6;
+}
+
+:root.dark {
+  --bg-primary: #0b0f19;
+  --bg-sidebar: #111827;
+  --bg-card: #1f2937;
+  --text-primary: #f3f4f6;
+  --text-secondary: #9ca3af;
+  --text-tertiary: #6b7280;
+  --border-primary: #374151;
+  --border-secondary: #1f2937;
 }
 
 /* ===== 基础 ===== */
 
 body {
-  font-family: "Inter", "PingFang SC", "Noto Sans SC", "Microsoft YaHei", system-ui, sans-serif;
+  font-family: var(--font-sans);
   color: var(--color-text);
+  background-color: var(--color-bg);
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
   letter-spacing: -0.01em;

@@ -6,7 +6,7 @@
   padding: 16px 20px;
   font-size: 16px;
   line-height: 1.7;
-  color: #1f2937;
+  color: var(--color-text);
   outline: none;
 }
 
@@ -36,7 +36,7 @@
 
 .editor-content:empty::before {
   content: attr(data-placeholder);
-  color: #d1d5db;
+  color: var(--text-tertiary);
   pointer-events: none;
 }
 
@@ -78,21 +78,22 @@
 .editor-content blockquote {
   margin: 1em 0;
   padding: 0.5em 1em;
-  border-left: 4px solid #e5e7eb;
-  color: #6b7280;
-  background: #f9fafb;
+  border-left: 4px solid var(--color-border);
+  color: var(--text-secondary);
+  background: var(--bg-primary);
 }
 
 .editor-content code {
-  background: #f3f4f6;
+  background: var(--bg-primary);
   padding: 0.2em 0.4em;
   border-radius: 3px;
   font-size: 0.9em;
   font-family: 'Courier New', monospace;
+  color: var(--color-text);
 }
 
 .editor-content pre {
-  background: #f3f4f6;
+  background: var(--bg-primary);
   padding: 1em;
   border-radius: 6px;
   overflow-x: auto;
@@ -123,19 +124,19 @@
 
 .editor-content th,
 .editor-content td {
-  border: 1px solid #e5e7eb;
+  border: 1px solid var(--color-border);
   padding: 0.5em 0.75em;
   text-align: left;
 }
 
 .editor-content th {
-  background: #f9fafb;
+  background: var(--bg-primary);
   font-weight: 600;
 }
 
 .editor-content hr {
   border: none;
-  border-top: 2px solid #e5e7eb;
+  border-top: 2px solid var(--color-border);
   margin: 1.5em 0;
 }
 

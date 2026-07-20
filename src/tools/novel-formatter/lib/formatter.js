@@ -42,7 +42,7 @@ export function format(text) {
 
   // 2.1 中文标点转全角
   if (isRuleEnabled('fullwidth-punct')) {
-    const arr = t.split('');
+    const arr = Array.from(t);
     const protected_ = new Set();
 
     for (let i = 0; i < arr.length; i++) {
@@ -117,7 +117,7 @@ export function format(text) {
 
   // 2.4 引号统一 (状态机)
   if (isRuleEnabled('quote-unify')) {
-    const arr2 = t.split('');
+    const arr2 = Array.from(t);
     let insideDouble = false;
     let insideSingle = false;
 
@@ -374,8 +374,8 @@ export function format(text) {
   // 4.7 对话格式检测
   if (isRuleEnabled('dialogue-format')) {
     const speechTags = '(?:说|道|问|答|喊|叫|吼|嚷|笑|叹|哭|骂|怒|吼道|叫道|笑道|叹道|问道|答道|低声说|大声说|小声说|冷冷地说|轻声说)';
-    t = t.replace(new RegExp(`\\u201D([，。])${speechTags}\\uFF0C\\u201C`, 'g'), '\u201D\uFF0C$2\uFF0C\u201C');
-    t = t.replace(new RegExp(`\\u201D([：。])${speechTags}\\u3002`, 'g'), '\u201D\uFF0C$2\u3002');
+    t = t.replace(new RegExp(`([，。])\\u201D(${speechTags})\\uFF0C\\u201C`, 'g'), '\uFF0C\u201D$2\uFF0C\u201C');
+    t = t.replace(new RegExp(`([：。])\\u201D(${speechTags})\\u3002`, 'g'), '\uFF0C\u201D$2\u3002');
   }
 
   return t;

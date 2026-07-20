@@ -50,6 +50,44 @@ export const themes = [
   },
 ];
 
+const darkColors = {
+  mint: {
+    accent: '#10b981',
+    hover: '#34d399',
+    subtle: '#064e3b',
+    shadow: '16,185,129',
+    light: '#047857',
+  },
+  rose: {
+    accent: '#f43f5e',
+    hover: '#fb7185',
+    subtle: '#4c0519',
+    shadow: '244,63,94',
+    light: '#be123c',
+  },
+  amber: {
+    accent: '#f59e0b',
+    hover: '#fbbf24',
+    subtle: '#451a03',
+    shadow: '245,158,11',
+    light: '#b45309',
+  },
+  sky: {
+    accent: '#0ea5e9',
+    hover: '#38bdf8',
+    subtle: '#0c4a6e',
+    shadow: '14,165,233',
+    light: '#0369a1',
+  },
+  violet: {
+    accent: '#a78bfa',
+    hover: '#c4b5fd',
+    subtle: '#2e1065',
+    shadow: '167,139,250',
+    light: '#6d28d9',
+  },
+};
+
 const ThemeContext = createContext(null);
 
 export function useTheme() {
@@ -68,11 +106,22 @@ function getStoredTheme() {
   }
 }
 
+function getStoredDark() {
+  if (typeof window === 'undefined') return false;
+  try {
+    return localStorage.getItem('toolbox-dark') === 'true';
+  } catch {
+    return false;
+  }
+}
+
 export default function ThemeProvider({ children }) {
   const [theme, setTheme] = useState(themes[0]);
+  const [isDark, setIsDark] = useState(false);
 
   useEffect(() => {
     setTheme(getStoredTheme());
+    setIsDark(getStoredDark());
   }, []);
 
   const setThemeAndPersist = useCallback((t) => {
@@ -80,19 +129,31 @@ export default function ThemeProvider({ children }) {
     try { localStorage.setItem('toolbox-theme', t.id); } catch {}
   }, []);
 
+  const setIsDarkAndPersist = useCallback((dark) => {
+    setIsDark(dark);
+    try { localStorage.setItem('toolbox-dark', String(dark)); } catch {}
+  }, []);
+
   useEffect(() => {
     const root = document.documentElement;
-    root.style.setProperty('--theme-accent', theme.accent);
-    root.style.setProperty('--theme-hover', theme.hover);
-    root.style.setProperty('--theme-subtle', theme.subtle);
-    root.style.setProperty('--theme-shadow', theme.shadow);
-    root.style.setProperty('--theme-light', theme.light);
-    root.style.setProperty('--theme-accent-rgb', theme.shadow);
-    root.style.setProperty('--theme-gradient', `linear-gradient(135deg, ${theme.accent}, ${theme.light})`);
-  }, [theme]);
+    if (isDark) {
+      root.classList.add('dark');
+    } else {
+      root.classList.remove('dark');
+    }
+
+    const currentColors = isDark ? darkColors[theme.id] : theme;
+    root.style.setProperty('--theme-accent', currentColors.accent);
+    root.style.setProperty('--theme-hover', currentColors.hover);
+    root.style.setProperty('--theme-subtle', currentColors.subtle);
+    root.style.setProperty('--theme-shadow', currentColors.shadow);
+    root.style.setProperty('--theme-light', currentColors.light);
+    root.style.setProperty('--theme-accent-rgb', currentColors.shadow);
+    root.style.setProperty('--theme-gradient', `linear-gradient(135deg, ${currentColors.accent}, ${currentColors.light})`);
+  }, [theme, isDark]);
 
   return (
-    <ThemeContext.Provider value={{ theme, themes, setTheme: setThemeAndPersist }}>
+    <ThemeContext.Provider value={{ theme, themes, setTheme: setThemeAndPersist, isDark, setIsDark: setIsDarkAndPersist }}>
       {children}
     </ThemeContext.Provider>
   );

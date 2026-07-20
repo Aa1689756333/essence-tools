@@ -21,17 +21,17 @@ import {
 import DOMPurify from 'dompurify';
 import { safeGetItem, safeSetItemWithRetry, safeRemoveItem } from '@/lib/storage';
 
-// DOMPurify 白名单配置：富文本编辑器允许的标签与属性
-// 先用白名单过滤危险标签/属性/协议，再做格式清理（font→span 等）
 const PURIFY_CONFIG = {
   ALLOWED_TAGS: [
     'p', 'div', 'span', 'b', 'i', 'u', 's', 'strong', 'em', 'br', 'hr',
     'h1', 'h2', 'h3', 'h4', 'h5', 'h6', 'ul', 'ol', 'li', 'blockquote', 'pre', 'code',
     'a', 'img', 'table', 'thead', 'tbody', 'tfoot', 'tr', 'td', 'th', 'caption', 'colgroup', 'col',
+    'font', 'center',
   ],
   ALLOWED_ATTR: [
     'href', 'src', 'alt', 'title', 'style', 'align', 'colspan', 'rowspan',
     'target', 'rel', 'width', 'height',
+    'size', 'color', 'face',
   ],
   ALLOW_DATA_ATTR: false,
   FORBID_TAGS: ['script', 'iframe', 'object', 'embed', 'svg', 'form', 'input', 'textarea', 'select', 'button', 'style', 'link', 'meta', 'base'],
@@ -218,8 +218,11 @@ function escapeHtml(str) {
 function isSafeUrl(url) {
   if (!url) return false;
   const trimmed = url.trim().toLowerCase();
-  if (trimmed.startsWith('javascript:') || trimmed.startsWith('data:') || trimmed.startsWith('vbscript:')) {
+  if (trimmed.startsWith('javascript:') || trimmed.startsWith('vbscript:')) {
     return false;
+  }
+  if (trimmed.startsWith('data:')) {
+    return trimmed.startsWith('data:image/');
   }
   return true;
 }
@@ -250,19 +253,21 @@ function ToolbarBtn({ icon: Icon, onClick, active, title }) {
     <button
       onMouseDown={(e) => { e.preventDefault(); onClick(); }}
       title={title}
+      aria-label={title}
+      aria-pressed={active !== undefined ? !!active : undefined}
       className={`w-[30px] h-[30px] rounded-md flex items-center justify-center cursor-pointer transition-all duration-150 shrink-0 ${
         active
-          ? 'bg-gray-200 text-gray-800'
-          : 'text-gray-500 hover:bg-gray-100 hover:text-gray-700'
+          ? 'bg-bg-primary border border-border text-text font-semibold'
+          : 'text-text-secondary hover:bg-bg-primary hover:text-text'
       }`}
     >
-      <Icon className="w-[15px] h-[15px]" />
+      <Icon className="w-[15px] h-[15px]" aria-hidden="true" />
     </button>
   );
 }
 
 function ToolbarDivider() {
-  return <div className="w-px h-5 bg-gray-200 mx-1 shrink-0" />;
+  return <div className="w-px h-5 bg-border mx-1 shrink-0" />;
 }
 
 function ToolbarSelect({ value, options, onChange, title, width }) {
@@ -270,13 +275,14 @@ function ToolbarSelect({ value, options, onChange, title, width }) {
     <select
       value={value}
       title={title}
+      aria-label={title}
       onChange={(e) => onChange(e.target.value)}
       onMouseDown={(e) => e.stopPropagation()}
-      className="h-[30px] rounded-md border border-gray-200 bg-white text-[12px] text-gray-600 px-1.5 cursor-pointer hover:border-gray-300 focus:outline-none transition-colors"
+      className="h-[30px] rounded-md border border-border bg-card text-[12px] text-text px-1.5 cursor-pointer hover:border-border-hover focus:outline-none transition-colors"
       style={{ width: width || 'auto' }}
     >
       {options.map(opt => (
-        <option key={opt.value ?? opt.label} value={opt.value ?? opt.label}>
+        <option key={opt.value ?? opt.label} value={opt.value ?? opt.label} className="bg-card text-text">
           {opt.label}
         </option>
       ))}
@@ -371,7 +377,7 @@ export default function HtmlEditor() {
 
   const handleRestoreConfirm = useCallback(() => {
     if (editorRef.current && savedContentRef.current) {
-      editorRef.current.innerHTML = savedContentRef.current;
+      editorRef.current.innerHTML = cleanHtml(savedContentRef.current);
       updateEmptyState();
     }
     setShowRestoreModal(false);
@@ -412,6 +418,7 @@ export default function HtmlEditor() {
 
   // 检测当前格式状态
   useEffect(() => {
+    let timeoutId = null;
     const updateFormatState = () => {
       if (!editorRef.current || showCode) return;
 
@@ -439,8 +446,16 @@ export default function HtmlEditor() {
       });
     };
 
-    document.addEventListener('selectionchange', updateFormatState);
-    return () => document.removeEventListener('selectionchange', updateFormatState);
+    const handleSelectionChange = () => {
+      if (timeoutId) clearTimeout(timeoutId);
+      timeoutId = setTimeout(updateFormatState, 100);
+    };
+
+    document.addEventListener('selectionchange', handleSelectionChange);
+    return () => {
+      document.removeEventListener('selectionchange', handleSelectionChange);
+      if (timeoutId) clearTimeout(timeoutId);
+    };
   }, [showCode]);
 
   const exec = useCallback((cmd, value) => {
@@ -768,8 +783,10 @@ ${html}
 
   const handleAddRow = useCallback(() => {
     if (!selectedCell) return;
-    const row = selectedCell.parentElement;
-    const table = row.parentElement;
+    const row = selectedCell.closest('tr');
+    if (!row) return;
+    const table = row.closest('table');
+    if (!table) return;
     const newRow = table.insertRow(row.rowIndex + 1);
     const cols = row.cells.length;
     for (let i = 0; i < cols; i++) {
@@ -806,8 +823,10 @@ ${html}
 
   const handleDeleteRow = useCallback(() => {
     if (!selectedCell) return;
-    const row = selectedCell.parentElement;
-    const table = row.parentElement;
+    const row = selectedCell.closest('tr');
+    if (!row) return;
+    const table = row.closest('table');
+    if (!table) return;
     if (table.rows.length > 1) {
       row.remove();
     }
@@ -864,8 +883,59 @@ ${html}
   }, []);
 
   const handleEditorScroll = useCallback(() => {
-    if (selectedImage) {
-      setScrollTick(t => t + 1);
+    if (!selectedImage || !editorRef.current) return;
+    
+    const imgRect = selectedImage.getBoundingClientRect();
+    const editorRect = editorRef.current.getBoundingClientRect();
+    const left = imgRect.left - editorRect.left;
+    const top = imgRect.top - editorRect.top + editorRef.current.scrollTop;
+    
+    const borderEl = document.getElementById('image-selected-border');
+    if (borderEl) {
+      borderEl.style.left = `${left}px`;
+      borderEl.style.top = `${top}px`;
+      borderEl.style.width = `${imgRect.width}px`;
+      borderEl.style.height = `${imgRect.height}px`;
+    }
+    
+    ['nw', 'ne', 'sw', 'se'].forEach(corner => {
+      const handleEl = document.getElementById(`image-resize-handle-${corner}`);
+      if (handleEl) {
+        const isTop = corner.includes('n');
+        const isLeft = corner.includes('w');
+        handleEl.style.left = isLeft ? `${left - 6}px` : `${left + imgRect.width - 6}px`;
+        handleEl.style.top = isTop ? `${top - 6}px` : `${top + imgRect.height - 6}px`;
+      }
+    });
+
+    if (imageToolbarRef.current) {
+      const toolbarHeight = 36;
+      const margin = 12;
+      const viewportHeight = window.innerHeight;
+      const viewportWidth = window.innerWidth;
+      const spaceBelow = viewportHeight - imgRect.bottom;
+      const showBelow = spaceBelow >= toolbarHeight + margin;
+      const toolbarTop = showBelow
+        ? imgRect.bottom + margin
+        : imgRect.top - toolbarHeight - margin;
+      
+      let toolbarLeft = imgRect.left + imgRect.width / 2;
+      const estimatedToolbarWidth = 280;
+      const actualToolbarWidth = imageToolbarRef.current.offsetWidth || estimatedToolbarWidth;
+      const halfWidth = actualToolbarWidth / 2;
+      const padding = 8;
+
+      const toolbarLeftEdge = toolbarLeft - halfWidth;
+      const toolbarRightEdge = toolbarLeft + halfWidth;
+
+      if (toolbarLeftEdge < padding) {
+        toolbarLeft = halfWidth + padding;
+      } else if (toolbarRightEdge > viewportWidth - padding) {
+        toolbarLeft = viewportWidth - halfWidth - padding;
+      }
+
+      imageToolbarRef.current.style.left = `${toolbarLeft}px`;
+      imageToolbarRef.current.style.top = `${toolbarTop}px`;
     }
   }, [selectedImage]);
 
@@ -1060,10 +1130,13 @@ ${html}
     }
   }, [findText, caseSensitive, highlightMatch]);
 
-  // 自动查找：findText 或 caseSensitive 变化时触发（修复 stale closure）
+  // 自动查找：findText 或 caseSensitive 变化时触发（加防抖优化性能）
   useEffect(() => {
     if (!showFindReplace) return;
-    performFind();
+    const timer = setTimeout(() => {
+      performFind();
+    }, 250);
+    return () => clearTimeout(timer);
   }, [findText, caseSensitive, showFindReplace, performFind]);
 
   // 上一个匹配项
@@ -1368,6 +1441,9 @@ ${html}
               onScroll={handleEditorScroll}
               className={`editor-content ${isFullscreen ? 'flex-1 max-h-none' : ''}`}
               spellCheck={false}
+              role="textbox"
+              aria-multiline="true"
+              aria-label="HTML 编辑区域"
             />
           )}
 
@@ -1386,6 +1462,7 @@ ${html}
               <>
                 {/* 选中边框 */}
                 <div
+                  id="image-selected-border"
                   className="absolute pointer-events-none border-2 border-blue-500 z-40"
                   style={{
                     left: `${left}px`,
@@ -1403,6 +1480,7 @@ ${html}
                   return (
                     <div
                       key={corner}
+                      id={`image-resize-handle-${corner}`}
                       onMouseDown={(e) => handleResizeStart(e, corner)}
                       onClick={(e) => e.stopPropagation()}
                       className="absolute w-3 h-3 bg-white border-2 border-blue-500 rounded-sm z-50 hover:bg-blue-100"
