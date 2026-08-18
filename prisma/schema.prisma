@@ -1,0 +1,41 @@
+datasource db {
+  provider = "sqlite"
+  url      = "file:./dev.db"
+}
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+model User {
+  id                 String             @id @default(uuid())
+  email              String             @unique
+  passwordHash       String
+  nickname           String
+  avatar             String?
+  role               String             @default("USER")
+  status             String             @default("ACTIVE")
+  points             Int                @default(0)
+  continuousCheckIn  Int                @default(0)
+  lastCheckInDate    String?
+  createdAt          DateTime           @default(now())
+  updatedAt          DateTime           @updatedAt
+  pointTransactions  PointTransaction[]
+}
+
+model PointTransaction {
+  id          String   @id @default(uuid())
+  userId      String
+  user        User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  amount      Int
+  balance     Int
+  type        String
+  description String
+  createdAt   DateTime @default(now())
+}
+
+model SystemSetting {
+  key       String   @id
+  value     String
+  updatedAt DateTime @updatedAt
+}

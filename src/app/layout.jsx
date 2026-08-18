@@ -3,7 +3,11 @@ import Sidebar from '@/shell/Sidebar';
 import Topbar from '@/shell/Topbar';
 import ThemeProvider from '@/shell/ThemeProvider';
 import { SidebarProvider } from '@/shell/useSidebar';
+import { AuthProvider } from '@/context/AuthContext';
+import AuthModal from '@/components/auth/AuthModal';
+import CheckInModal from '@/components/auth/CheckInModal';
 import { tools, getToolsByCategory } from '@/tools/registry';
+import { getSystemSettings } from '@/lib/settings';
 import { Inter } from 'next/font/google';
 
 const inter = Inter({
@@ -12,12 +16,16 @@ const inter = Inter({
   variable: '--font-inter',
 });
 
-export const metadata = {
-  title: 'ToolBox · 在线工具箱',
-  description: '免费在线工具集合，所有工具在浏览器本地运行，不上传任何数据。',
-};
+export async function generateMetadata() {
+  const settings = await getSystemSettings();
+  return {
+    title: settings.site_title || 'ToolBox · 在线工具箱',
+    description: settings.site_description || '免费在线工具集合，所有工具在浏览器本地运行，不上传任何数据。',
+    keywords: settings.site_keywords || '在线工具, 小说排版, HTML编辑器, Markdown编辑器, 开发工具',
+  };
+}
 
-export default function RootLayout({ children }) {
+export default async function RootLayout({ children }) {
   const toolsByCategory = getToolsByCategory();
 
   const inlineScript = `
@@ -38,17 +46,21 @@ export default function RootLayout({ children }) {
       </head>
       <body className="bg-bg antialiased font-sans" suppressHydrationWarning>
         <ThemeProvider>
-          <SidebarProvider>
-            <div className="flex h-screen overflow-hidden">
-              <Sidebar tools={tools} toolsByCategory={toolsByCategory} />
-              <div className="flex flex-col flex-1 min-w-0 overflow-hidden">
-                <Topbar />
-                <main className="flex-1 overflow-y-auto p-4 sm:p-5 md:p-6 lg:p-8">
-                  {children}
-                </main>
+          <AuthProvider>
+            <SidebarProvider>
+              <div className="flex h-screen overflow-hidden">
+                <Sidebar tools={tools} toolsByCategory={toolsByCategory} />
+                <div className="flex flex-col flex-1 min-w-0 overflow-hidden">
+                  <Topbar />
+                  <main className="flex-1 overflow-y-auto p-4 sm:p-5 md:p-6 lg:p-8">
+                    {children}
+                  </main>
+                </div>
               </div>
-            </div>
-          </SidebarProvider>
+              <AuthModal />
+              <CheckInModal />
+            </SidebarProvider>
+          </AuthProvider>
         </ThemeProvider>
       </body>
     </html>

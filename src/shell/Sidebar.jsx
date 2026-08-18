@@ -5,12 +5,14 @@ import { usePathname } from 'next/navigation';
 import { useEffect } from 'react';
 import { useSidebar } from './useSidebar';
 import { useTheme } from './ThemeProvider';
-import { LayoutGrid, ChevronLeft, Wrench, X } from 'lucide-react';
+import { useAuth } from '@/context/AuthContext';
+import { LayoutGrid, ChevronLeft, Wrench, X, Shield } from 'lucide-react';
 
 export default function Sidebar({ tools, toolsByCategory }) {
   const pathname = usePathname();
   const { collapsed, toggle, mobileOpen, closeMobile, isMobile } = useSidebar();
   const { theme } = useTheme();
+  const { user } = useAuth();
 
   const isActive = (path) => pathname === path;
 
@@ -102,6 +104,40 @@ export default function Sidebar({ tools, toolsByCategory }) {
           } ${isActive('/') ? 'text-text font-semibold' : 'text-text-secondary group-hover:text-text'}`}>
             工具总览
           </span>
+        {/* 管理员控制台通道 */}
+        {user && user.role === 'ADMIN' && (
+          <Link
+            href="/admin"
+            onClick={isMobile ? closeMobile : undefined}
+            className={`flex items-center rounded-lg mb-1 transition-all duration-[180ms] relative group ${
+              (!isMobile && collapsed) ? 'justify-center py-2' : 'gap-2 py-1.5 px-2'
+            } ${
+              isActive('/admin') ? 'bg-purple-500/10' : 'hover:bg-purple-500/5'
+            }`}
+            aria-current={isActive('/admin') ? 'page' : undefined}
+          >
+            {isActive('/admin') && (
+              <span
+                className={`absolute top-1/2 -translate-y-1/2 w-[3px] h-[16px] rounded-r-[3px] ${
+                  (!isMobile && collapsed) ? 'left-0' : '-left-2.5'
+                }`}
+                style={{ backgroundColor: '#a855f7' }}
+              />
+            )}
+            <span
+              className={`w-7 h-7 rounded-md flex items-center justify-center shrink-0 transition-all duration-200 ${
+                isActive('/admin') ? 'bg-purple-500/20 text-purple-600 dark:text-purple-400' : 'bg-card border border-border text-purple-500'
+              }`}
+            >
+              <Shield className="w-3.5 h-3.5" aria-hidden="true" />
+            </span>
+            <span className={`text-[13.5px] whitespace-nowrap overflow-hidden transition-all duration-200 tracking-tight ${
+              (!isMobile && collapsed) ? 'opacity-0 w-0' : 'opacity-100'
+            } ${isActive('/admin') ? 'text-purple-600 dark:text-purple-400 font-bold' : 'text-purple-600/80 dark:text-purple-400/80 font-semibold group-hover:text-purple-600'}`}>
+              管理后台
+            </span>
+          </Link>
+        )}
         </Link>
 
         {/* 分类工具 */}
