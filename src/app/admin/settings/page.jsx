@@ -15,6 +15,7 @@ export default function AdminSettingsPage() {
     site_description: '',
     site_keywords: '',
     allow_registration: 'true',
+    email_verification: 'false',
     email_mode: 'none',
     email_whitelist: [],
     email_blacklist: [],
@@ -72,6 +73,7 @@ export default function AdminSettingsPage() {
           site_description: s.site_description || '',
           site_keywords: s.site_keywords || '',
           allow_registration: s.allow_registration ?? 'true',
+          email_verification: s.email_verification ?? 'false',
           email_mode: s.email_mode || 'none',
           email_whitelist: whiteArr,
           email_blacklist: blackArr,
@@ -115,6 +117,7 @@ export default function AdminSettingsPage() {
         site_description: form.site_description,
         site_keywords: form.site_keywords,
         allow_registration: form.allow_registration,
+        email_verification: form.email_verification,
         email_mode: form.email_mode,
         email_whitelist: JSON.stringify(form.email_whitelist),
         email_blacklist: JSON.stringify(form.email_blacklist),
@@ -278,6 +281,22 @@ export default function AdminSettingsPage() {
                   type="checkbox"
                   checked={form.allow_registration === 'true'}
                   onChange={(e) => setForm({ ...form, allow_registration: e.target.checked ? 'true' : 'false' })}
+                  className="sr-only peer"
+                />
+                <div className="w-11 h-6 bg-border peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-purple-600"></div>
+              </label>
+            </div>
+
+            <div className="flex items-center justify-between p-4 bg-bg-primary border border-border rounded-xl">
+              <div>
+                <div className="font-bold text-xs text-text">注册需邮箱验证码</div>
+                <div className="text-[11px] text-text-tertiary">开启后，新用户注册时需通过邮箱验证码验证身份。若 SMTP 未配置则自动降级跳过。</div>
+              </div>
+              <label className="relative inline-flex items-center cursor-pointer">
+                <input
+                  type="checkbox"
+                  checked={form.email_verification === 'true'}
+                  onChange={(e) => setForm({ ...form, email_verification: e.target.checked ? 'true' : 'false' })}
                   className="sr-only peer"
                 />
                 <div className="w-11 h-6 bg-border peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-purple-600"></div>

@@ -1,6 +1,17 @@
 import nodemailer from 'nodemailer';
 import { getSystemSettings } from './settings';
 
+export async function isSmtpConfigured() {
+  const settings = await getSystemSettings();
+  let config = {};
+  try {
+    config = JSON.parse(settings.smtp_config || '{}');
+  } catch {
+    config = {};
+  }
+  return Boolean(config.host && config.user && config.pass);
+}
+
 export async function createTransporter(customConfig = null) {
   let config = customConfig;
   if (!config) {

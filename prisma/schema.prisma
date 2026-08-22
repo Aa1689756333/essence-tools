@@ -39,3 +39,14 @@ model SystemSetting {
   value     String
   updatedAt DateTime @updatedAt
 }
+
+model EmailVerification {
+  id        String   @id @default(uuid())
+  email     String
+  code      String
+  attempts  Int      @default(0)
+  expiresAt DateTime
+  createdAt DateTime @default(now())
+
+  @@index([email])
+}

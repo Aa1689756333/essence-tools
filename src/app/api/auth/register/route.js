@@ -2,10 +2,12 @@ import { NextResponse } from 'next/server';
 import db from '@/lib/db';
 import { hashPassword, createToken, COOKIE_NAME } from '@/lib/auth';
 import { getSystemSettings, validateEmailRule } from '@/lib/settings';
+import { isSmtpConfigured } from '@/lib/mailer';
+import { verifyEmailCode } from '@/lib/verification';
 
 export async function POST(req) {
   try {
-    const { email, password, nickname } = await req.json();
+    const { email, password, nickname, code } = await req.json();
 
     if (!email || !password) {
       return NextResponse.json({ error: '请填写邮箱和密码' }, { status: 400 });
@@ -23,6 +25,20 @@ export async function POST(req) {
     const emailCheck = await validateEmailRule(email);
     if (!emailCheck.allowed) {
       return NextResponse.json({ error: emailCheck.reason }, { status: 403 });
+    }
+
+    // 邮箱验证码校验（开关开启时强制，未开启则跳过）
+    if (settings.email_verification === 'true') {
+      if (!(await isSmtpConfigured())) {
+        return NextResponse.json(
+          { error: '系统未配置邮箱 SMTP，无法完成注册。请联系管理员。' },
+          { status: 503 }
+        );
+      }
+      const codeCheck = await verifyEmailCode(email, code);
+      if (!codeCheck.ok) {
+        return NextResponse.json({ error: codeCheck.error }, { status: 400 });
+      }
     }
 
     const existingUser = await db.user.findUnique({

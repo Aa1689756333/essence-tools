@@ -45,17 +45,29 @@ export function AuthProvider({ children }) {
     return data.user;
   };
 
-  const register = async (email, password, nickname) => {
+  const register = async (email, password, nickname, code) => {
     const res = await fetch('/api/auth/register', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ email, password, nickname }),
+      body: JSON.stringify({ email, password, nickname, code }),
     });
     const data = await res.json();
     if (!res.ok) throw new Error(data.error || '注册失败');
     setUser(data.user);
     setShowAuthModal(false);
     return data.user;
+  };
+
+  // 发送注册验证码；返回是否需要验证（false 表示已降级，可直接注册）
+  const sendCode = async (email) => {
+    const res = await fetch('/api/auth/send-code', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ email }),
+    });
+    const data = await res.json();
+    if (!res.ok) throw new Error(data.error || '验证码发送失败');
+    return data.verificationRequired;
   };
 
   const logout = async () => {
@@ -97,6 +109,7 @@ export function AuthProvider({ children }) {
         showCheckInModal,
         login,
         register,
+        sendCode,
         logout,
         openAuth,
         closeAuth,

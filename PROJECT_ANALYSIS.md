@@ -168,7 +168,7 @@ ThemeProvider → AuthProvider → SidebarProvider
 
 ### 5.3 认证流程（`src/app/api/auth/`）
 
-- **注册**：校验密码 ≥6 位 → 检查 `allow_registration` 开关 → 邮箱白/黑名单校验 → 查重 → **首个注册用户自动成为 ADMIN** → 哈希入库 → 签发 token（注册即登录）。
+- **注册**：校验密码 ≥6 位 → 检查 `allow_registration` 开关 → 邮箱白/黑名单校验 → 邮箱验证码校验（开启且 SMTP 已配置时强制，否则自动降级跳过）→ 查重 → **首个注册用户自动成为 ADMIN** → 哈希入库 → 签发 token（注册即登录）。
 - **登录**：邮箱不存在或密码错误统一返回「邮箱或密码错误」（防用户枚举）；BANNED 返回 403。
 - **登出**：将 cookie 置空并 `expires: new Date(0)`。
 - **me**：始终返回 200，`{ user }` 或 `{ user: null }`，前端据此判断登录态。
@@ -292,7 +292,7 @@ if (!user || user.role !== 'ADMIN') return 403;
 2. ~~**遗留文件冗余**——`src_vite_backup/`、根目录 `index.html`（Vite 版入口）在 Next.js 架构下已无用。~~ ✅ 已清理（删除 `src_vite_backup/` 全部文件与根目录 `index.html`）。
 3. ~~**测试脚本零散**——`acceptance-test.mjs`、`test-*.mjs`、`test-*.js` 为独立脚本，未集成到 `package.json` scripts。~~ ✅ 已集成（新增 `test` / `test:acceptance` / `test:md` / `test:md2` / `test:html` 命令，`npm test` 可一键聚合运行）。
 4. **公共组件未抽取**——`ToolbarBtn` / `Modal` / `countWords` / `useSyncScroll` 在多个工具中重复实现（项目内部备忘录 `.workbuddy/memory` 已记录此待办 P3-4.12）。
-5. **未实现功能**——~~签到 `monthFullBonus`（整月全勤奖励）配置已留但逻辑缺失~~ ✅ 已实现（月末最后一天且当月全勤时发放独立奖励流水，后台设置可配、签到弹窗展示全勤进度）；邮件仅用于测试，注册未接入邮箱验证。
+5. **未实现功能**——~~签到 `monthFullBonus`（整月全勤奖励）配置已留但逻辑缺失~~ ✅ 已实现（月末最后一天且当月全勤时发放独立奖励流水，后台设置可配、签到弹窗展示全勤进度）；~~邮件仅用于测试，注册未接入邮箱验证~~ ✅ 已实现（6 位验证码 + 后台开关，开关初始关闭以确保首个用户可注册；SMTP 未配置时直接拒绝发送并提示管理员配置）。
 6. **无 TypeScript**——全 JS，大型组件（HtmlEditor 约 2020 行）缺类型约束，维护成本较高。
 
 ---

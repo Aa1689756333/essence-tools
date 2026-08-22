@@ -5,6 +5,7 @@ export const DEFAULT_SETTINGS = {
   site_description: '免费在线工具集合，所有工具在浏览器本地运行，不上传任何数据。',
   site_keywords: '在线工具, 小说排版, HTML编辑器, Markdown编辑器, 开发工具',
   allow_registration: 'true',
+  email_verification: 'false', // 'true' 时注册需邮箱验证码；初始关闭以确保首个用户可注册
   email_mode: 'none', // 'none' | 'whitelist' | 'blacklist'
   email_whitelist: JSON.stringify(['@gmail.com', '@qq.com', '@163.com', '@outlook.com']),
   email_blacklist: JSON.stringify(['*@tempmail.com', '*@dispostable.com', '*@mailinator.com']),

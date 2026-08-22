@@ -1,20 +1,66 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useAuth } from '@/context/AuthContext';
-import { X, Mail, Lock, User, Sparkles, Loader2, ArrowRight } from 'lucide-react';
+import { X, Mail, Lock, User, Sparkles, Loader2, ArrowRight, KeyRound } from 'lucide-react';
 
 export default function AuthModal() {
-  const { showAuthModal, authModalMode, closeAuth, openAuth, login, register } = useAuth();
+  const { showAuthModal, authModalMode, closeAuth, openAuth, login, register, sendCode } = useAuth();
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [nickname, setNickname] = useState('');
+  const [code, setCode] = useState('');
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
+  const [needVerification, setNeedVerification] = useState(false);
+  const [sendingCode, setSendingCode] = useState(false);
+  const [countdown, setCountdown] = useState(0);
+  const [codeSent, setCodeSent] = useState(false);
+
+  const isLogin = authModalMode === 'login';
+
+  // 注册模式：探测是否需要邮箱验证码
+  useEffect(() => {
+    if (showAuthModal && !isLogin) {
+      fetch('/api/auth/config')
+        .then((res) => res.json())
+        .then((data) => setNeedVerification(Boolean(data.emailVerification)))
+        .catch(() => setNeedVerification(false));
+    }
+  }, [showAuthModal, isLogin]);
+
+  // 发送验证码倒计时
+  useEffect(() => {
+    if (countdown <= 0) return;
+    const timer = setTimeout(() => setCountdown((c) => c - 1), 1000);
+    return () => clearTimeout(timer);
+  }, [countdown]);
 
   if (!showAuthModal) return null;
 
-  const isLogin = authModalMode === 'login';
+  const handleSendCode = async () => {
+    setError('');
+    if (!email) {
+      setError('请先填写电子邮箱');
+      return;
+    }
+    setSendingCode(true);
+    try {
+      const required = await sendCode(email);
+      if (required) {
+        setCodeSent(true);
+        setCountdown(60);
+      } else {
+        // 已降级，无需验证码
+        setNeedVerification(false);
+        setError('当前无需验证码，请直接创建账户');
+      }
+    } catch (err) {
+      setError(err.message || '验证码发送失败');
+    } finally {
+      setSendingCode(false);
+    }
+  };
 
   const handleSubmit = async (e) => {
     e.preventDefault();
@@ -25,7 +71,7 @@ export default function AuthModal() {
       if (isLogin) {
         await login(email, password);
       } else {
-        await register(email, password, nickname);
+        await register(email, password, nickname, code);
       }
     } catch (err) {
       setError(err.message || '操作失败，请重试');
@@ -128,6 +174,35 @@ export default function AuthModal() {
               />
             </div>
           </div>
+
+          {/* 邮箱验证码（仅注册且开启验证时显示） */}
+          {!isLogin && needVerification && (
+            <div>
+              <label className="block text-xs font-medium text-text-secondary mb-1">邮箱验证码</label>
+              <div className="flex gap-2">
+                <div className="relative flex-1">
+                  <KeyRound className="absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-text-tertiary" />
+                  <input
+                    type="text"
+                    inputMode="numeric"
+                    maxLength={6}
+                    value={code}
+                    onChange={(e) => setCode(e.target.value.replace(/\D/g, ''))}
+                    placeholder="6 位验证码"
+                    className="w-full pl-10 pr-4 py-2.5 bg-bg border border-border rounded-xl text-sm text-text placeholder:text-text-tertiary focus:outline-none focus:border-border-light transition-all tracking-widest"
+                  />
+                </div>
+                <button
+                  type="button"
+                  onClick={handleSendCode}
+                  disabled={sendingCode || countdown > 0}
+                  className="px-3 py-2.5 rounded-xl border border-border text-xs font-medium text-text whitespace-nowrap transition-all cursor-pointer disabled:opacity-60 hover:border-border-light"
+                >
+                  {sendingCode ? '发送中...' : countdown > 0 ? `${countdown}s 后重发` : codeSent ? '重新发送' : '发送验证码'}
+                </button>
+              </div>
+            </div>
+          )}
 
           <button
             type="submit"
