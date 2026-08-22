@@ -104,6 +104,8 @@ export default function Sidebar({ tools, toolsByCategory }) {
           } ${isActive('/') ? 'text-text font-semibold' : 'text-text-secondary group-hover:text-text'}`}>
             工具总览
           </span>
+        </Link>
+
         {/* 管理员控制台通道 */}
         {user && user.role === 'ADMIN' && (
           <Link
@@ -138,7 +140,6 @@ export default function Sidebar({ tools, toolsByCategory }) {
             </span>
           </Link>
         )}
-        </Link>
 
         {/* 分类工具 */}
         {Object.entries(toolsByCategory).map(([category, categoryTools]) => (
