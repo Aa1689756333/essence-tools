@@ -3,9 +3,17 @@ import { SignJWT, jwtVerify } from 'jose';
 import { cookies } from 'next/headers';
 import db from './db';
 
-const JWT_SECRET = new TextEncoder().encode(
-  process.env.JWT_SECRET || 'toolbox-secret-key-2026-secure-jwt-auth-token-super-secret'
-);
+// JWT 密钥初始化：生产环境必须配置环境变量，开发环境使用兜底值并警告
+let jwtSecretKey;
+if (process.env.JWT_SECRET) {
+  jwtSecretKey = new TextEncoder().encode(process.env.JWT_SECRET);
+} else if (process.env.NODE_ENV === 'production') {
+  throw new Error('JWT_SECRET environment variable is required in production');
+} else {
+  console.warn('⚠️ JWT_SECRET not configured, using development fallback. DO NOT use in production!');
+  jwtSecretKey = new TextEncoder().encode('toolbox-dev-secret-key');
+}
+const JWT_SECRET = jwtSecretKey;
 
 export const COOKIE_NAME = 'toolbox_session';
 

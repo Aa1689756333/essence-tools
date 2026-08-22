@@ -28,6 +28,22 @@ export async function issueCode(email) {
   // 清除该邮箱旧验证码，保证同一时刻只有一个有效码
   await db.emailVerification.deleteMany({ where: { email: cleanEmail } });
 
+  // 10% 概率触发全局过期清理，避免数据库无限膨胀
+  if (Math.random() < 0.1) {
+    try {
+      await db.emailVerification.deleteMany({
+        where: {
+          expiresAt: {
+            lt: new Date(),
+          },
+        },
+      });
+    } catch (error) {
+      // 清理失败不影响主流程
+      console.error('Failed to cleanup expired verification codes:', error);
+    }
+  }
+
   const code = generateCode();
   await db.emailVerification.create({
     data: {

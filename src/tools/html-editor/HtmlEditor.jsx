@@ -20,6 +20,7 @@ import {
 } from 'lucide-react';
 import DOMPurify from 'dompurify';
 import { safeGetItem, safeSetItemWithRetry, safeRemoveItem } from '@/lib/storage';
+import { countWords } from '@/lib/utils';
 
 const PURIFY_CONFIG = {
   ALLOWED_TAGS: [
@@ -186,21 +187,6 @@ function cleanHtml(html) {
   }
   
   return container.innerHTML;
-}
-
-// 字数统计函数
-function countWords(text) {
-  if (!text) return { words: 0, chars: 0 };
-  
-  // 字符数（含空格和标点）
-  const chars = text.length;
-  
-  // 字数：中文单字 + 英文单词
-  const chineseChars = (text.match(/[\u4e00-\u9fa5]/g) || []).length;
-  const englishWords = (text.replace(/[\u4e00-\u9fa5]/g, ' ').match(/[a-zA-Z0-9-]+/g) || []).length;
-  const words = chineseChars + englishWords;
-  
-  return { words, chars };
 }
 
 // HTML 实体转义（防止 XSS）

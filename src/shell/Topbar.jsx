@@ -3,19 +3,21 @@
 import { useState, useRef, useEffect } from 'react';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
-import { Search, Palette, Check, Menu, Sun, Moon, Flame, Coins, ChevronDown, Shield, LogOut } from 'lucide-react';
+import { Search, Palette, Check, Menu, Sun, Moon, Flame, Coins, ChevronDown, Shield, LogOut, Settings } from 'lucide-react';
 import { tools } from '@/tools/registry';
 import { useTheme } from './ThemeProvider';
 import { useSidebar } from './useSidebar';
 import { useAuth } from '@/context/AuthContext';
+import SearchModal from '@/components/SearchModal';
 
 export default function Topbar() {
   const pathname = usePathname();
   const { theme, themes, setTheme, isDark, setIsDark } = useTheme();
   const { toggle, isMobile } = useSidebar();
-  const { user, logout, openAuth, openCheckIn } = useAuth();
+  const { user, logout, openAuth, openCheckIn, openProfileModal } = useAuth();
   const [showPicker, setShowPicker] = useState(false);
   const [showUserMenu, setShowUserMenu] = useState(false);
+  const [showSearch, setShowSearch] = useState(false);
   const [pickerDirection, setPickerDirection] = useState('right');
   const pickerRef = useRef(null);
   const pickerButtonRef = useRef(null);
@@ -62,6 +64,19 @@ export default function Topbar() {
     }
   }, [showPicker]);
 
+  // 键盘快捷键：Ctrl+K / Cmd+K 打开搜索
+  useEffect(() => {
+    const handleKeyDown = (e) => {
+      if ((e.metaKey || e.ctrlKey) && e.key === 'k') {
+        e.preventDefault();
+        setShowSearch(true);
+      }
+    };
+
+    window.addEventListener('keydown', handleKeyDown);
+    return () => window.removeEventListener('keydown', handleKeyDown);
+  }, []);
+
   return (
     <header className="h-[52px] px-4 sm:px-5 md:px-6 lg:px-8 flex items-center justify-between border-b border-border bg-bg-sidebar shrink-0">
       <div className="flex items-center gap-2 text-[13px]" role="navigation" aria-label="面包屑导航">
@@ -82,6 +97,7 @@ export default function Topbar() {
       <div className="flex items-center gap-1.5 md:gap-2">
         {/* 搜索按钮 */}
         <button
+          onClick={() => setShowSearch(true)}
           className="w-[34px] h-[34px] rounded-lg border border-border bg-card flex items-center justify-center text-text-secondary hover:bg-bg-primary transition-all duration-150 cursor-pointer hidden md:flex"
           aria-label="搜索工具"
         >
@@ -189,6 +205,14 @@ export default function Topbar() {
                   <span>打卡与积分日志</span>
                 </button>
 
+                <button
+                  onClick={() => { setShowUserMenu(false); openProfileModal(); }}
+                  className="w-full text-left px-2.5 py-1.5 rounded-lg text-xs font-medium text-text-secondary hover:text-text hover:bg-bg-primary flex items-center gap-2 cursor-pointer transition-colors"
+                >
+                  <Settings className="w-3.5 h-3.5 text-blue-500" />
+                  <span>个人设置</span>
+                </button>
+
                 {user.role === 'ADMIN' && (
                   <Link
                     href="/admin"
@@ -228,6 +252,12 @@ export default function Topbar() {
           </div>
         )}
       </div>
+      
+      {/* 搜索模态框 */}
+      <SearchModal
+        isOpen={showSearch}
+        onClose={() => setShowSearch(false)}
+      />
     </header>
   );
 }

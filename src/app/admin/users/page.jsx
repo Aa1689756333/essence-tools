@@ -2,8 +2,10 @@
 
 import { useState, useEffect, useCallback } from 'react';
 import { Search, Shield, Ban, CheckCircle, Coins, ChevronLeft, ChevronRight, Loader2, X } from 'lucide-react';
+import { useAuth } from '@/context/AuthContext';
 
 export default function AdminUsersPage() {
+  const { user: currentUser } = useAuth();
   const [users, setUsers] = useState([]);
   const [pagination, setPagination] = useState({ page: 1, limit: 10, total: 0, totalPages: 1 });
   const [query, setQuery] = useState('');
@@ -217,28 +219,32 @@ export default function AdminUsersPage() {
                           <Coins className="w-3 h-3" /> 积分
                         </button>
 
-                        {/* 角色设为/降级 */}
-                        <button
-                          onClick={() => handleAction(u.id, 'update_role', { role: u.role === 'ADMIN' ? 'USER' : 'ADMIN' })}
-                          className="px-2 py-1 rounded bg-purple-500/10 text-purple-600 dark:text-purple-400 hover:bg-purple-500/20 font-medium cursor-pointer transition-colors flex items-center gap-1"
-                          title={u.role === 'ADMIN' ? '降级为 USER' : '提升为 ADMIN'}
-                        >
-                          <Shield className="w-3 h-3" />
-                          {u.role === 'ADMIN' ? '设为USER' : '设为ADMIN'}
-                        </button>
+                        {/* 角色设为/降级 - 当前用户不能降级自己 */}
+                        {!(u.id === currentUser?.id && u.role === 'ADMIN') && (
+                          <button
+                            onClick={() => handleAction(u.id, 'update_role', { role: u.role === 'ADMIN' ? 'USER' : 'ADMIN' })}
+                            className="px-2 py-1 rounded bg-purple-500/10 text-purple-600 dark:text-purple-400 hover:bg-purple-500/20 font-medium cursor-pointer transition-colors flex items-center gap-1"
+                            title={u.role === 'ADMIN' ? '降级为 USER' : '提升为 ADMIN'}
+                          >
+                            <Shield className="w-3 h-3" />
+                            {u.role === 'ADMIN' ? '设为USER' : '设为ADMIN'}
+                          </button>
+                        )}
 
-                        {/* 冻结 / 解封 */}
-                        <button
-                          onClick={() => handleAction(u.id, 'update_status', { status: u.status === 'ACTIVE' ? 'BANNED' : 'ACTIVE' })}
-                          className={`px-2 py-1 rounded font-medium cursor-pointer transition-colors flex items-center gap-1 ${
-                            u.status === 'ACTIVE'
-                              ? 'bg-rose-500/10 text-rose-600 dark:text-rose-400 hover:bg-rose-500/20'
-                              : 'bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 hover:bg-emerald-500/20'
-                          }`}
-                        >
-                          {u.status === 'ACTIVE' ? <Ban className="w-3 h-3" /> : <CheckCircle className="w-3 h-3" />}
-                          {u.status === 'ACTIVE' ? '冻结' : '解封'}
-                        </button>
+                        {/* 冻结 / 解封 - 当前用户不能冻结自己 */}
+                        {!(u.id === currentUser?.id && u.status === 'ACTIVE') && (
+                          <button
+                            onClick={() => handleAction(u.id, 'update_status', { status: u.status === 'ACTIVE' ? 'BANNED' : 'ACTIVE' })}
+                            className={`px-2 py-1 rounded font-medium cursor-pointer transition-colors flex items-center gap-1 ${
+                              u.status === 'ACTIVE'
+                                ? 'bg-rose-500/10 text-rose-600 dark:text-rose-400 hover:bg-rose-500/20'
+                                : 'bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 hover:bg-emerald-500/20'
+                            }`}
+                          >
+                            {u.status === 'ACTIVE' ? <Ban className="w-3 h-3" /> : <CheckCircle className="w-3 h-3" />}
+                            {u.status === 'ACTIVE' ? '冻结' : '解封'}
+                          </button>
+                        )}
                       </div>
                     </td>
                   </tr>

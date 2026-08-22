@@ -3,9 +3,28 @@ import db from '@/lib/db';
 import { getSystemSettings, validateEmailRule } from '@/lib/settings';
 import { isSmtpConfigured, sendMail } from '@/lib/mailer';
 import { issueCode } from '@/lib/verification';
+import { checkRateLimit, getClientIP, RateLimitRules } from '@/lib/rateLimit';
 
 export async function POST(req) {
   try {
+    // 速率限制检查
+    const clientIP = getClientIP(req);
+    const rateLimitResult = checkRateLimit(`send-code:${clientIP}`, RateLimitRules.SEND_CODE);
+    
+    if (!rateLimitResult.allowed) {
+      return NextResponse.json(
+        { error: `请求过于频繁，请在 ${Math.ceil(rateLimitResult.retryAfter / 60)} 分钟后重试` },
+        { 
+          status: 429,
+          headers: {
+            'Retry-After': String(rateLimitResult.retryAfter),
+            'X-RateLimit-Limit': String(RateLimitRules.SEND_CODE.maxRequests),
+            'X-RateLimit-Remaining': String(rateLimitResult.remaining),
+          }
+        }
+      );
+    }
+
     const { email } = await req.json();
 
     if (!email) {

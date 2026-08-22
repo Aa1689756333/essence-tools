@@ -23,6 +23,7 @@ import css from 'highlight.js/lib/languages/css';
 import xml from 'highlight.js/lib/languages/xml';
 import markdownLang from 'highlight.js/lib/languages/markdown';
 import python from 'highlight.js/lib/languages/python';
+import { countWords } from '@/lib/utils';
 import bash from 'highlight.js/lib/languages/bash';
 import json from 'highlight.js/lib/languages/json';
 import 'highlight.js/styles/github.css';
@@ -82,16 +83,6 @@ function Modal({ isOpen, onClose, title, children, theme }) {
       </div>
     </div>
   );
-}
-
-// 字数统计：中文单字 + 英文单词（与 html-editor 对齐）
-function countWords(text) {
-  if (!text) return { words: 0, chars: 0 };
-  const chars = text.length;
-  const chineseChars = (text.match(/[\u4e00-\u9fa5]/g) || []).length;
-  const englishWords = (text.replace(/[\u4e00-\u9fa5]/g, ' ').match(/[a-zA-Z0-9-]+/g) || []).length;
-  const words = chineseChars + englishWords;
-  return { words, chars };
 }
 
 // 历史记录配置

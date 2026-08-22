@@ -6,6 +6,8 @@ import { SidebarProvider } from '@/shell/useSidebar';
 import { AuthProvider } from '@/context/AuthContext';
 import AuthModal from '@/components/auth/AuthModal';
 import CheckInModal from '@/components/auth/CheckInModal';
+import ProfileModal from '@/components/auth/ProfileModal';
+import ErrorBoundary from '@/components/ErrorBoundary';
 import { tools, getToolsByCategory } from '@/tools/registry';
 import { getSystemSettings } from '@/lib/settings';
 import { Inter } from 'next/font/google';
@@ -53,12 +55,15 @@ export default async function RootLayout({ children }) {
                 <div className="flex flex-col flex-1 min-w-0 overflow-hidden">
                   <Topbar />
                   <main className="flex-1 overflow-y-auto p-4 sm:p-5 md:p-6 lg:p-8">
-                    {children}
+                    <ErrorBoundary>
+                      {children}
+                    </ErrorBoundary>
                   </main>
                 </div>
               </div>
               <AuthModal />
               <CheckInModal />
+              <ProfileModal />
             </SidebarProvider>
           </AuthProvider>
         </ThemeProvider>

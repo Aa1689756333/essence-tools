@@ -1,6 +1,7 @@
 import { NextResponse } from 'next/server';
 import db from '@/lib/db';
 import { getSessionUser } from '@/lib/auth';
+import { validateBody, adminUserPatchSchema } from '@/lib/validate';
 
 export async function GET(req) {
   const currentUser = await getSessionUser();
@@ -68,11 +69,16 @@ export async function PATCH(req) {
   }
 
   try {
-    const { userId, action, role, status, pointsDelta, reason } = await req.json();
-
-    if (!userId) {
-      return NextResponse.json({ error: '缺少目标用户 ID' }, { status: 400 });
+    // 使用 zod 校验请求体
+    const validation = await validateBody(req, adminUserPatchSchema);
+    if (!validation.success) {
+      return NextResponse.json(
+        { error: validation.error, details: validation.details },
+        { status: validation.status }
+      );
     }
+
+    const { userId, action, role, status, pointsDelta, reason } = validation.data;
 
     const targetUser = await db.user.findUnique({ where: { id: userId } });
     if (!targetUser) {
@@ -80,9 +86,19 @@ export async function PATCH(req) {
     }
 
     if (action === 'update_role') {
-      if (!['USER', 'ADMIN'].includes(role)) {
-        return NextResponse.json({ error: '无效的角色类型' }, { status: 400 });
+      // 自我保护：防止管理员降级自己
+      if (userId === currentUser.id && role !== 'ADMIN') {
+        return NextResponse.json({ error: '不能降级自己的管理员权限' }, { status: 403 });
       }
+
+      // 系统保护：防止降级最后一个管理员
+      if (role !== 'ADMIN' && targetUser.role === 'ADMIN') {
+        const adminCount = await db.user.count({ where: { role: 'ADMIN' } });
+        if (adminCount === 1) {
+          return NextResponse.json({ error: '不能降级系统唯一的管理员' }, { status: 403 });
+        }
+      }
+
       const updated = await db.user.update({
         where: { id: userId },
         data: { role },
@@ -92,9 +108,11 @@ export async function PATCH(req) {
     }
 
     if (action === 'update_status') {
-      if (!['ACTIVE', 'BANNED'].includes(status)) {
-        return NextResponse.json({ error: '无效的状态类型' }, { status: 400 });
+      // 自我保护：防止管理员封禁自己
+      if (userId === currentUser.id && status === 'BANNED') {
+        return NextResponse.json({ error: '不能封禁自己的账号' }, { status: 403 });
       }
+
       const updated = await db.user.update({
         where: { id: userId },
         data: { status },
