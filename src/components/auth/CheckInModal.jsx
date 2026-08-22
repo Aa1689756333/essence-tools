@@ -175,6 +175,30 @@ export default function CheckInModal() {
             <span className="text-[11px] text-text-tertiary">稀缺积分规则</span>
           </div>
 
+          {/* 整月全勤进度 */}
+          {info?.monthFullBonus > 0 && (
+            <div className="mb-3 p-2.5 rounded-xl bg-amber-500/10 border border-amber-500/20">
+              <div className="flex items-center justify-between text-[11px] mb-1.5">
+                <span className="flex items-center gap-1 font-semibold text-amber-600 dark:text-amber-400">
+                  <Award className="w-3.5 h-3.5" />
+                  整月全勤奖励 +{info.monthFullBonus} 积分
+                </span>
+                <span className="text-text-tertiary">
+                  {info?.monthCheckinCount || 0}/{info?.daysInMonth || daysInMonth} 天
+                </span>
+              </div>
+              <div className="h-1.5 rounded-full bg-bg-primary overflow-hidden">
+                <div
+                  className="h-full rounded-full bg-gradient-to-r from-amber-400 to-amber-500 transition-all"
+                  style={{ width: `${Math.min(100, ((info?.monthCheckinCount || 0) / (info?.daysInMonth || daysInMonth)) * 100)}%` }}
+                />
+              </div>
+              <p className="text-[10px] text-text-tertiary mt-1.5">
+                当月每天签到，月末最后一天可领取全勤奖励
+              </p>
+            </div>
+          )}
+
           <div className="grid grid-cols-7 gap-1.5 text-center text-xs">
             {['日', '一', '二', '三', '四', '五', '六'].map((d) => (
               <div key={d} className="py-1 text-text-tertiary font-medium text-[11px]">
@@ -183,7 +207,7 @@ export default function CheckInModal() {
             ))}
             {daysArray.map((day) => {
               const isToday = day === todayDate;
-              const isChecked = isToday && info?.todayChecked;
+              const isChecked = (info?.checkedDays || []).includes(day) || (isToday && info?.todayChecked);
 
               return (
                 <div

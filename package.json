@@ -5,7 +5,12 @@
   "scripts": {
     "dev": "next dev --turbopack",
     "build": "next build",
-    "start": "next start"
+    "start": "next start",
+    "test": "npm run test:acceptance && npm run test:md && npm run test:md2 && npm run test:html",
+    "test:acceptance": "node acceptance-test.mjs",
+    "test:md": "node test-md-editor.mjs",
+    "test:md2": "node test-md-editor-2.mjs",
+    "test:html": "node test-html-editor.js"
   },
   "dependencies": {
     "@prisma/client": "^5.22.0",

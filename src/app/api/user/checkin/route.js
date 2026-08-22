@@ -32,12 +32,39 @@ export async function GET() {
     take: 20,
   });
 
+  // 当月全勤进度统计
+  const now = new Date();
+  const daysInMonth = new Date(now.getFullYear(), now.getMonth() + 1, 0).getDate();
+  const monthStart = new Date(now.getFullYear(), now.getMonth(), 1);
+  const nextMonthStart = new Date(now.getFullYear(), now.getMonth() + 1, 1);
+  const monthCheckins = await db.pointTransaction.findMany({
+    where: {
+      userId: user.id,
+      type: 'CHECKIN',
+      createdAt: { gte: monthStart, lt: nextMonthStart },
+    },
+    select: { createdAt: true },
+  });
+  const checkedDays = [...new Set(monthCheckins.map((tx) => tx.createdAt.getDate()))];
+
+  const settings = await getSystemSettings();
+  let monthFullBonus = 0;
+  try {
+    if (settings.checkin_config) {
+      monthFullBonus = JSON.parse(settings.checkin_config).monthFullBonus || 0;
+    }
+  } catch {}
+
   return NextResponse.json({
     todayChecked,
     continuousCheckIn: user.lastCheckInDate === today || user.lastCheckInDate === yesterday ? user.continuousCheckIn : 0,
     lastCheckInDate: user.lastCheckInDate,
     points: user.points,
     history,
+    monthCheckinCount: checkedDays.length,
+    daysInMonth,
+    checkedDays,
+    monthFullBonus,
   });
 }
 
@@ -90,13 +117,36 @@ export async function POST() {
       earned = Math.min(earned, checkinCfg.dailyCap);
     }
 
-    const newBalance = user.points + earned;
+    // 整月全勤奖励：本月最后一天签到，且当月每天都已签到（不受 dailyCap 限制）
+    let fullMonthBonus = 0;
+    const now = new Date();
+    const daysInMonth = new Date(now.getFullYear(), now.getMonth() + 1, 0).getDate();
+    const isLastDayOfMonth = now.getDate() === daysInMonth;
+    if (isLastDayOfMonth && (checkinCfg.monthFullBonus || 0) > 0) {
+      const monthStart = new Date(now.getFullYear(), now.getMonth(), 1);
+      const nextMonthStart = new Date(now.getFullYear(), now.getMonth() + 1, 1);
+      const priorCheckins = await db.pointTransaction.count({
+        where: {
+          userId: user.id,
+          type: 'CHECKIN',
+          createdAt: { gte: monthStart, lt: nextMonthStart },
+        },
+      });
+      // priorCheckins 不含本次签到，+1 后覆盖当月每一天即为全勤
+      if (priorCheckins + 1 >= daysInMonth) {
+        fullMonthBonus = checkinCfg.monthFullBonus;
+      }
+    }
 
-    const [updatedUser, transaction] = await db.$transaction([
+    const totalEarned = earned + fullMonthBonus;
+    const checkinBalance = user.points + earned;
+    const finalBalance = user.points + totalEarned;
+
+    const txOps = [
       db.user.update({
         where: { id: user.id },
         data: {
-          points: { increment: earned },
+          points: { increment: totalEarned },
           continuousCheckIn: newContinuous,
           lastCheckInDate: today,
         },
@@ -116,17 +166,39 @@ export async function POST() {
         data: {
           userId: user.id,
           amount: earned,
-          balance: newBalance,
+          balance: checkinBalance,
           type: 'CHECKIN',
           description: `签到成功 (+${earned} 积分，已连续 ${newContinuous} 天)`,
         },
       }),
-    ]);
+    ];
+
+    if (fullMonthBonus > 0) {
+      txOps.push(
+        db.pointTransaction.create({
+          data: {
+            userId: user.id,
+            amount: fullMonthBonus,
+            balance: finalBalance,
+            type: 'MONTH_FULL_BONUS',
+            description: `🎊 ${now.getMonth() + 1}月整月全勤奖励 (+${fullMonthBonus} 积分)`,
+          },
+        })
+      );
+    }
+
+    const [updatedUser, transaction] = await db.$transaction(txOps);
+
+    const message = fullMonthBonus > 0
+      ? `签到成功！增加 ${earned} 积分，整月全勤额外奖励 ${fullMonthBonus} 积分！`
+      : `签到成功！增加 ${earned} 积分`;
 
     return NextResponse.json({
-      message: `签到成功！增加 ${earned} 积分`,
+      message,
       user: updatedUser,
       earned,
+      fullMonthBonus,
+      totalEarned,
       continuousCheckIn: newContinuous,
       transaction,
     });

@@ -30,6 +30,7 @@ export default function AdminSettingsPage() {
     checkin_config: {
       basePoints: 3,
       dailyCap: 7,
+      monthFullBonus: 20,
       bonusRules: [
         { minDays: 3, maxDays: 6, extraPoints: 2 },
         { minDays: 7, maxDays: 99, extraPoints: 4 },
@@ -86,6 +87,7 @@ export default function AdminSettingsPage() {
           checkin_config: {
             basePoints: checkinObj.basePoints ?? 3,
             dailyCap: checkinObj.dailyCap ?? 7,
+            monthFullBonus: checkinObj.monthFullBonus ?? 20,
             bonusRules: checkinObj.bonusRules || [
               { minDays: 3, maxDays: 6, extraPoints: 2 },
               { minDays: 7, maxDays: 99, extraPoints: 4 },
@@ -573,6 +575,21 @@ export default function AdminSettingsPage() {
                     setForm({
                       ...form,
                       checkin_config: { ...form.checkin_config, dailyCap: parseInt(e.target.value || '7') },
+                    })
+                  }
+                  className="w-full px-3 py-2 bg-bg border border-border rounded-xl text-xs text-text focus:outline-none"
+                />
+              </div>
+
+              <div>
+                <label className="block text-xs font-semibold text-text mb-1">整月全勤奖励 (月末发放，0 为关闭)</label>
+                <input
+                  type="number"
+                  value={form.checkin_config.monthFullBonus}
+                  onChange={(e) =>
+                    setForm({
+                      ...form,
+                      checkin_config: { ...form.checkin_config, monthFullBonus: parseInt(e.target.value || '0') },
                     })
                   }
                   className="w-full px-3 py-2 bg-bg border border-border rounded-xl text-xs text-text focus:outline-none"
