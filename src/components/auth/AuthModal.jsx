@@ -2,7 +2,8 @@
 
 import { useState, useEffect } from 'react';
 import { useAuth } from '@/context/AuthContext';
-import { X, Mail, Lock, User, Sparkles, Loader2, ArrowRight, KeyRound } from 'lucide-react';
+import { Mail, Lock, User, Sparkles, Loader2, ArrowRight, KeyRound } from 'lucide-react';
+import Modal from '@/components/ui/Modal';
 
 export default function AuthModal() {
   const { showAuthModal, authModalMode, closeAuth, openAuth, login, register, sendCode } = useAuth();
@@ -133,27 +134,7 @@ export default function AuthModal() {
   };
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50 backdrop-blur-xs animate-fade-up">
-      <div
-        className="relative w-full max-w-md bg-card border border-border rounded-2xl shadow-2xl p-6 sm:p-8 overflow-hidden"
-        role="dialog"
-        aria-modal="true"
-      >
-        {/* 顶部背景饰条 */}
-        <div
-          className="absolute top-0 left-0 right-0 h-1.5"
-          style={{ background: 'var(--theme-gradient, linear-gradient(90deg, #10b981, #34d399))' }}
-        />
-
-        {/* 关闭按钮 */}
-        <button
-          onClick={closeAuth}
-          className="absolute top-4 right-4 w-8 h-8 rounded-full flex items-center justify-center text-text-secondary hover:text-text hover:bg-bg-primary transition-colors cursor-pointer"
-          aria-label="关闭弹窗"
-        >
-          <X className="w-4 h-4" />
-        </button>
-
+    <Modal isOpen={showAuthModal} onClose={closeAuth} maxWidth="max-w-md">
         {/* 标题 */}
         <div className="mb-6 text-center">
           <div
@@ -439,7 +420,6 @@ export default function AuthModal() {
             </p>
           )}
         </div>
-      </div>
-    </div>
+    </Modal>
   );
 }

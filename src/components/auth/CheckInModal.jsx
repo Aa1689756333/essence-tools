@@ -2,7 +2,8 @@
 
 import { useState, useEffect, useCallback } from 'react';
 import { useAuth } from '@/context/AuthContext';
-import { X, Calendar, Flame, Coins, CheckCircle2, Loader2, Sparkles, Award } from 'lucide-react';
+import { Calendar, Flame, Coins, CheckCircle2, Loader2, Sparkles, Award } from 'lucide-react';
+import Modal from '@/components/ui/Modal';
 
 export default function CheckInModal() {
   const { showCheckInModal, closeCheckIn, user, updateUser } = useAuth();
@@ -71,27 +72,7 @@ export default function CheckInModal() {
   const daysArray = Array.from({ length: daysInMonth }, (_, i) => i + 1);
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50 backdrop-blur-xs animate-fade-up">
-      <div
-        className="relative w-full max-w-lg bg-card border border-border rounded-2xl shadow-2xl p-6 sm:p-8 overflow-hidden"
-        role="dialog"
-        aria-modal="true"
-      >
-        {/* 顶部饰条 */}
-        <div
-          className="absolute top-0 left-0 right-0 h-1.5"
-          style={{ background: 'var(--theme-gradient, linear-gradient(90deg, #10b981, #34d399))' }}
-        />
-
-        {/* 关闭按钮 */}
-        <button
-          onClick={closeCheckIn}
-          className="absolute top-4 right-4 w-8 h-8 rounded-full flex items-center justify-center text-text-secondary hover:text-text hover:bg-bg-primary transition-colors cursor-pointer"
-          aria-label="关闭弹窗"
-        >
-          <X className="w-4 h-4" />
-        </button>
-
+    <Modal isOpen={showCheckInModal} onClose={closeCheckIn} maxWidth="max-w-lg">
         {/* 头部摘要 */}
         <div className="flex items-center justify-between mb-6 pb-4 border-b border-border">
           <div>
@@ -261,7 +242,6 @@ export default function CheckInModal() {
             )}
           </div>
         </div>
-      </div>
-    </div>
+    </Modal>
   );
 }

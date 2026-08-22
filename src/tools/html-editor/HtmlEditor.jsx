@@ -21,6 +21,7 @@ import {
 import DOMPurify from 'dompurify';
 import { safeGetItem, safeSetItemWithRetry, safeRemoveItem } from '@/lib/storage';
 import { countWords } from '@/lib/utils';
+import Modal from '@/components/ui/Modal';
 
 const PURIFY_CONFIG = {
   ALLOWED_TAGS: [
@@ -276,25 +277,7 @@ function ToolbarSelect({ value, options, onChange, title, width }) {
   );
 }
 
-function Modal({ isOpen, onClose, title, children, theme }) {
-  if (!isOpen) return null;
 
-  return (
-    <div className="fixed inset-0 z-[100] flex items-center justify-center bg-black/30 backdrop-blur-sm" onClick={onClose}>
-      <div className="bg-white rounded-xl shadow-2xl min-w-[320px] max-w-[90vw] max-h-[80vh] overflow-hidden" onClick={(e) => e.stopPropagation()}>
-        <div className="flex items-center justify-between px-5 py-3 border-b border-gray-100">
-          <h3 className="text-[15px] font-semibold text-gray-800">{title}</h3>
-          <button onClick={onClose} className="w-7 h-7 rounded-lg flex items-center justify-center text-gray-400 hover:bg-gray-100 hover:text-gray-600 transition-colors">
-            <X className="w-4 h-4" />
-          </button>
-        </div>
-        <div className="p-5">
-          {children}
-        </div>
-      </div>
-    </div>
-  );
-}
 
 export default function HtmlEditor() {
   const { theme } = useTheme();
