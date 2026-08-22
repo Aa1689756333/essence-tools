@@ -572,7 +572,7 @@
 
 ---
 
-### T021 - 抽取公共 UI 组件：Toolbar `[ ]`
+### T021 - 抽取公共 UI 组件：Toolbar `[x]`
 
 **目标**：将 HtmlEditor 和 MarkdownEditor 中重复的工具栏组件抽取为公共组件。
 
@@ -600,7 +600,7 @@
 
 ---
 
-### T022 - HtmlEditor 拆分：提取 HTML 工具函数 `[ ]`
+### T022 - HtmlEditor 拆分：提取 HTML 工具函数 `[x]`
 
 **目标**：将 HtmlEditor.jsx 中的纯函数（sanitizeHtml, formatHtml, cleanHtml, escapeHtml, isSafeUrl, countWords）提取到独立文件。
 
@@ -629,7 +629,7 @@
 
 ---
 
-### T023 - HtmlEditor 拆分：提取模态框组件 `[ ]`
+### T023 - HtmlEditor 拆分：提取模态框组件 `[x]`
 
 **目标**：将 HtmlEditor.jsx 中的链接/图片/表格模态框提取为独立组件。
 
@@ -661,7 +661,7 @@
 
 ---
 
-### T024 - HtmlEditor 拆分：提取查找替换和图片缩放逻辑 `[ ]`
+### T024 - HtmlEditor 拆分：提取查找替换和图片缩放逻辑 `[x]`
 
 **目标**：将查找替换和图片缩放逻辑提取为自定义 hooks。
 

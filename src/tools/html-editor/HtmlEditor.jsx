@@ -15,204 +15,19 @@ import {
   Minus,
   Type,
   Link, Image, Table,
-  X, Upload, Globe, Sparkles, Quote, Terminal,
+  X, Sparkles, Quote, Terminal,
   Maximize, Minimize, Search, Replace, ChevronDown, ChevronUp,
 } from 'lucide-react';
-import DOMPurify from 'dompurify';
 import { safeGetItem, safeSetItemWithRetry, safeRemoveItem } from '@/lib/storage';
 import { countWords } from '@/lib/utils';
 import Modal from '@/components/ui/Modal';
-
-const PURIFY_CONFIG = {
-  ALLOWED_TAGS: [
-    'p', 'div', 'span', 'b', 'i', 'u', 's', 'strong', 'em', 'br', 'hr',
-    'h1', 'h2', 'h3', 'h4', 'h5', 'h6', 'ul', 'ol', 'li', 'blockquote', 'pre', 'code',
-    'a', 'img', 'table', 'thead', 'tbody', 'tfoot', 'tr', 'td', 'th', 'caption', 'colgroup', 'col',
-    'font', 'center',
-  ],
-  ALLOWED_ATTR: [
-    'href', 'src', 'alt', 'title', 'style', 'align', 'colspan', 'rowspan',
-    'target', 'rel', 'width', 'height',
-    'size', 'color', 'face',
-  ],
-  ALLOW_DATA_ATTR: false,
-  FORBID_TAGS: ['script', 'iframe', 'object', 'embed', 'svg', 'form', 'input', 'textarea', 'select', 'button', 'style', 'link', 'meta', 'base'],
-  // DOMPurify 默认已拦截 javascript:/vbscript: 协议；data: 仅允许图片
-  ALLOWED_URI_REGEXP: /^(?:(?:https?|mailto|tel|ftp):|[^a-z]|[a-z+.-]+(?:[^a-z+.-:]|$))/i,
-};
-
-// 安全过滤：移除危险标签、事件属性、危险协议（XSS 防护主力）
-function sanitizeHtml(html) {
-  if (!html) return '';
-  if (typeof window === 'undefined') return html; // SSR 防护：DOMPurify 依赖 window
-  return DOMPurify.sanitize(html, PURIFY_CONFIG);
-}
-
-// HTML 格式化函数：美化代码结构，添加缩进和换行
-function formatHtml(html) {
-  if (!html) return '';
-  
-  // 块级标签（需要独占一行）
-  const blockTags = new Set([
-    'div', 'p', 'h1', 'h2', 'h3', 'h4', 'h5', 'h6',
-    'ul', 'ol', 'li', 'table', 'tr', 'tbody', 'thead', 'tfoot',
-    'blockquote', 'pre', 'hr', 'section', 'article', 'aside',
-    'header', 'footer', 'nav', 'main', 'figure', 'figcaption',
-    'dl', 'dt', 'dd', 'form', 'fieldset', 'legend'
-  ]);
-  
-  // 自闭合标签
-  const selfClosingTags = new Set(['br', 'hr', 'img', 'input', 'meta', 'link']);
-  
-  let result = '';
-  let indent = 0;
-  const indentStr = '  ';
-  
-  // 先将所有标签统一格式（小写）
-  const tokens = html.match(/<[^>]+>|[^<]+/g) || [];
-  
-  for (let i = 0; i < tokens.length; i++) {
-    const token = tokens[i];
-    
-    // 文本节点
-    if (!token.startsWith('<')) {
-      const trimmed = token.trim();
-      if (trimmed) {
-        result += indentStr.repeat(indent) + trimmed + '\n';
-      }
-      continue;
-    }
-    
-    // 注释
-    if (token.startsWith('<!--')) {
-      result += indentStr.repeat(indent) + token + '\n';
-      continue;
-    }
-    
-    // 自闭合标签
-    if (selfClosingTags.has(token.match(/^<\/?(\w+)/)?.[1]?.toLowerCase()) || token.endsWith('/>')) {
-      result += indentStr.repeat(indent) + token + '\n';
-      continue;
-    }
-    
-    // 结束标签
-    if (token.startsWith('</')) {
-      indent = Math.max(0, indent - 1);
-      result += indentStr.repeat(indent) + token + '\n';
-      continue;
-    }
-    
-    // 开始标签
-    const tagName = token.match(/^<(\w+)/)?.[1]?.toLowerCase();
-    result += indentStr.repeat(indent) + token + '\n';
-    
-    // 如果是块级标签，增加缩进
-    if (tagName && blockTags.has(tagName)) {
-      indent++;
-    }
-  }
-  
-  return result.trim();
-}
-
-// HTML 清理函数：用于粘贴和输出时清理垃圾
-// 安全过滤由 sanitizeHtml（DOMPurify）负责，本函数仅做格式清理
-function cleanHtml(html) {
-  if (!html) return '';
-
-  const container = document.createElement('div');
-  container.innerHTML = sanitizeHtml(html);
-
-  // 1. 移除残留事件属性（双保险，DOMPurify 已处理大部分）
-  container.querySelectorAll('*').forEach(el => {
-    Array.from(el.attributes).forEach(attr => {
-      if (attr.name.startsWith('on')) {
-        el.removeAttribute(attr.name);
-      }
-      // 校验 href/src 协议：拦截残留的 javascript:/vbscript:
-      if ((attr.name === 'href' || attr.name === 'src') && !isSafeUrl(attr.value)) {
-        el.removeAttribute(attr.name);
-      }
-    });
-  });
-  
-  // 2. 将废弃的 <font> 标签转换为 <span> + inline style
-  container.querySelectorAll('font').forEach(font => {
-    const span = document.createElement('span');
-    const size = font.getAttribute('size');
-    const color = font.getAttribute('color');
-    const face = font.getAttribute('face');
-    const existingStyle = font.getAttribute('style') || '';
-    let style = existingStyle;
-    if (size) {
-      const sizeMap = { '1': '10px', '2': '13px', '3': '16px', '4': '18px', '5': '24px', '6': '32px', '7': '48px' };
-      style += `font-size:${sizeMap[size] || '16px'};`;
-    }
-    if (color) style += `color:${color};`;
-    if (face) style += `font-family:${face};`;
-    if (style) span.setAttribute('style', style);
-    Array.from(font.attributes).forEach(attr => {
-      if (!['size', 'color', 'face', 'style'].includes(attr.name)) {
-        span.setAttribute(attr.name, attr.value);
-      }
-    });
-    while (font.firstChild) span.appendChild(font.firstChild);
-    font.replaceWith(span);
-  });
-  
-  // 3. 将 <center> 标签转换为 <div style="text-align:center">
-  container.querySelectorAll('center').forEach(center => {
-    const div = document.createElement('div');
-    const existingStyle = center.getAttribute('style') || '';
-    div.setAttribute('style', `text-align:center;${existingStyle}`);
-    while (center.firstChild) div.appendChild(center.firstChild);
-    center.replaceWith(div);
-  });
-  
-  // 4. 移除空的 style 属性
-  container.querySelectorAll('[style=""]').forEach(el => {
-    el.removeAttribute('style');
-  });
-  
-  // 5. 移除空的行内包装元素（不含文本、不含图片/br/hr）
-  const inlineTags = ['b', 'i', 'u', 's', 'strong', 'em', 'span'];
-  let changed = true;
-  while (changed) {
-    changed = false;
-    container.querySelectorAll(inlineTags.join(',')).forEach(el => {
-      if (!el.textContent.trim() && !el.querySelector('img, br, hr, table') && el.children.length === 0) {
-        el.remove();
-        changed = true;
-      }
-    });
-  }
-  
-  return container.innerHTML;
-}
-
-// HTML 实体转义（防止 XSS）
-function escapeHtml(str) {
-  if (!str) return '';
-  return str
-    .replace(/&/g, '&amp;')
-    .replace(/</g, '&lt;')
-    .replace(/>/g, '&gt;')
-    .replace(/"/g, '&quot;')
-    .replace(/'/g, '&#39;');
-}
-
-// URL 安全检查（防止 javascript: 等危险协议）
-function isSafeUrl(url) {
-  if (!url) return false;
-  const trimmed = url.trim().toLowerCase();
-  if (trimmed.startsWith('javascript:') || trimmed.startsWith('vbscript:')) {
-    return false;
-  }
-  if (trimmed.startsWith('data:')) {
-    return trimmed.startsWith('data:image/');
-  }
-  return true;
-}
+import { ToolbarBtn, ToolbarDivider, ToolbarSelect } from '@/components/ui/Toolbar';
+import { formatHtml, cleanHtml, escapeHtml, isSafeUrl } from './lib/htmlUtils';
+import LinkModal from './components/LinkModal';
+import ImageModal from './components/ImageModal';
+import TableModal from './components/TableModal';
+import useFindReplace from './hooks/useFindReplace';
+import useImageResize from './hooks/useImageResize';
 
 const FONT_SIZES = ['12px','14px','16px','18px','20px','24px','28px','32px','36px','48px'];
 const FONT_FAMILIES = [
@@ -235,50 +50,6 @@ const COLORS = [
   '#cc4125','#e06666','#f6b26b','#ffd966','#93c47d','#76a5af','#6d9eeb','#6fa8dc','#8e7cc3','#c27ba0',
 ];
 
-function ToolbarBtn({ icon: Icon, onClick, active, title }) {
-  return (
-    <button
-      onMouseDown={(e) => { e.preventDefault(); onClick(); }}
-      title={title}
-      aria-label={title}
-      aria-pressed={active !== undefined ? !!active : undefined}
-      className={`w-[30px] h-[30px] rounded-md flex items-center justify-center cursor-pointer transition-all duration-150 shrink-0 ${
-        active
-          ? 'bg-bg-primary border border-border text-text font-semibold'
-          : 'text-text-secondary hover:bg-bg-primary hover:text-text'
-      }`}
-    >
-      <Icon className="w-[15px] h-[15px]" aria-hidden="true" />
-    </button>
-  );
-}
-
-function ToolbarDivider() {
-  return <div className="w-px h-5 bg-border mx-1 shrink-0" />;
-}
-
-function ToolbarSelect({ value, options, onChange, title, width }) {
-  return (
-    <select
-      value={value}
-      title={title}
-      aria-label={title}
-      onChange={(e) => onChange(e.target.value)}
-      onMouseDown={(e) => e.stopPropagation()}
-      className="h-[30px] rounded-md border border-border bg-card text-[12px] text-text px-1.5 cursor-pointer hover:border-border-hover focus:outline-none transition-colors"
-      style={{ width: width || 'auto' }}
-    >
-      {options.map(opt => (
-        <option key={opt.value ?? opt.label} value={opt.value ?? opt.label} className="bg-card text-text">
-          {opt.label}
-        </option>
-      ))}
-    </select>
-  );
-}
-
-
-
 export default function HtmlEditor() {
   const { theme } = useTheme();
   const editorRef = useRef(null);
@@ -295,31 +66,17 @@ export default function HtmlEditor() {
     h1: false, h2: false, h3: false, p: false,
   });
   const [modalType, setModalType] = useState(null);
-  const [modalData, setModalData] = useState({});
+  const [linkInitialData, setLinkInitialData] = useState({});
   const [tableMenu, setTableMenu] = useState(null);
   const [selectedCell, setSelectedCell] = useState(null);
   const [wordCount, setWordCount] = useState({ words: 0, chars: 0 });
-  const [imageTab, setImageTab] = useState('upload'); // 'upload' | 'url'
   const [isOptimized, setIsOptimized] = useState(false);
   const [originalHtml, setOriginalHtml] = useState('');
-  const fileInputRef = useRef(null);
   const savedRangeRef = useRef(null);
-  const [selectedImage, setSelectedImage] = useState(null);
-  const [imageSize, setImageSize] = useState({ width: 0, height: 0 });
-  const dragStateRef = useRef(null);
-  const imageToolbarRef = useRef(null);
-  const [scrollTick, setScrollTick] = useState(0);
   const autoSaveTimerRef = useRef(null);
   const [lastSavedTime, setLastSavedTime] = useState(null);
   const [saveError, setSaveError] = useState(false);
   const [isFullscreen, setIsFullscreen] = useState(false);
-  const [showFindReplace, setShowFindReplace] = useState(false);
-  const [findText, setFindText] = useState('');
-  const [replaceText, setReplaceText] = useState('');
-  const [findMatches, setFindMatches] = useState([]);
-  const [currentMatchIndex, setCurrentMatchIndex] = useState(-1);
-  const [caseSensitive, setCaseSensitive] = useState(false);
-  const findInputRef = useRef(null);
   const [showRestoreModal, setShowRestoreModal] = useState(false);
   const savedContentRef = useRef(null);
 
@@ -358,6 +115,36 @@ export default function HtmlEditor() {
     setShowRestoreModal(false);
     savedContentRef.current = null;
   }, []);
+
+  const {
+    selectedImage,
+    imageSize,
+    imageToolbarRef,
+    handleResizeStart,
+    handleImagePresetSize,
+    handleImageAlign,
+    handleEditorClick,
+    handleEditorScroll,
+  } = useImageResize({ editorRef, updateEmptyState });
+
+  const {
+    showFindReplace,
+    setShowFindReplace,
+    findText,
+    setFindText,
+    replaceText,
+    setReplaceText,
+    findMatches,
+    currentMatchIndex,
+    caseSensitive,
+    setCaseSensitive,
+    findInputRef,
+    findNext,
+    findPrevious,
+    replaceCurrent,
+    replaceAll,
+    closeFindReplace,
+  } = useFindReplace({ editorRef, updateEmptyState });
 
   // 自动保存：内容变化时防抖写入 localStorage
   useEffect(() => {
@@ -656,14 +443,12 @@ ${html}
     saveSelection();
     const selection = window.getSelection();
     const selectedText = selection.toString();
-    setModalData({ type: 'link', url: 'https://', text: selectedText });
+    setLinkInitialData({ url: 'https://', text: selectedText });
     setModalType('link');
   }, [saveSelection]);
 
   const handleInsertImage = useCallback(() => {
     saveSelection();
-    setModalData({ type: 'image', url: 'https://', alt: '', isBase64: false });
-    setImageTab('upload');
     setModalType('image');
   }, [saveSelection]);
 
@@ -673,52 +458,58 @@ ${html}
 
   const handleInsertTable = useCallback(() => {
     saveSelection();
-    setModalData({ type: 'table', rows: 3, cols: 3 });
     setModalType('table');
   }, [saveSelection]);
 
-  const handleModalConfirm = useCallback(() => {
+  const handleLinkConfirm = useCallback(({ url, text }) => {
     restoreSelection();
-
-    if (modalType === 'link') {
-      const { url, text } = modalData;
-      if (url && url !== 'https://' && isSafeUrl(url)) {
-        if (text) {
-          exec('insertHTML', `<a href="${escapeHtml(url)}" target="_blank" rel="noopener noreferrer">${escapeHtml(text)}</a>`);
-        } else {
-          exec('createLink', url);
-        }
+    if (url && url !== 'https://' && isSafeUrl(url)) {
+      if (text) {
+        exec('insertHTML', `<a href="${escapeHtml(url)}" target="_blank" rel="noopener noreferrer">${escapeHtml(text)}</a>`);
+      } else {
+        exec('createLink', url);
       }
-    } else if (modalType === 'image') {
-      const { url, alt } = modalData;
-      if (url && url !== 'https://' && isSafeUrl(url)) {
-        exec('insertHTML', `<img src="${escapeHtml(url)}" alt="${escapeHtml(alt || '')}" style="max-width:100%;height:auto" />`);
-      }
-    } else if (modalType === 'table') {
-      const r = parseInt(modalData.rows);
-      const c = parseInt(modalData.cols);
-      if (isNaN(r) || isNaN(c) || r < 1 || c < 1) return;
-
-      let table = '<table style="border-collapse:collapse;width:100%;margin:8px 0">';
-      for (let i = 0; i < r; i++) {
-        table += '<tr>';
-        for (let j = 0; j < c; j++) {
-          const tag = i === 0 ? 'th' : 'td';
-          table += `<${tag} style="border:1px solid #ddd;padding:8px;text-align:left">${i === 0 ? '标题' : ''}</${tag}>`;
-        }
-        table += '</tr>';
-      }
-      table += '</table><p><br></p>';
-      exec('insertHTML', table);
     }
     setModalType(null);
-    setModalData({});
     savedRangeRef.current = null;
-  }, [modalType, modalData, exec, restoreSelection]);
+  }, [exec, restoreSelection]);
+
+  const handleImageConfirm = useCallback(({ url, alt }) => {
+    restoreSelection();
+    if (url && url !== 'https://' && isSafeUrl(url)) {
+      exec('insertHTML', `<img src="${escapeHtml(url)}" alt="${escapeHtml(alt || '')}" style="max-width:100%;height:auto" />`);
+    }
+    setModalType(null);
+    savedRangeRef.current = null;
+  }, [exec, restoreSelection]);
+
+  const handleTableConfirm = useCallback(({ rows, cols }) => {
+    restoreSelection();
+    const r = parseInt(rows);
+    const c = parseInt(cols);
+    if (isNaN(r) || isNaN(c) || r < 1 || c < 1) {
+      setModalType(null);
+      savedRangeRef.current = null;
+      return;
+    }
+
+    let table = '<table style="border-collapse:collapse;width:100%;margin:8px 0">';
+    for (let i = 0; i < r; i++) {
+      table += '<tr>';
+      for (let j = 0; j < c; j++) {
+        const tag = i === 0 ? 'th' : 'td';
+        table += `<${tag} style="border:1px solid #ddd;padding:8px;text-align:left">${i === 0 ? '标题' : ''}</${tag}>`;
+      }
+      table += '</tr>';
+    }
+    table += '</table><p><br></p>';
+    exec('insertHTML', table);
+    setModalType(null);
+    savedRangeRef.current = null;
+  }, [exec, restoreSelection]);
 
   const handleModalCancel = useCallback(() => {
     setModalType(null);
-    setModalData({});
   }, []);
 
   // 粘贴处理：智能保留格式并清理垃圾代码
@@ -837,175 +628,6 @@ ${html}
     }
   }, [tableMenu]);
 
-  // 图片点击处理
-  const handleEditorClick = useCallback((e) => {
-    const target = e.target;
-    if (target.tagName === 'IMG' && editorRef.current?.contains(target)) {
-      setSelectedImage(target);
-      setImageSize({
-        width: target.offsetWidth,
-        height: target.offsetHeight
-      });
-    } else {
-      setSelectedImage(null);
-    }
-  }, []);
-
-  const handleEditorScroll = useCallback(() => {
-    if (!selectedImage || !editorRef.current) return;
-    
-    const imgRect = selectedImage.getBoundingClientRect();
-    const editorRect = editorRef.current.getBoundingClientRect();
-    const left = imgRect.left - editorRect.left;
-    const top = imgRect.top - editorRect.top + editorRef.current.scrollTop;
-    
-    const borderEl = document.getElementById('image-selected-border');
-    if (borderEl) {
-      borderEl.style.left = `${left}px`;
-      borderEl.style.top = `${top}px`;
-      borderEl.style.width = `${imgRect.width}px`;
-      borderEl.style.height = `${imgRect.height}px`;
-    }
-    
-    ['nw', 'ne', 'sw', 'se'].forEach(corner => {
-      const handleEl = document.getElementById(`image-resize-handle-${corner}`);
-      if (handleEl) {
-        const isTop = corner.includes('n');
-        const isLeft = corner.includes('w');
-        handleEl.style.left = isLeft ? `${left - 6}px` : `${left + imgRect.width - 6}px`;
-        handleEl.style.top = isTop ? `${top - 6}px` : `${top + imgRect.height - 6}px`;
-      }
-    });
-
-    if (imageToolbarRef.current) {
-      const toolbarHeight = 36;
-      const margin = 12;
-      const viewportHeight = window.innerHeight;
-      const viewportWidth = window.innerWidth;
-      const spaceBelow = viewportHeight - imgRect.bottom;
-      const showBelow = spaceBelow >= toolbarHeight + margin;
-      const toolbarTop = showBelow
-        ? imgRect.bottom + margin
-        : imgRect.top - toolbarHeight - margin;
-      
-      let toolbarLeft = imgRect.left + imgRect.width / 2;
-      const estimatedToolbarWidth = 280;
-      const actualToolbarWidth = imageToolbarRef.current.offsetWidth || estimatedToolbarWidth;
-      const halfWidth = actualToolbarWidth / 2;
-      const padding = 8;
-
-      const toolbarLeftEdge = toolbarLeft - halfWidth;
-      const toolbarRightEdge = toolbarLeft + halfWidth;
-
-      if (toolbarLeftEdge < padding) {
-        toolbarLeft = halfWidth + padding;
-      } else if (toolbarRightEdge > viewportWidth - padding) {
-        toolbarLeft = viewportWidth - halfWidth - padding;
-      }
-
-      imageToolbarRef.current.style.left = `${toolbarLeft}px`;
-      imageToolbarRef.current.style.top = `${toolbarTop}px`;
-    }
-  }, [selectedImage]);
-
-  // 开始拖拽调整图片大小
-  const handleResizeStart = useCallback((e, corner) => {
-    e.preventDefault();
-    e.stopPropagation();
-
-    if (!selectedImage) return;
-
-    const rect = selectedImage.getBoundingClientRect();
-    const aspectRatio = rect.width / rect.height;
-
-    dragStateRef.current = {
-      startX: e.clientX,
-      startY: e.clientY,
-      startWidth: rect.width,
-      startHeight: rect.height,
-      aspectRatio,
-      corner
-    };
-
-    const handleMouseMove = (moveEvent) => {
-      if (!dragStateRef.current || !selectedImage) return;
-
-      const { startX, startY, startWidth, startHeight, aspectRatio, corner } = dragStateRef.current;
-      const deltaX = moveEvent.clientX - startX;
-      const deltaY = moveEvent.clientY - startY;
-
-      let newWidth, newHeight;
-
-      // 根据拖拽角落计算新尺寸
-      if (corner === 'se' || corner === 'ne') {
-        newWidth = startWidth + deltaX;
-      } else {
-        newWidth = startWidth - deltaX;
-      }
-
-      // 保持宽高比
-      newHeight = newWidth / aspectRatio;
-
-      // 最小尺寸约束
-      const minWidth = 50;
-      const maxWidth = editorRef.current?.offsetWidth || 800;
-      newWidth = Math.max(minWidth, Math.min(newWidth, maxWidth));
-      newHeight = newWidth / aspectRatio;
-
-      // 应用新尺寸
-      selectedImage.style.width = `${newWidth}px`;
-      selectedImage.style.height = `${newHeight}px`;
-
-      // 更新显示尺寸
-      setImageSize({
-        width: Math.round(newWidth),
-        height: Math.round(newHeight)
-      });
-    };
-
-    const handleMouseUp = () => {
-      dragStateRef.current = null;
-      document.removeEventListener('mousemove', handleMouseMove);
-      document.removeEventListener('mouseup', handleMouseUp);
-      updateEmptyState();
-    };
-
-    document.addEventListener('mousemove', handleMouseMove);
-    document.addEventListener('mouseup', handleMouseUp);
-  }, [selectedImage, updateEmptyState]);
-
-  const handleImagePresetSize = useCallback((percent) => {
-    if (!selectedImage || !editorRef.current) return;
-    const editorWidth = editorRef.current.clientWidth;
-    const newWidth = Math.max(50, editorWidth * percent / 100);
-    const aspectRatio = selectedImage.offsetWidth / selectedImage.offsetHeight;
-    const newHeight = newWidth / aspectRatio;
-    selectedImage.style.width = `${newWidth}px`;
-    selectedImage.style.height = `${newHeight}px`;
-    setImageSize({ width: Math.round(newWidth), height: Math.round(newHeight) });
-    updateEmptyState();
-  }, [selectedImage, updateEmptyState]);
-
-  const handleImageAlign = useCallback((align) => {
-    if (!selectedImage) return;
-    const img = selectedImage;
-    img.removeAttribute('align');
-    if (align === 'left') {
-      img.style.cssText = img.style.cssText.replace(/margin[^;]+;?/g, '').replace(/display[^;]+;?/g, '');
-      img.style.float = 'left';
-      img.style.margin = '0 12px 8px 0';
-    } else if (align === 'right') {
-      img.style.cssText = img.style.cssText.replace(/margin[^;]+;?/g, '').replace(/display[^;]+;?/g, '');
-      img.style.float = 'right';
-      img.style.margin = '0 0 8px 12px';
-    } else {
-      img.style.cssText = img.style.cssText.replace(/float[^;]+;?/g, '').replace(/margin[^;]+;?/g, '');
-      img.style.display = 'block';
-      img.style.margin = '1em auto';
-    }
-    updateEmptyState();
-  }, [selectedImage, updateEmptyState]);
-
   const fontSizeOptions = FONT_SIZES.map(s => ({ label: s, value: s }));
   const fontFamilyOptions = FONT_FAMILIES.map(f => ({ label: f.label, value: f.value }));
 
@@ -1013,169 +635,6 @@ ${html}
   const toggleFullscreen = useCallback(() => {
     setIsFullscreen(!isFullscreen);
   }, [isFullscreen]);
-
-  // 高亮匹配项
-  const highlightMatch = useCallback((match) => {
-    if (!editorRef.current) return;
-
-    const editor = editorRef.current;
-    const text = editor.innerText || '';
-    const beforeText = text.substring(0, match.index);
-    const lines = beforeText.split('\n');
-    const lineIndex = lines.length - 1;
-    const charIndex = lines[lineIndex].length;
-
-    // 使用 Range API 定位并滚动到匹配项
-    const range = document.createRange();
-    const walker = document.createTreeWalker(editor, NodeFilter.SHOW_TEXT);
-    let currentOffset = 0;
-    let targetNode = null;
-    let targetOffset = 0;
-
-    while (walker.nextNode()) {
-      const node = walker.currentNode;
-      const nodeLength = node.textContent.length;
-
-      if (currentOffset + nodeLength > match.index) {
-        targetNode = node;
-        targetOffset = match.index - currentOffset;
-        break;
-      }
-      currentOffset += nodeLength;
-    }
-
-    if (targetNode) {
-      try {
-        range.setStart(targetNode, targetOffset);
-        range.setEnd(targetNode, targetOffset + match.length);
-        const selection = window.getSelection();
-        selection.removeAllRanges();
-        selection.addRange(range);
-
-        // 滚动到可见区域
-        const rect = range.getBoundingClientRect();
-        const editorRect = editor.getBoundingClientRect();
-        if (rect.top < editorRect.top || rect.bottom > editorRect.bottom) {
-          range.startContainer.parentElement?.scrollIntoView({
-            behavior: 'smooth',
-            block: 'center'
-          });
-        }
-      } catch (e) {
-        console.error('Highlight error:', e);
-      }
-    }
-  }, []);
-
-  // 查找文本
-  const performFind = useCallback(() => {
-    if (!findText || !editorRef.current) {
-      setFindMatches([]);
-      setCurrentMatchIndex(-1);
-      return;
-    }
-
-    const editor = editorRef.current;
-    const text = editor.innerText || '';
-    const flags = caseSensitive ? 'g' : 'gi';
-    const regex = new RegExp(findText.replace(/[.*+?^${}()|[\]\\]/g, '\\$&'), flags);
-    const matches = [];
-    let match;
-
-    while ((match = regex.exec(text)) !== null) {
-      matches.push({
-        index: match.index,
-        length: match[0].length,
-        text: match[0]
-      });
-    }
-
-    setFindMatches(matches);
-    setCurrentMatchIndex(matches.length > 0 ? 0 : -1);
-
-    // 高亮第一个匹配
-    if (matches.length > 0) {
-      highlightMatch(matches[0]);
-    }
-  }, [findText, caseSensitive, highlightMatch]);
-
-  // 自动查找：findText 或 caseSensitive 变化时触发（加防抖优化性能）
-  useEffect(() => {
-    if (!showFindReplace) return;
-    const timer = setTimeout(() => {
-      performFind();
-    }, 250);
-    return () => clearTimeout(timer);
-  }, [findText, caseSensitive, showFindReplace, performFind]);
-
-  // 上一个匹配项
-  const findPrevious = useCallback(() => {
-    if (findMatches.length === 0) return;
-    const newIndex = currentMatchIndex <= 0 ? findMatches.length - 1 : currentMatchIndex - 1;
-    setCurrentMatchIndex(newIndex);
-    highlightMatch(findMatches[newIndex]);
-  }, [findMatches, currentMatchIndex, highlightMatch]);
-
-  // 下一个匹配项
-  const findNext = useCallback(() => {
-    if (findMatches.length === 0) return;
-    const newIndex = currentMatchIndex >= findMatches.length - 1 ? 0 : currentMatchIndex + 1;
-    setCurrentMatchIndex(newIndex);
-    highlightMatch(findMatches[newIndex]);
-  }, [findMatches, currentMatchIndex, highlightMatch]);
-
-  // 替换当前匹配项
-  const replaceCurrent = useCallback(() => {
-    if (currentMatchIndex < 0 || !editorRef.current) return;
-
-    const editor = editorRef.current;
-    const selection = window.getSelection();
-    if (!selection.rangeCount) return;
-
-    const range = selection.getRangeAt(0);
-    const selectedText = range.toString();
-    const match = findMatches[currentMatchIndex];
-
-    if (selectedText === match.text) {
-      range.deleteContents();
-      range.insertNode(document.createTextNode(replaceText));
-      performFind(); // 重新查找
-    }
-  }, [currentMatchIndex, findMatches, replaceText, performFind]);
-
-  // 替换所有匹配项（保留 HTML 格式）
-  const replaceAll = useCallback(() => {
-    if (findMatches.length === 0 || !editorRef.current) return;
-
-    const editor = editorRef.current;
-    const flags = caseSensitive ? 'g' : 'gi';
-    const regex = new RegExp(findText.replace(/[.*+?^${}()|[\]\\]/g, '\\$&'), flags);
-
-    const walker = document.createTreeWalker(editor, NodeFilter.SHOW_TEXT);
-    const textNodes = [];
-    while (walker.nextNode()) textNodes.push(walker.currentNode);
-
-    textNodes.forEach(node => {
-      const original = node.textContent;
-      const replaced = original.replace(regex, replaceText);
-      if (replaced !== original) {
-        node.textContent = replaced;
-      }
-    });
-
-    updateEmptyState();
-    setFindMatches([]);
-    setCurrentMatchIndex(-1);
-  }, [findMatches, findText, replaceText, caseSensitive, updateEmptyState]);
-
-  // 关闭查找替换面板
-  const closeFindReplace = useCallback(() => {
-    setShowFindReplace(false);
-    setFindText('');
-    setReplaceText('');
-    setFindMatches([]);
-    setCurrentMatchIndex(-1);
-  }, []);
 
   // 键盘快捷键
   useEffect(() => {
@@ -1713,228 +1172,27 @@ ${html}
       </Modal>
 
       {/* 模态框 */}
-      <Modal isOpen={modalType === 'link'} onClose={handleModalCancel} title="插入链接" theme={theme}>
-        <div className="space-y-3">
-          <div>
-            <label className="block text-[13px] text-gray-600 mb-1.5">链接地址</label>
-            <input
-              type="text"
-              value={modalData.url || ''}
-              onChange={(e) => setModalData({ ...modalData, url: e.target.value })}
-              className="w-full h-[36px] px-3 rounded-lg border border-gray-200 text-[13px] focus:outline-none focus:border-gray-300"
-              placeholder="https://"
-            />
-          </div>
-          {modalData.text && (
-            <div>
-              <label className="block text-[13px] text-gray-600 mb-1.5">链接文本</label>
-              <input
-                type="text"
-                value={modalData.text || ''}
-                onChange={(e) => setModalData({ ...modalData, text: e.target.value })}
-                className="w-full h-[36px] px-3 rounded-lg border border-gray-200 text-[13px] focus:outline-none focus:border-gray-300"
-              />
-            </div>
-          )}
-          <div className="flex gap-2 pt-2">
-            <button
-              onClick={handleModalConfirm}
-              className="flex-1 h-[36px] rounded-lg text-[13px] font-semibold text-white cursor-pointer transition-all"
-              style={{ backgroundColor: theme.accent }}
-            >
-              确定
-            </button>
-            <button
-              onClick={handleModalCancel}
-              className="flex-1 h-[36px] rounded-lg text-[13px] font-semibold text-gray-500 bg-white border border-gray-200 cursor-pointer hover:bg-gray-50 transition-all"
-            >
-              取消
-            </button>
-          </div>
-        </div>
-      </Modal>
+      <LinkModal
+        isOpen={modalType === 'link'}
+        onConfirm={handleLinkConfirm}
+        onCancel={handleModalCancel}
+        initialData={linkInitialData}
+        theme={theme}
+      />
 
-      <Modal isOpen={modalType === 'image'} onClose={handleModalCancel} title="插入图片" theme={theme}>
-        <div className="space-y-3">
-          {/* Tab 切换 */}
-          <div className="flex gap-1 p-1 bg-gray-100 rounded-lg">
-            <button
-              onClick={() => setImageTab('upload')}
-              className={`flex-1 py-1.5 text-[13px] font-medium rounded-md transition-all ${
-                imageTab === 'upload'
-                  ? 'bg-white text-gray-800 shadow-sm'
-                  : 'text-gray-500 hover:text-gray-700'
-              }`}
-            >
-              本地上传
-            </button>
-            <button
-              onClick={() => setImageTab('url')}
-              className={`flex-1 py-1.5 text-[13px] font-medium rounded-md transition-all ${
-                imageTab === 'url'
-                  ? 'bg-white text-gray-800 shadow-sm'
-                  : 'text-gray-500 hover:text-gray-700'
-              }`}
-            >
-              网络图片
-            </button>
-          </div>
+      <ImageModal
+        isOpen={modalType === 'image'}
+        onConfirm={handleImageConfirm}
+        onCancel={handleModalCancel}
+        theme={theme}
+      />
 
-          {/* 本地上传 */}
-          {imageTab === 'upload' && (
-            <div>
-              <input
-                ref={fileInputRef}
-                type="file"
-                accept="image/*"
-                onChange={(e) => {
-                  const file = e.target.files?.[0];
-                  if (file) {
-                    const reader = new FileReader();
-                    reader.onload = (event) => {
-                      const base64 = event.target?.result;
-                      setModalData({ ...modalData, url: base64, isBase64: true });
-                    };
-                    reader.readAsDataURL(file);
-                  }
-                }}
-                className="hidden"
-              />
-              <div
-                onClick={() => fileInputRef.current?.click()}
-                onDragOver={(e) => {
-                  e.preventDefault();
-                  e.stopPropagation();
-                }}
-                onDrop={(e) => {
-                  e.preventDefault();
-                  e.stopPropagation();
-                  const file = e.dataTransfer.files?.[0];
-                  if (file && file.type.startsWith('image/')) {
-                    const reader = new FileReader();
-                    reader.onload = (event) => {
-                      const base64 = event.target?.result;
-                      setModalData({ ...modalData, url: base64, isBase64: true });
-                    };
-                    reader.readAsDataURL(file);
-                  }
-                }}
-                className="border-2 border-dashed border-gray-300 rounded-lg p-8 text-center cursor-pointer hover:border-gray-400 transition-colors"
-              >
-                <Upload className="w-8 h-8 mx-auto mb-2 text-gray-400" />
-                <p className="text-[13px] text-gray-600 mb-1">
-                  {modalData.url && modalData.isBase64 ? '已选择图片' : '点击选择或拖拽图片到此处'}
-                </p>
-                <p className="text-[12px] text-gray-400">支持 JPG、PNG、GIF 等格式</p>
-                {modalData.url && modalData.isBase64 && (
-                  <div className="mt-3">
-                    <img
-                      src={modalData.url}
-                      alt="预览"
-                      className="max-w-[200px] max-h-[150px] mx-auto rounded border border-gray-200"
-                    />
-                  </div>
-                )}
-              </div>
-            </div>
-          )}
-
-          {/* 网络图片 */}
-          {imageTab === 'url' && (
-            <div>
-              <label className="block text-[13px] text-gray-600 mb-1.5">图片地址</label>
-              <input
-                type="text"
-                value={modalData.url || ''}
-                onChange={(e) => setModalData({ ...modalData, url: e.target.value, isBase64: false })}
-                className="w-full h-[36px] px-3 rounded-lg border border-gray-200 text-[13px] focus:outline-none focus:border-gray-300"
-                placeholder="https://"
-              />
-              {modalData.url && !modalData.isBase64 && modalData.url !== 'https://' && (
-                <div className="mt-3">
-                  <img
-                    src={modalData.url}
-                    alt="预览"
-                    className="max-w-[200px] max-h-[150px] mx-auto rounded border border-gray-200"
-                    onError={(e) => {
-                      e.target.style.display = 'none';
-                    }}
-                  />
-                </div>
-              )}
-            </div>
-          )}
-
-          <div>
-            <label className="block text-[13px] text-gray-600 mb-1.5">替代文本 (可选)</label>
-            <input
-              type="text"
-              value={modalData.alt || ''}
-              onChange={(e) => setModalData({ ...modalData, alt: e.target.value })}
-              className="w-full h-[36px] px-3 rounded-lg border border-gray-200 text-[13px] focus:outline-none focus:border-gray-300"
-              placeholder="图片描述"
-            />
-          </div>
-          <div className="flex gap-2 pt-2">
-            <button
-              onClick={handleModalConfirm}
-              disabled={!modalData.url || (imageTab === 'url' && modalData.url === 'https://')}
-              className="flex-1 h-[36px] rounded-lg text-[13px] font-semibold text-white cursor-pointer transition-all disabled:opacity-40 disabled:cursor-not-allowed"
-              style={{ backgroundColor: theme.accent }}
-            >
-              确定
-            </button>
-            <button
-              onClick={handleModalCancel}
-              className="flex-1 h-[36px] rounded-lg text-[13px] font-semibold text-gray-500 bg-white border border-gray-200 cursor-pointer hover:bg-gray-50 transition-all"
-            >
-              取消
-            </button>
-          </div>
-        </div>
-      </Modal>
-
-      <Modal isOpen={modalType === 'table'} onClose={handleModalCancel} title="插入表格" theme={theme}>
-        <div className="space-y-3">
-          <div>
-            <label className="block text-[13px] text-gray-600 mb-1.5">行数</label>
-            <input
-              type="number"
-              value={modalData.rows || 3}
-              onChange={(e) => setModalData({ ...modalData, rows: e.target.value })}
-              className="w-full h-[36px] px-3 rounded-lg border border-gray-200 text-[13px] focus:outline-none focus:border-gray-300"
-              min="1"
-              max="20"
-            />
-          </div>
-          <div>
-            <label className="block text-[13px] text-gray-600 mb-1.5">列数</label>
-            <input
-              type="number"
-              value={modalData.cols || 3}
-              onChange={(e) => setModalData({ ...modalData, cols: e.target.value })}
-              className="w-full h-[36px] px-3 rounded-lg border border-gray-200 text-[13px] focus:outline-none focus:border-gray-300"
-              min="1"
-              max="10"
-            />
-          </div>
-          <div className="flex gap-2 pt-2">
-            <button
-              onClick={handleModalConfirm}
-              className="flex-1 h-[36px] rounded-lg text-[13px] font-semibold text-white cursor-pointer transition-all"
-              style={{ backgroundColor: theme.accent }}
-            >
-              确定
-            </button>
-            <button
-              onClick={handleModalCancel}
-              className="flex-1 h-[36px] rounded-lg text-[13px] font-semibold text-gray-500 bg-white border border-gray-200 cursor-pointer hover:bg-gray-50 transition-all"
-            >
-              取消
-            </button>
-          </div>
-        </div>
-      </Modal>
+      <TableModal
+        isOpen={modalType === 'table'}
+        onConfirm={handleTableConfirm}
+        onCancel={handleModalCancel}
+        theme={theme}
+      />
     </div>
   );
 }

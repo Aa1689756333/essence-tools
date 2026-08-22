@@ -30,32 +30,10 @@ import 'highlight.js/styles/github.css';
 
 [['javascript', javascript], ['css', css], ['xml', xml], ['markdown', markdownLang], ['python', python], ['bash', bash], ['json', json]].forEach(([n, l]) => hljs.registerLanguage(n, l));
 import { safeGetItem, safeSetItemWithRetry, safeRemoveItem } from '@/lib/storage';
+import { ToolbarBtn, ToolbarDivider } from '@/components/ui/Toolbar';
 
 // 使用实例而非全局配置，避免污染其他使用 marked 的代码
 const md = new Marked({ breaks: true, gfm: true });
-
-function ToolbarBtn({ icon: Icon, onClick, active, title }) {
-  return (
-    <button
-      type="button"
-      onMouseDown={(e) => { e.preventDefault(); onClick(); }}
-      title={title}
-      aria-label={title}
-      aria-pressed={active}
-      className={`w-[30px] h-[30px] rounded-md flex items-center justify-center cursor-pointer transition-all duration-150 shrink-0 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-gray-300 ${
-        active
-          ? 'bg-gray-200 text-gray-800'
-          : 'text-gray-500 hover:bg-gray-100 hover:text-gray-700'
-      }`}
-    >
-      <Icon className="w-[15px] h-[15px]" />
-    </button>
-  );
-}
-
-function ToolbarDivider() {
-  return <div className="w-px h-5 bg-border mx-1 shrink-0" />;
-}
 
 // 通用模态框（与 html-editor 对齐，支持暗黑模式和可访问性）
 function Modal({ isOpen, onClose, title, children, theme }) {
@@ -517,31 +495,31 @@ export default function MarkdownEditor() {
         {/* 工具栏 */}
         <div className="border-b border-gray-200 bg-gray-50/80 px-2 sm:px-3 py-2">
           <div className="flex items-center gap-0.5 overflow-x-auto scrollbar-hide" role="toolbar" aria-label="Markdown 编辑工具栏">
-            <ToolbarBtn icon={Undo2} onClick={handleUndo} title="撤销 (Ctrl+Z)" />
-            <ToolbarBtn icon={Redo2} onClick={handleRedo} title="恢复 (Ctrl+Y)" />
+            <ToolbarBtn icon={Undo2} onClick={handleUndo} title="撤销 (Ctrl+Z)" variant="gray" />
+            <ToolbarBtn icon={Redo2} onClick={handleRedo} title="恢复 (Ctrl+Y)" variant="gray" />
             <ToolbarDivider />
 
-            <ToolbarBtn icon={Heading1} onClick={handleH1} title="标题 1" />
-            <ToolbarBtn icon={Heading2} onClick={handleH2} title="标题 2" />
-            <ToolbarBtn icon={Heading3} onClick={handleH3} title="标题 3" />
+            <ToolbarBtn icon={Heading1} onClick={handleH1} title="标题 1" variant="gray" />
+            <ToolbarBtn icon={Heading2} onClick={handleH2} title="标题 2" variant="gray" />
+            <ToolbarBtn icon={Heading3} onClick={handleH3} title="标题 3" variant="gray" />
             <ToolbarDivider />
 
-            <ToolbarBtn icon={Bold} onClick={handleBold} title="加粗 (Ctrl+B)" />
-            <ToolbarBtn icon={Italic} onClick={handleItalic} title="斜体 (Ctrl+I)" />
-            <ToolbarBtn icon={Strikethrough} onClick={handleStrike} title="删除线" />
+            <ToolbarBtn icon={Bold} onClick={handleBold} title="加粗 (Ctrl+B)" variant="gray" />
+            <ToolbarBtn icon={Italic} onClick={handleItalic} title="斜体 (Ctrl+I)" variant="gray" />
+            <ToolbarBtn icon={Strikethrough} onClick={handleStrike} title="删除线" variant="gray" />
             <ToolbarDivider />
 
-            <ToolbarBtn icon={List} onClick={handleUl} title="无序列表" />
-            <ToolbarBtn icon={ListOrdered} onClick={handleOl} title="有序列表" />
-            <ToolbarBtn icon={CheckSquare} onClick={handleTask} title="任务列表" />
-            <ToolbarBtn icon={Quote} onClick={handleQuote} title="引用" />
+            <ToolbarBtn icon={List} onClick={handleUl} title="无序列表" variant="gray" />
+            <ToolbarBtn icon={ListOrdered} onClick={handleOl} title="有序列表" variant="gray" />
+            <ToolbarBtn icon={CheckSquare} onClick={handleTask} title="任务列表" variant="gray" />
+            <ToolbarBtn icon={Quote} onClick={handleQuote} title="引用" variant="gray" />
             <ToolbarDivider />
 
-            <ToolbarBtn icon={Code} onClick={handleInlineCode} title="行内代码" />
-            <ToolbarBtn icon={Code2} onClick={handleCodeBlock} title="代码块" />
-            <ToolbarBtn icon={Link} onClick={handleLink} title="链接" />
-            <ToolbarBtn icon={Image} onClick={handleImage} title="图片" />
-            <ToolbarBtn icon={Minus} onClick={handleHr} title="分割线" />
+            <ToolbarBtn icon={Code} onClick={handleInlineCode} title="行内代码" variant="gray" />
+            <ToolbarBtn icon={Code2} onClick={handleCodeBlock} title="代码块" variant="gray" />
+            <ToolbarBtn icon={Link} onClick={handleLink} title="链接" variant="gray" />
+            <ToolbarBtn icon={Image} onClick={handleImage} title="图片" variant="gray" />
+            <ToolbarBtn icon={Minus} onClick={handleHr} title="分割线" variant="gray" />
             <ToolbarDivider />
 
             {/* 视图切换 */}
@@ -590,6 +568,7 @@ export default function MarkdownEditor() {
                 onClick={toggleFullscreen}
                 active={isFullscreen}
                 title={isFullscreen ? '退出全屏 (Esc)' : '全屏编辑'}
+                variant="gray"
               />
             </div>
           </div>
@@ -622,9 +601,9 @@ export default function MarkdownEditor() {
               <span className="text-[12px] text-gray-400 min-w-[60px] text-center">
                 {findText ? `${currentMatchIndex + 1}/${findMatches.length}` : ''}
               </span>
-              <ToolbarBtn icon={ChevronUp} onClick={findPrev} title="上一个 (Shift+Enter)" />
-              <ToolbarBtn icon={ChevronDown} onClick={findNext} title="下一个 (Enter)" />
-              <ToolbarBtn icon={X} onClick={closeFindReplace} title="关闭 (Esc)" />
+              <ToolbarBtn icon={ChevronUp} onClick={findPrev} title="上一个 (Shift+Enter)" variant="gray" />
+              <ToolbarBtn icon={ChevronDown} onClick={findNext} title="下一个 (Enter)" variant="gray" />
+              <ToolbarBtn icon={X} onClick={closeFindReplace} title="关闭 (Esc)" variant="gray" />
             </div>
             <div className="flex items-center gap-2">
               <input
