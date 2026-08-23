@@ -4,6 +4,7 @@ import { getSystemSettings, validateEmailRule } from '@/lib/settings';
 import { isSmtpConfigured, sendMail } from '@/lib/mailer';
 import { issueCode } from '@/lib/verification';
 import { checkRateLimit, getClientIP, RateLimitRules } from '@/lib/rateLimit';
+import { validateBody, sendCodeSchema } from '@/lib/validate';
 
 export async function POST(req) {
   try {
@@ -25,11 +26,14 @@ export async function POST(req) {
       );
     }
 
-    const { email } = await req.json();
-
-    if (!email) {
-      return NextResponse.json({ error: '请填写邮箱' }, { status: 400 });
+    const validation = await validateBody(req, sendCodeSchema);
+    if (!validation.success) {
+      return NextResponse.json(
+        { error: validation.error, details: validation.details },
+        { status: validation.status }
+      );
     }
+    const { email } = validation.data;
 
     const settings = await getSystemSettings();
     if (settings.allow_registration === 'false') {

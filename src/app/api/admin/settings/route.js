@@ -1,6 +1,7 @@
 import { NextResponse } from 'next/server';
 import { getSessionUser } from '@/lib/auth';
 import { getSystemSettings, updateSystemSettings } from '@/lib/settings';
+import { validateBody, adminSettingsSchema } from '@/lib/validate';
 
 export async function GET() {
   const currentUser = await getSessionUser();
@@ -38,7 +39,14 @@ export async function POST(req) {
   }
 
   try {
-    const body = await req.json();
+    const validation = await validateBody(req, adminSettingsSchema);
+    if (!validation.success) {
+      return NextResponse.json(
+        { error: validation.error, details: validation.details },
+        { status: validation.status }
+      );
+    }
+    const body = { ...validation.data };
 
     // 处理 SMTP 密码：如果提交的是脱敏值，则保留原密码
     if (body.smtp_config) {

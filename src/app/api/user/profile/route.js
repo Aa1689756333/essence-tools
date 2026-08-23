@@ -46,7 +46,7 @@ export async function GET() {
 // PATCH: 更新用户资料
 export async function PATCH(request) {
   try {
-    const user = await getSessionUser();
+    const user = await getSessionUser(true);
     if (!user) {
       return NextResponse.json({ error: '请先登录' }, { status: 401 });
     }

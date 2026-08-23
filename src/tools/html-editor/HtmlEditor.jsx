@@ -26,6 +26,9 @@ import { formatHtml, cleanHtml, escapeHtml, isSafeUrl } from './lib/htmlUtils';
 import LinkModal from './components/LinkModal';
 import ImageModal from './components/ImageModal';
 import TableModal from './components/TableModal';
+import EditorToolbar from './components/EditorToolbar';
+import FindReplaceBar from './components/FindReplaceBar';
+import EditorArea from './components/EditorArea';
 import useFindReplace from './hooks/useFindReplace';
 import useImageResize from './hooks/useImageResize';
 
@@ -673,257 +676,67 @@ ${html}
 
       {/* 编辑器容器 */}
       <div className={`rounded-xl border border-gray-200 bg-white overflow-hidden shadow-[0_1px_3px_rgba(0,0,0,0.04)] ${isFullscreen ? 'fixed inset-0 z-[9999] rounded-none' : ''}`}>
-        {/* 工具栏 */}
-        <div className="border-b border-gray-200 bg-gray-50/80 px-2 sm:px-3 py-2">
-          <div className="flex items-center gap-0.5 flex-wrap">
-            <ToolbarBtn icon={Undo2} onClick={() => exec('undo')} title="撤销 (Ctrl+Z)" />
-            <ToolbarBtn icon={Redo2} onClick={() => exec('redo')} title="恢复 (Ctrl+Y)" />
-            <ToolbarDivider />
+        <EditorToolbar
+          theme={theme}
+          formatState={formatState}
+          exec={exec}
+          fontFamily={fontFamily}
+          fontSize={fontSize}
+          fontFamilyOptions={fontFamilyOptions}
+          fontSizeOptions={fontSizeOptions}
+          handleFontFamily={handleFontFamily}
+          handleFontSize={handleFontSize}
+          handleInsertHr={handleInsertHr}
+          showCode={showCode}
+          toggleCodeView={toggleCodeView}
+          handleColor={handleColor}
+          handleBgColor={handleBgColor}
+          handleInsertLink={handleInsertLink}
+          handleInsertImage={handleInsertImage}
+          handleInsertTable={handleInsertTable}
+          showFindReplace={showFindReplace}
+          setShowFindReplace={setShowFindReplace}
+          isFullscreen={isFullscreen}
+          toggleFullscreen={toggleFullscreen}
+          colors={COLORS}
+        />
 
-            <ToolbarSelect
-              value={fontFamily}
-              options={fontFamilyOptions}
-              onChange={handleFontFamily}
-              title="字体"
-              width="100px"
-            />
-            <ToolbarSelect
-              value={fontSize}
-              options={fontSizeOptions}
-              onChange={handleFontSize}
-              title="字号"
-              width="70px"
-            />
-            <ToolbarDivider />
+        <FindReplaceBar
+          theme={theme}
+          findInputRef={findInputRef}
+          findText={findText}
+          setFindText={setFindText}
+          findPrevious={findPrevious}
+          findNext={findNext}
+          findMatches={findMatches}
+          caseSensitive={caseSensitive}
+          setCaseSensitive={setCaseSensitive}
+          currentMatchIndex={currentMatchIndex}
+          replaceText={replaceText}
+          setReplaceText={setReplaceText}
+          replaceCurrent={replaceCurrent}
+          replaceAll={replaceAll}
+          closeFindReplace={closeFindReplace}
+        />
 
-            <ToolbarBtn icon={Bold} onClick={() => exec('bold')} active={formatState.bold} title="加粗 (Ctrl+B)" />
-            <ToolbarBtn icon={Italic} onClick={() => exec('italic')} active={formatState.italic} title="斜体 (Ctrl+I)" />
-            <ToolbarBtn icon={Underline} onClick={() => exec('underline')} active={formatState.underline} title="下划线 (Ctrl+U)" />
-            <ToolbarBtn icon={Strikethrough} onClick={() => exec('strikeThrough')} active={formatState.strikethrough} title="删除线" />
-            <ToolbarDivider />
-
-            <ToolbarBtn icon={Heading1} onClick={() => exec('formatBlock', 'h1')} active={formatState.h1} title="标题 1" />
-            <ToolbarBtn icon={Heading2} onClick={() => exec('formatBlock', 'h2')} active={formatState.h2} title="标题 2" />
-            <ToolbarBtn icon={Heading3} onClick={() => exec('formatBlock', 'h3')} active={formatState.h3} title="标题 3" />
-            <ToolbarBtn icon={Type} onClick={() => exec('formatBlock', 'p')} active={formatState.p} title="正文" />
-            <ToolbarDivider />
-
-            <ToolbarBtn icon={AlignLeft} onClick={() => exec('justifyLeft')} active={formatState.alignLeft} title="左对齐" />
-            <ToolbarBtn icon={AlignCenter} onClick={() => exec('justifyCenter')} active={formatState.alignCenter} title="居中" />
-            <ToolbarBtn icon={AlignRight} onClick={() => exec('justifyRight')} active={formatState.alignRight} title="右对齐" />
-            <ToolbarBtn icon={AlignJustify} onClick={() => exec('justifyFull')} active={formatState.alignJustify} title="两端对齐" />
-            <ToolbarDivider />
-
-            <ToolbarBtn icon={List} onClick={() => exec('insertUnorderedList')} active={formatState.unorderedList} title="无序列表" />
-            <ToolbarBtn icon={ListOrdered} onClick={() => exec('insertOrderedList')} active={formatState.orderedList} title="有序列表" />
-            <ToolbarBtn icon={Outdent} onClick={() => exec('outdent')} title="减少缩进" />
-            <ToolbarBtn icon={Indent} onClick={() => exec('indent')} title="增加缩进" />
-            <ToolbarDivider />
-
-            <ToolbarBtn icon={Quote} onClick={() => exec('formatBlock', 'blockquote')} title="引用块" />
-            <ToolbarBtn icon={Terminal} onClick={() => exec('formatBlock', 'pre')} title="代码块" />
-            <ToolbarDivider />
-
-            <ToolbarBtn icon={Minus} onClick={handleInsertHr} title="分割线" />
-            <ToolbarBtn icon={Code} onClick={toggleCodeView} active={showCode} title="HTML 源码" />
-            <ToolbarDivider />
-
-            <ColorPicker icon="A" label="文字颜色" colors={COLORS} onSelect={handleColor} theme={theme} />
-            <ColorPicker icon="BG" label="背景颜色" colors={COLORS} onSelect={handleBgColor} theme={theme} isBg />
-            <ToolbarDivider />
-            <ToolbarBtn icon={Link} onClick={handleInsertLink} title="插入链接" />
-            <ToolbarBtn icon={Image} onClick={handleInsertImage} title="插入图片" />
-            <ToolbarBtn icon={Table} onClick={handleInsertTable} title="插入表格" />
-            <ToolbarDivider />
-            <ToolbarBtn icon={Search} onClick={() => setShowFindReplace(!showFindReplace)} active={showFindReplace} title="查找替换 (Ctrl+F)" />
-            <ToolbarBtn icon={isFullscreen ? Minimize : Maximize} onClick={toggleFullscreen} active={isFullscreen} title={isFullscreen ? "退出全屏 (Esc)" : "全屏编辑"} />
-          </div>
-        </div>
-
-        {/* 查找替换面板 */}
-        {showFindReplace && (
-          <div className="border-b border-gray-200 bg-gray-50 px-4 py-3">
-            <div className="flex items-center gap-3 mb-2">
-              <div className="flex-1 flex items-center gap-2">
-                <input
-                  ref={findInputRef}
-                  type="text"
-                  value={findText}
-                  onChange={(e) => {
-                    setFindText(e.target.value);
-                  }}
-                  placeholder="查找内容"
-                  className="flex-1 h-[32px] px-3 rounded-md border border-gray-200 text-[13px] focus:outline-none focus:border-gray-300"
-                />
-                <button
-                  onClick={findPrevious}
-                  disabled={findMatches.length === 0}
-                  className="px-2 py-1 text-[12px] text-gray-600 bg-white border border-gray-200 rounded-md hover:bg-gray-50 disabled:opacity-40 disabled:cursor-not-allowed"
-                  title="上一个"
-                >
-                  <ChevronUp className="w-4 h-4" />
-                </button>
-                <button
-                  onClick={findNext}
-                  disabled={findMatches.length === 0}
-                  className="px-2 py-1 text-[12px] text-gray-600 bg-white border border-gray-200 rounded-md hover:bg-gray-50 disabled:opacity-40 disabled:cursor-not-allowed"
-                  title="下一个"
-                >
-                  <ChevronDown className="w-4 h-4" />
-                </button>
-              </div>
-              <div className="flex items-center gap-2 text-[12px] text-gray-500">
-                <label className="flex items-center gap-1 cursor-pointer">
-                  <input
-                    type="checkbox"
-                    checked={caseSensitive}
-                    onChange={(e) => {
-                      setCaseSensitive(e.target.checked);
-                    }}
-                    className="w-3.5 h-3.5"
-                  />
-                  区分大小写
-                </label>
-                {findMatches.length > 0 && (
-                  <span className="text-gray-400">
-                    {currentMatchIndex + 1} / {findMatches.length}
-                  </span>
-                )}
-              </div>
-            </div>
-            <div className="flex items-center gap-2">
-              <input
-                type="text"
-                value={replaceText}
-                onChange={(e) => setReplaceText(e.target.value)}
-                placeholder="替换为"
-                className="flex-1 h-[32px] px-3 rounded-md border border-gray-200 text-[13px] focus:outline-none focus:border-gray-300"
-              />
-              <button
-                onClick={replaceCurrent}
-                disabled={currentMatchIndex < 0}
-                className="px-3 py-1 text-[12px] text-white rounded-md disabled:opacity-40 disabled:cursor-not-allowed"
-                style={{ backgroundColor: theme.accent }}
-              >
-                替换
-              </button>
-              <button
-                onClick={replaceAll}
-                disabled={findMatches.length === 0}
-                className="px-3 py-1 text-[12px] text-white rounded-md disabled:opacity-40 disabled:cursor-not-allowed"
-                style={{ backgroundColor: theme.accent }}
-              >
-                全部替换
-              </button>
-              <button
-                onClick={closeFindReplace}
-                className="px-2 py-1 text-[12px] text-gray-500 hover:text-gray-700"
-                title="关闭"
-              >
-                <X className="w-4 h-4" />
-              </button>
-            </div>
-          </div>
-        )}
-
-        {/* 编辑区域 */}
-        <div className={`relative ${isFullscreen ? 'flex-1 overflow-hidden flex flex-col' : ''}`}>
-          {isEmpty && !showCode && (
-            <div className="absolute inset-0 flex items-center justify-center pointer-events-none z-10">
-              <span className="text-[14px] text-gray-300">点击此处开始编辑内容...</span>
-            </div>
-          )}
-          {showCode ? (
-            <div className={`code-view ${isFullscreen ? 'flex-1 flex flex-col' : ''}`}>
-              <textarea
-                value={htmlCode}
-                onChange={handleCodeChange}
-                className={`w-full p-3 sm:p-4 font-mono text-[13px] text-gray-700 bg-gray-50 resize-none focus:outline-none border-none leading-relaxed ${isFullscreen ? 'flex-1' : 'h-[400px] sm:h-[500px]'}`}
-                spellCheck={false}
-              />
-              <div className="flex gap-2 px-4 py-2 border-t border-gray-200 bg-gray-50">
-                <button
-                  onClick={applyCode}
-                  className="px-4 py-[6px] rounded-md text-[12px] font-semibold text-white cursor-pointer transition-all"
-                  style={{ backgroundColor: theme.accent }}
-                >
-                  应用修改
-                </button>
-                <button
-                  onClick={() => setShowCode(false)}
-                  className="px-4 py-[6px] rounded-md text-[12px] font-semibold text-gray-500 bg-white border border-gray-200 cursor-pointer hover:bg-gray-50 transition-all"
-                >
-                  取消
-                </button>
-              </div>
-            </div>
-          ) : (
-            <div
-              ref={editorRef}
-              contentEditable
-              suppressContentEditableWarning
-              onInput={handleInput}
-              onPaste={handlePaste}
-              onContextMenu={handleContextMenu}
-              onClick={handleEditorClick}
-              onScroll={handleEditorScroll}
-              className={`editor-content ${isFullscreen ? 'flex-1 max-h-none' : ''}`}
-              spellCheck={false}
-              role="textbox"
-              aria-multiline="true"
-              aria-label="HTML 编辑区域"
-            />
-          )}
-
-          {/* 图片调整手柄 */}
-          {selectedImage && !showCode && (() => {
-            const imgRect = selectedImage.getBoundingClientRect();
-            const editorRect = editorRef.current?.getBoundingClientRect();
-            if (!editorRect) return null;
-
-            const left = imgRect.left - editorRect.left;
-            const top = imgRect.top - editorRect.top + editorRef.current.scrollTop;
-            const width = imgRect.width;
-            const height = imgRect.height;
-
-            return (
-              <>
-                {/* 选中边框 */}
-                <div
-                  id="image-selected-border"
-                  className="absolute pointer-events-none border-2 border-blue-500 z-40"
-                  style={{
-                    left: `${left}px`,
-                    top: `${top}px`,
-                    width: `${width}px`,
-                    height: `${height}px`
-                  }}
-                />
-                {/* 四角手柄 */}
-                {['nw', 'ne', 'sw', 'se'].map(corner => {
-                  const isTop = corner.includes('n');
-                  const isLeft = corner.includes('w');
-                  const cursor = corner === 'nw' || corner === 'se' ? 'nwse-resize' : 'nesw-resize';
-
-                  return (
-                    <div
-                      key={corner}
-                      id={`image-resize-handle-${corner}`}
-                      onMouseDown={(e) => handleResizeStart(e, corner)}
-                      onClick={(e) => e.stopPropagation()}
-                      className="absolute w-3 h-3 bg-white border-2 border-blue-500 rounded-sm z-50 hover:bg-blue-100"
-                      style={{
-                        left: isLeft ? `${left - 6}px` : `${left + width - 6}px`,
-                        top: isTop ? `${top - 6}px` : `${top + height - 6}px`,
-                        cursor
-                      }}
-                    />
-                  );
-                })}
-              </>
-            );
-          })()}
-        </div>
+        <EditorArea
+          editorRef={editorRef}
+          showCode={showCode}
+          htmlCode={htmlCode}
+          handleCodeChange={handleCodeChange}
+          applyCode={applyCode}
+          setShowCode={setShowCode}
+          isFullscreen={isFullscreen}
+          isEmpty={isEmpty}
+          handleInput={handleInput}
+          handlePaste={handlePaste}
+          handleContextMenu={handleContextMenu}
+          handleEditorClick={handleEditorClick}
+          handleEditorScroll={handleEditorScroll}
+          theme={theme}
+          selectedImage={selectedImage}
+          handleResizeStart={handleResizeStart}
+        />
 
         {/* 底部操作栏 */}
         <div className={`flex items-center justify-between flex-wrap gap-2 ${isFullscreen ? 'px-4 py-3 border-t border-gray-200 bg-gray-50' : 'mt-4'}`}>

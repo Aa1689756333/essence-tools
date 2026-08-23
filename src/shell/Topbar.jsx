@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useRef, useEffect } from 'react';
+import { useState, useRef, useEffect, useCallback } from 'react';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import { Search, Palette, Check, Menu, Sun, Moon, Flame, Coins, ChevronDown, Shield, LogOut, Settings } from 'lucide-react';
@@ -9,6 +9,7 @@ import { useTheme } from './ThemeProvider';
 import { useSidebar } from './useSidebar';
 import { useAuth } from '@/context/AuthContext';
 import SearchModal from '@/components/SearchModal';
+import { useClickOutside } from '@/hooks/useClickOutside';
 
 export default function Topbar() {
   const pathname = usePathname();
@@ -29,26 +30,9 @@ export default function Topbar() {
   const today = new Date();
   const todayStr = `${today.getFullYear()}-${String(today.getMonth() + 1).padStart(2, '0')}-${String(today.getDate()).padStart(2, '0')}`;
 
-  useEffect(() => {
-    const handler = (e) => {
-      if (userMenuRef.current && !userMenuRef.current.contains(e.target)) {
-        setShowUserMenu(false);
-      }
-    };
-    document.addEventListener('mousedown', handler);
-    return () => document.removeEventListener('mousedown', handler);
-  }, []);
+  useClickOutside(userMenuRef, useCallback(() => setShowUserMenu(false), []));
 
-  useEffect(() => {
-    if (!showPicker) return;
-    const handler = (e) => {
-      if (pickerRef.current && !pickerRef.current.contains(e.target)) {
-        setShowPicker(false);
-      }
-    };
-    document.addEventListener('mousedown', handler);
-    return () => document.removeEventListener('mousedown', handler);
-  }, [showPicker]);
+  useClickOutside(pickerRef, useCallback(() => setShowPicker(false), []), showPicker);
 
   useEffect(() => {
     if (showPicker && pickerButtonRef.current) {

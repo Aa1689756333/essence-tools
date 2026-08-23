@@ -1,4 +1,9 @@
-import HtmlEditor from '@/tools/html-editor/HtmlEditor';
+import dynamic from 'next/dynamic';
+import SkeletonLoader from '@/components/ui/SkeletonLoader';
+
+const HtmlEditor = dynamic(() => import('@/tools/html-editor/HtmlEditor'), {
+  loading: () => <SkeletonLoader />,
+});
 
 export const metadata = {
   title: 'HTML 编辑器 - ToolBox',

@@ -42,7 +42,7 @@ export async function verifyToken(token) {
   }
 }
 
-export async function getSessionUser() {
+export async function getSessionUser(includePasswordHash = false) {
   try {
     const cookieStore = await cookies();
     const token = cookieStore.get(COOKIE_NAME)?.value;
@@ -56,6 +56,7 @@ export async function getSessionUser() {
       select: {
         id: true,
         email: true,
+        passwordHash: includePasswordHash,
         nickname: true,
         avatar: true,
         role: true,

@@ -1,6 +1,7 @@
 'use client';
 
-import { createContext, useContext, useState, useEffect, useCallback } from 'react';
+import { createContext, useContext, useEffect, useCallback } from 'react';
+import { useLocalStorage } from '@/hooks/useLocalStorage';
 
 export const themes = [
   {
@@ -96,43 +97,18 @@ export function useTheme() {
   return ctx;
 }
 
-function getStoredTheme() {
-  if (typeof window === 'undefined') return themes[0];
-  try {
-    const id = localStorage.getItem('toolbox-theme');
-    return themes.find(t => t.id === id) || themes[0];
-  } catch {
-    return themes[0];
-  }
-}
-
-function getStoredDark() {
-  if (typeof window === 'undefined') return false;
-  try {
-    return localStorage.getItem('toolbox-dark') === 'true';
-  } catch {
-    return false;
-  }
-}
-
 export default function ThemeProvider({ children }) {
-  const [theme, setTheme] = useState(themes[0]);
-  const [isDark, setIsDark] = useState(false);
+  const [themeId, setThemeId] = useLocalStorage('toolbox-theme', themes[0].id);
+  const [isDark, setIsDark] = useLocalStorage('toolbox-dark', false, {
+    serialize: (v) => String(v),
+    deserialize: (raw) => raw === 'true',
+  });
 
-  useEffect(() => {
-    setTheme(getStoredTheme());
-    setIsDark(getStoredDark());
-  }, []);
+  const theme = themes.find(t => t.id === themeId) || themes[0];
 
-  const setThemeAndPersist = useCallback((t) => {
-    setTheme(t);
-    try { localStorage.setItem('toolbox-theme', t.id); } catch {}
-  }, []);
-
-  const setIsDarkAndPersist = useCallback((dark) => {
-    setIsDark(dark);
-    try { localStorage.setItem('toolbox-dark', String(dark)); } catch {}
-  }, []);
+  const setTheme = useCallback((t) => {
+    setThemeId(t.id);
+  }, [setThemeId]);
 
   useEffect(() => {
     const root = document.documentElement;
@@ -153,7 +129,7 @@ export default function ThemeProvider({ children }) {
   }, [theme, isDark]);
 
   return (
-    <ThemeContext.Provider value={{ theme, themes, setTheme: setThemeAndPersist, isDark, setIsDark: setIsDarkAndPersist }}>
+    <ThemeContext.Provider value={{ theme, themes, setTheme, isDark, setIsDark }}>
       {children}
     </ThemeContext.Provider>
   );

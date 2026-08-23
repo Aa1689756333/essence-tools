@@ -1,4 +1,9 @@
-import MarkdownEditor from '@/tools/markdown-editor/MarkdownEditor';
+import dynamic from 'next/dynamic';
+import SkeletonLoader from '@/components/ui/SkeletonLoader';
+
+const MarkdownEditor = dynamic(() => import('@/tools/markdown-editor/MarkdownEditor'), {
+  loading: () => <SkeletonLoader />,
+});
 
 export const metadata = {
   title: 'Markdown 编辑器 - ToolBox',

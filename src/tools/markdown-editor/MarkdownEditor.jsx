@@ -21,14 +21,12 @@ import hljs from 'highlight.js/lib/core'; // from 'highlight.js'
 import javascript from 'highlight.js/lib/languages/javascript';
 import css from 'highlight.js/lib/languages/css';
 import xml from 'highlight.js/lib/languages/xml';
-import markdownLang from 'highlight.js/lib/languages/markdown';
-import python from 'highlight.js/lib/languages/python';
-import { countWords } from '@/lib/utils';
-import bash from 'highlight.js/lib/languages/bash';
 import json from 'highlight.js/lib/languages/json';
+import { countWords } from '@/lib/utils';
 import 'highlight.js/styles/github.css';
 
-[['javascript', javascript], ['css', css], ['xml', xml], ['markdown', markdownLang], ['python', python], ['bash', bash], ['json', json]].forEach(([n, l]) => hljs.registerLanguage(n, l));
+// 按需加载常用语言，减少打包体积（xml 覆盖 HTML）
+[['javascript', javascript], ['css', css], ['xml', xml], ['json', json]].forEach(([n, l]) => hljs.registerLanguage(n, l));
 import { safeGetItem, safeSetItemWithRetry, safeRemoveItem } from '@/lib/storage';
 import { ToolbarBtn, ToolbarDivider } from '@/components/ui/Toolbar';
 

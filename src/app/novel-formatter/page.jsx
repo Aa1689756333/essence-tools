@@ -1,4 +1,9 @@
-import NovelFormatter from '@/tools/novel-formatter/NovelFormatter';
+import dynamic from 'next/dynamic';
+import SkeletonLoader from '@/components/ui/SkeletonLoader';
+
+const NovelFormatter = dynamic(() => import('@/tools/novel-formatter/NovelFormatter'), {
+  loading: () => <SkeletonLoader />,
+});
 
 export const metadata = {
   title: '小说排版器 - ToolBox',

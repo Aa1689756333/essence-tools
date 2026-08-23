@@ -8,6 +8,8 @@ import AuthModal from '@/components/auth/AuthModal';
 import CheckInModal from '@/components/auth/CheckInModal';
 import ProfileModal from '@/components/auth/ProfileModal';
 import ErrorBoundary from '@/components/ErrorBoundary';
+import { ToastProvider } from '@/context/ToastContext';
+import Toast from '@/components/ui/Toast';
 import { tools, getToolsByCategory } from '@/tools/registry';
 import { getSystemSettings } from '@/lib/settings';
 import { Inter } from 'next/font/google';
@@ -48,7 +50,8 @@ export default async function RootLayout({ children }) {
       </head>
       <body className="bg-bg antialiased font-sans" suppressHydrationWarning>
         <ThemeProvider>
-          <AuthProvider>
+          <ToastProvider>
+            <AuthProvider>
             <SidebarProvider>
               <div className="flex h-screen overflow-hidden">
                 <Sidebar tools={tools} toolsByCategory={toolsByCategory} />
@@ -65,7 +68,9 @@ export default async function RootLayout({ children }) {
               <CheckInModal />
               <ProfileModal />
             </SidebarProvider>
+            <Toast />
           </AuthProvider>
+          </ToastProvider>
         </ThemeProvider>
       </body>
     </html>

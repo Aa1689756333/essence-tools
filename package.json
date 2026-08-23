@@ -10,7 +10,8 @@
     "test:acceptance": "node acceptance-test.mjs",
     "test:md": "node test-md-editor.mjs",
     "test:md2": "node test-md-editor-2.mjs",
-    "test:html": "node test-html-editor.js"
+    "test:html": "node test-html-editor.js",
+    "test:fixes": "node --test test-fixes.mjs"
   },
   "dependencies": {
     "@prisma/client": "^5.22.0",
