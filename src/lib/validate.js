@@ -77,6 +77,48 @@ export const adminUserPatchSchema = z.object({
   reason: z.string().max(200, '原因长度不能超过 200 个字符').optional(),
 });
 
+export const checkinConfigSchema = z.object({
+  mode: z.enum(['A', 'B', 'C'], { errorMap: () => ({ message: 'mode 必须是 A、B 或 C' }) }),
+  capped: z.object({
+    basePoints: z.number().int('basePoints 必须是整数').nonnegative('basePoints 不能为负数'),
+    bonusRules: z.array(z.object({
+      minDays: z.number().int().nonnegative(),
+      maxDays: z.number().int().nonnegative().optional(),
+      extraPoints: z.number().int().nonnegative(),
+    })),
+    dailyCap: z.number().int().nonnegative(),
+    milestones: z.array(z.object({
+      day: z.number().int().positive(),
+      bonus: z.number().int().nonnegative(),
+    })),
+  }),
+  tiered: z.object({
+    dailyTiers: z.array(z.object({
+      minDays: z.number().int().positive(),
+      maxDays: z.number().int().positive(),
+      dailyPoints: z.number().int().nonnegative(),
+    })),
+    milestones: z.array(z.object({
+      day: z.number().int().positive(),
+      bonus: z.number().int().nonnegative(),
+    })),
+  }),
+  daily: z.object({
+    days: z.array(z.number().int().nonnegative()),
+  }),
+  cycleLength: z.number().int().positive().max(365, 'cycleLength 不能超过 365'),
+  cycleReset: z.boolean(),
+  absoluteDailyCap: z.number().int().nonnegative().max(10000, 'absoluteDailyCap 不能超过 10000'),
+}).superRefine((config, ctx) => {
+  if (config.daily.days.length !== config.cycleLength) {
+    ctx.addIssue({
+      code: z.ZodIssueCode.custom,
+      path: ['daily', 'days'],
+      message: 'daily.days 长度必须等于 cycleLength',
+    });
+  }
+});
+
 export const adminSettingsSchema = z.object({
   site_title: z.string().max(100, '站点标题长度不能超过 100 个字符').optional(),
   site_description: z.string().max(500, '站点描述长度不能超过 500 个字符').optional(),

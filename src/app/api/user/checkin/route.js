@@ -1,7 +1,8 @@
 import { NextResponse } from 'next/server';
 import db from '@/lib/db';
 import { getSessionUser } from '@/lib/auth';
-import { getSystemSettings } from '@/lib/settings';
+import { getSystemSettings, normalizeCheckinConfig } from '@/lib/settings';
+import { computeEarned, getCycleDay } from '@/lib/checkin-core';
 
 function getLocalDateStr(dateObj = new Date()) {
   const year = dateObj.getFullYear();
@@ -16,6 +17,39 @@ function getYesterdayDateStr() {
   return getLocalDateStr(d);
 }
 
+function getNextMilestone(config, mode, cycleDay) {
+  if (mode === 'C') return null;
+
+  const milestones = mode === 'A'
+    ? config.capped.milestones
+    : config.tiered.milestones;
+  const next = (milestones || [])
+    .filter((milestone) => milestone.day > cycleDay)
+    .sort((a, b) => a.day - b.day)[0];
+
+  return next ? { day: next.day, bonus: next.bonus, daysRemaining: next.day - cycleDay } : null;
+}
+
+function getCurrentTierDescription(config, mode, cycleDay) {
+  if (mode === 'A') {
+    const matchedRules = (config.capped.bonusRules || []).filter(
+      (rule) => cycleDay >= rule.minDays && cycleDay <= (rule.maxDays ?? Infinity)
+    );
+    const dailyEarned = computeEarned(mode, config, cycleDay).dailyEarned;
+    return `基础 ${config.capped.basePoints} 分，日常封顶 ${config.capped.dailyCap} 分${matchedRules.length ? `，当前额外奖励 ${matchedRules.reduce((sum, rule) => sum + (rule.extraPoints || 0), 0)} 分` : ''}，今日到手 ${dailyEarned} 分`;
+  }
+
+  if (mode === 'B') {
+    const tier = (config.tiered.dailyTiers || []).find(
+      ({ minDays, maxDays }) => cycleDay >= minDays && cycleDay <= maxDays
+    );
+    return tier ? `第 ${tier.minDays}-${tier.maxDays} 天，每日基准 ${tier.dailyPoints} 分` : '当前无匹配积分档位';
+  }
+
+  const dailyEarned = config.daily.days?.[cycleDay - 1] || 0;
+  return `第 ${cycleDay} 天自定义 ${dailyEarned} 分`;
+}
+
 export async function GET() {
   const user = await getSessionUser();
   if (!user) {
@@ -25,6 +59,9 @@ export async function GET() {
   const today = getLocalDateStr();
   const yesterday = getYesterdayDateStr();
   const todayChecked = user.lastCheckInDate === today;
+  const continuousCheckIn = user.lastCheckInDate === today || user.lastCheckInDate === yesterday
+    ? user.continuousCheckIn
+    : 0;
 
   const history = await db.pointTransaction.findMany({
     where: { userId: user.id },
@@ -32,7 +69,6 @@ export async function GET() {
     take: 20,
   });
 
-  // 当月全勤进度统计
   const now = new Date();
   const daysInMonth = new Date(now.getFullYear(), now.getMonth() + 1, 0).getDate();
   const monthStart = new Date(now.getFullYear(), now.getMonth(), 1);
@@ -48,23 +84,27 @@ export async function GET() {
   const checkedDays = [...new Set(monthCheckins.map((tx) => tx.createdAt.getDate()))];
 
   const settings = await getSystemSettings();
-  let monthFullBonus = 0;
-  try {
-    if (settings.checkin_config) {
-      monthFullBonus = JSON.parse(settings.checkin_config).monthFullBonus || 0;
-    }
-  } catch {}
+  const config = normalizeCheckinConfig(settings.checkin_config);
+  const cycleDay = continuousCheckIn > 0
+    ? getCycleDay(continuousCheckIn, config.cycleLength, config.cycleReset)
+    : 1;
+  const expected = computeEarned(config.mode, config, cycleDay);
 
   return NextResponse.json({
     todayChecked,
-    continuousCheckIn: user.lastCheckInDate === today || user.lastCheckInDate === yesterday ? user.continuousCheckIn : 0,
+    continuousCheckIn,
     lastCheckInDate: user.lastCheckInDate,
     points: user.points,
     history,
     monthCheckinCount: checkedDays.length,
     daysInMonth,
     checkedDays,
-    monthFullBonus,
+    monthFullBonus: 0,
+    mode: config.mode,
+    cycleDay,
+    todayExpected: todayChecked ? 0 : expected.totalEarned,
+    currentTier: getCurrentTierDescription(config, config.mode, cycleDay),
+    nextMilestone: getNextMilestone(config, config.mode, cycleDay),
   });
 }
 
@@ -76,80 +116,61 @@ export async function POST() {
     }
 
     const today = getLocalDateStr();
-    if (user.lastCheckInDate === today) {
-      return NextResponse.json({ error: '您今天已经签过到了，明天再来吧！' }, { status: 400 });
-    }
-
     const yesterday = getYesterdayDateStr();
-    let newContinuous = 1;
-    if (user.lastCheckInDate === yesterday) {
-      newContinuous = user.continuousCheckIn + 1;
-    }
-
     const settings = await getSystemSettings();
-    let checkinCfg = {
-      basePoints: 3,
-      bonusRules: [
-        { minDays: 3, maxDays: 6, extraPoints: 2 },
-        { minDays: 7, extraPoints: 4 },
-      ],
-      dailyCap: 7,
-    };
+    const config = normalizeCheckinConfig(settings.checkin_config);
 
-    try {
-      if (settings.checkin_config) {
-        checkinCfg = { ...checkinCfg, ...JSON.parse(settings.checkin_config) };
-      }
-    } catch {}
-
-    let earned = checkinCfg.basePoints || 3;
-    const rules = checkinCfg.bonusRules || [];
-
-    for (const rule of rules) {
-      const min = rule.minDays || 0;
-      const max = rule.maxDays || Infinity;
-      if (newContinuous >= min && newContinuous <= max) {
-        earned += (rule.extraPoints || 0);
-      }
-    }
-
-    if (checkinCfg.dailyCap) {
-      earned = Math.min(earned, checkinCfg.dailyCap);
-    }
-
-    // 整月全勤奖励：本月最后一天签到，且当月每天都已签到（不受 dailyCap 限制）
-    let fullMonthBonus = 0;
-    const now = new Date();
-    const daysInMonth = new Date(now.getFullYear(), now.getMonth() + 1, 0).getDate();
-    const isLastDayOfMonth = now.getDate() === daysInMonth;
-    if (isLastDayOfMonth && (checkinCfg.monthFullBonus || 0) > 0) {
-      const monthStart = new Date(now.getFullYear(), now.getMonth(), 1);
-      const nextMonthStart = new Date(now.getFullYear(), now.getMonth() + 1, 1);
-      const priorCheckins = await db.pointTransaction.count({
-        where: {
-          userId: user.id,
-          type: 'CHECKIN',
-          createdAt: { gte: monthStart, lt: nextMonthStart },
-        },
-      });
-      // priorCheckins 不含本次签到，+1 后覆盖当月每一天即为全勤
-      if (priorCheckins + 1 >= daysInMonth) {
-        fullMonthBonus = checkinCfg.monthFullBonus;
-      }
-    }
-
-    const totalEarned = earned + fullMonthBonus;
-    const checkinBalance = user.points + earned;
-    const finalBalance = user.points + totalEarned;
-
-    const txOps = [
-      db.user.update({
+    const result = await db.$transaction(async (tx) => {
+      const currentUser = await tx.user.findUnique({
         where: { id: user.id },
+        select: { lastCheckInDate: true, continuousCheckIn: true, points: true },
+      });
+      const newContinuous = currentUser.lastCheckInDate === yesterday
+        ? currentUser.continuousCheckIn + 1
+        : 1;
+      const cycleDay = getCycleDay(newContinuous, config.cycleLength, config.cycleReset);
+      const earned = computeEarned(config.mode, config, cycleDay);
+
+      const affected = await tx.user.updateMany({
+        where: { id: user.id, NOT: { lastCheckInDate: today } },
         data: {
-          points: { increment: totalEarned },
+          points: { increment: earned.totalEarned },
           continuousCheckIn: newContinuous,
           lastCheckInDate: today,
         },
+      });
+      if (affected.count === 0) throw new Error('ALREADY_CHECKED');
+
+      const dailyBalance = currentUser.points + earned.dailyEarned;
+      const transactions = [];
+      if (earned.dailyEarned > 0) {
+        transactions.push(await tx.pointTransaction.create({
+          data: {
+            userId: user.id,
+            amount: earned.dailyEarned,
+            balance: dailyBalance,
+            type: 'CHECKIN',
+            description: `签到成功 (+${earned.dailyEarned} 积分，已连续 ${newContinuous} 天)`,
+          },
+        }));
+      }
+      if (earned.milestoneBonus > 0) {
+        transactions.push(await tx.pointTransaction.create({
+          data: {
+            userId: user.id,
+            amount: earned.milestoneBonus,
+            balance: currentUser.points + earned.totalEarned,
+            type: 'MILESTONE_BONUS',
+            description: `连签第 ${cycleDay} 天里程碑奖励 (+${earned.milestoneBonus} 积分)`,
+          },
+        }));
+      }
+
+      const checkInLog = await tx.checkInLog.create({
+        data: { userId: user.id, date: today, earned: earned.totalEarned },
+      });
+      const updatedUser = await tx.user.findUnique({
+        where: { id: user.id },
         select: {
           id: true,
           email: true,
@@ -161,48 +182,27 @@ export async function POST() {
           continuousCheckIn: true,
           lastCheckInDate: true,
         },
-      }),
-      db.pointTransaction.create({
-        data: {
-          userId: user.id,
-          amount: earned,
-          balance: checkinBalance,
-          type: 'CHECKIN',
-          description: `签到成功 (+${earned} 积分，已连续 ${newContinuous} 天)`,
-        },
-      }),
-    ];
+      });
 
-    if (fullMonthBonus > 0) {
-      txOps.push(
-        db.pointTransaction.create({
-          data: {
-            userId: user.id,
-            amount: fullMonthBonus,
-            balance: finalBalance,
-            type: 'MONTH_FULL_BONUS',
-            description: `🎊 ${now.getMonth() + 1}月整月全勤奖励 (+${fullMonthBonus} 积分)`,
-          },
-        })
-      );
-    }
-
-    const [updatedUser, transaction] = await db.$transaction(txOps);
-
-    const message = fullMonthBonus > 0
-      ? `签到成功！增加 ${earned} 积分，整月全勤额外奖励 ${fullMonthBonus} 积分！`
-      : `签到成功！增加 ${earned} 积分`;
+      return { updatedUser, transactions, checkInLog, earned, newContinuous, cycleDay };
+    });
 
     return NextResponse.json({
-      message,
-      user: updatedUser,
-      earned,
-      fullMonthBonus,
-      totalEarned,
-      continuousCheckIn: newContinuous,
-      transaction,
+      message: `签到成功！增加 ${result.earned.totalEarned} 积分`,
+      user: result.updatedUser,
+      earned: result.earned.totalEarned,
+      dailyEarned: result.earned.dailyEarned,
+      milestoneBonus: result.earned.milestoneBonus,
+      fullMonthBonus: 0,
+      totalEarned: result.earned.totalEarned,
+      continuousCheckIn: result.newContinuous,
+      cycleDay: result.cycleDay,
+      transactions: result.transactions,
     });
   } catch (error) {
+    if (error.message === 'ALREADY_CHECKED' || error.code === 'P2002') {
+      return NextResponse.json({ error: '您今天已经签过到了，明天再来吧！' }, { status: 400 });
+    }
     return NextResponse.json({ error: error.message || '签到失败' }, { status: 500 });
   }
 }

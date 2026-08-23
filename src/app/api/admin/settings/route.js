@@ -1,7 +1,7 @@
 import { NextResponse } from 'next/server';
 import { getSessionUser } from '@/lib/auth';
 import { getSystemSettings, updateSystemSettings } from '@/lib/settings';
-import { validateBody, adminSettingsSchema } from '@/lib/validate';
+import { validateBody, adminSettingsSchema, checkinConfigSchema } from '@/lib/validate';
 
 export async function GET() {
   const currentUser = await getSessionUser();
@@ -47,6 +47,31 @@ export async function POST(req) {
       );
     }
     const body = { ...validation.data };
+
+    if (body.checkin_config) {
+      let checkinConfig;
+      try {
+        checkinConfig = JSON.parse(body.checkin_config);
+      } catch {
+        return NextResponse.json({
+          error: '签到配置格式错误',
+          details: [{ field: 'checkin_config', message: '必须是合法 JSON' }],
+        }, { status: 400 });
+      }
+
+      const checkinValidation = checkinConfigSchema.safeParse(checkinConfig);
+      if (!checkinValidation.success) {
+        return NextResponse.json({
+          error: '签到配置校验失败',
+          details: checkinValidation.error.issues.map((issue) => ({
+            field: ['checkin_config', ...issue.path].join('.'),
+            message: issue.message,
+          })),
+        }, { status: 400 });
+      }
+
+      body.checkin_config = JSON.stringify(checkinValidation.data);
+    }
 
     // 处理 SMTP 密码：如果提交的是脱敏值，则保留原密码
     if (body.smtp_config) {

@@ -112,7 +112,7 @@ export default function CheckInModal() {
         )}
 
         {/* 签到按钮区域 */}
-        <div className="mb-6">
+        <div className="mb-4">
           <button
             onClick={handleCheckIn}
             disabled={checkingIn || info?.todayChecked}
@@ -140,10 +140,36 @@ export default function CheckInModal() {
             ) : (
               <>
                 <Award className="w-4 h-4" />
-                <span>立即打卡签到 (+3~7 积分)</span>
+                <span>立即打卡签到 (+{info?.todayExpected ?? 0} 积分)</span>
               </>
             )}
           </button>
+        </div>
+
+        <div className="mb-6 p-3 rounded-xl bg-bg-primary border border-border">
+          <div className="flex items-center justify-between text-[11px] text-text-secondary">
+            <span>{info?.mode ? `${info.mode} 模式` : '签到规则'} · 连签第 {info?.cycleDay || 1} 天</span>
+            <span className="text-text-tertiary">{info?.currentTier || '正在计算今日奖励'}</span>
+          </div>
+          {info?.nextMilestone ? (
+            <div className="mt-2">
+              <div className="flex items-center justify-between text-[11px] mb-1.5">
+                <span className="flex items-center gap-1 font-semibold text-amber-600 dark:text-amber-400">
+                  <Award className="w-3.5 h-3.5" />
+                  距离下个里程碑还差 {info.nextMilestone.daysRemaining} 天
+                </span>
+                <span className="text-text-tertiary">第 {info.nextMilestone.day} 天 +{info.nextMilestone.bonus}</span>
+              </div>
+              <div className="h-1.5 rounded-full bg-bg overflow-hidden">
+                <div
+                  className="h-full rounded-full bg-gradient-to-r from-amber-400 to-amber-500 transition-all"
+                  style={{ width: `${Math.min(100, Math.max(0, ((info.cycleDay || 1) / info.nextMilestone.day) * 100))}%` }}
+                />
+              </div>
+            </div>
+          ) : (
+            <div className="mt-2 text-[11px] text-text-tertiary">当前周期暂无下一个里程碑</div>
+          )}
         </div>
 
         {/* 月度日历小组件 */}
@@ -157,7 +183,7 @@ export default function CheckInModal() {
           </div>
 
           {/* 整月全勤进度 */}
-          {info?.monthFullBonus > 0 && (
+          {(info?.monthFullBonus ?? 0) > 0 && (
             <div className="mb-3 p-2.5 rounded-xl bg-amber-500/10 border border-amber-500/20">
               <div className="flex items-center justify-between text-[11px] mb-1.5">
                 <span className="flex items-center gap-1 font-semibold text-amber-600 dark:text-amber-400">
