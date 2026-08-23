@@ -19,15 +19,84 @@ export const DEFAULT_SETTINGS = {
     fromEmail: '',
   }),
   checkin_config: JSON.stringify({
-    basePoints: 3,
-    bonusRules: [
-      { minDays: 3, maxDays: 6, extraPoints: 2 },
-      { minDays: 7, extraPoints: 4 },
-    ],
-    dailyCap: 7,
-    monthFullBonus: 20,
+    mode: 'A',
+    capped: {
+      basePoints: 3,
+      bonusRules: [
+        { minDays: 3, maxDays: 6, extraPoints: 2 },
+        { minDays: 7, maxDays: 99, extraPoints: 4 },
+      ],
+      dailyCap: 7,
+      milestones: [
+        { day: 7, bonus: 3 },
+        { day: 14, bonus: 6 },
+        { day: 21, bonus: 10 },
+        { day: 30, bonus: 20 },
+      ],
+    },
+    tiered: {
+      dailyTiers: [
+        { minDays: 1, maxDays: 6, dailyPoints: 1 },
+        { minDays: 7, maxDays: 13, dailyPoints: 2 },
+        { minDays: 14, maxDays: 20, dailyPoints: 3 },
+        { minDays: 21, maxDays: 30, dailyPoints: 4 },
+      ],
+      milestones: [
+        { day: 7, bonus: 3 },
+        { day: 14, bonus: 6 },
+        { day: 21, bonus: 10 },
+        { day: 30, bonus: 20 },
+      ],
+    },
+    daily: {
+      days: [1, 1, 1, 1, 1, 1, 5, 2, 2, 2, 2, 2, 2, 9, 3, 3, 3, 3, 3, 3, 14, 4, 4, 4, 4, 4, 4, 4, 4, 24],
+    },
+    cycleLength: 30,
+    cycleReset: true,
+    absoluteDailyCap: 50,
   }),
 };
+
+export function normalizeCheckinConfig(raw) {
+  let parsed = raw;
+  if (typeof parsed === 'string') {
+    try {
+      parsed = JSON.parse(parsed);
+    } catch {
+      parsed = null;
+    }
+  }
+
+  const defaults = JSON.parse(DEFAULT_SETTINGS.checkin_config);
+  if (!parsed || typeof parsed !== 'object' || Array.isArray(parsed)) {
+    return defaults;
+  }
+
+  if (!parsed.mode) {
+    return {
+      ...defaults,
+      capped: {
+        ...defaults.capped,
+        basePoints: parsed.basePoints ?? defaults.capped.basePoints,
+        bonusRules: parsed.bonusRules ?? defaults.capped.bonusRules,
+        dailyCap: parsed.dailyCap ?? defaults.capped.dailyCap,
+        ...(parsed.monthFullBonus !== undefined ? { monthFullBonus: parsed.monthFullBonus } : {}),
+      },
+    };
+  }
+
+  if (!['A', 'B', 'C'].includes(parsed.mode)) {
+    return defaults;
+  }
+
+  return {
+    ...defaults,
+    ...parsed,
+    capped: { ...defaults.capped, ...(parsed.capped || {}) },
+    tiered: { ...defaults.tiered, ...(parsed.tiered || {}) },
+    daily: { ...defaults.daily, ...(parsed.daily || {}) },
+  };
+}
 
 let settingsCache = null;
 let cacheTime = 0;

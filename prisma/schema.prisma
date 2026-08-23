@@ -40,6 +40,16 @@ model SystemSetting {
   updatedAt DateTime @updatedAt
 }
 
+model CheckInLog {
+  id        String   @id @default(uuid())
+  userId    String
+  date      String // 本地日期 YYYY-MM-DD
+  earned    Int // 当日实际发放积分（日常 + 里程碑）
+  createdAt DateTime @default(now())
+
+  @@unique([userId, date])
+}
+
 model EmailVerification {
   id        String   @id @default(uuid())
   email     String
