@@ -11,7 +11,8 @@
     "test:md": "node test-md-editor.mjs",
     "test:md2": "node test-md-editor-2.mjs",
     "test:html": "node test-html-editor.js",
-    "test:fixes": "node --test test-fixes.mjs"
+    "test:fixes": "node --test test-fixes.mjs",
+    "test:checkin": "node --test test-checkin.mjs"
   },
   "dependencies": {
     "@prisma/client": "^5.22.0",
