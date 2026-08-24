@@ -182,14 +182,6 @@ export default function Topbar() {
                 </div>
 
                 <button
-                  onClick={() => { setShowUserMenu(false); openCheckIn(); }}
-                  className="w-full text-left px-2.5 py-1.5 rounded-lg text-xs font-medium text-text-secondary hover:text-text hover:bg-bg-primary flex items-center gap-2 cursor-pointer transition-colors"
-                >
-                  <Flame className="w-3.5 h-3.5 text-emerald-500" />
-                  <span>打卡与积分日志</span>
-                </button>
-
-                <button
                   onClick={() => { setShowUserMenu(false); openProfileModal(); }}
                   className="w-full text-left px-2.5 py-1.5 rounded-lg text-xs font-medium text-text-secondary hover:text-text hover:bg-bg-primary flex items-center gap-2 cursor-pointer transition-colors"
                 >
