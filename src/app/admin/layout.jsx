@@ -41,7 +41,7 @@ export default function AdminLayout({ children }) {
   }
 
   const tabs = [
-    { path: '/admin', name: '控制台仪表盘', icon: LayoutDashboard },
+    { path: '/admin', name: '数据看板', icon: LayoutDashboard },
     { path: '/admin/users', name: '用户管理', icon: Users },
     { path: '/admin/settings', name: '系统设置', icon: Settings },
   ];

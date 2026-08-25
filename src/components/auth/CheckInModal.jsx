@@ -86,7 +86,7 @@ export default function CheckInModal() {
                 连续 {info?.continuousCheckIn || user?.continuousCheckIn || 0} 天
               </span>
             </div>
-            <p className="text-xs text-text-secondary mt-1">坚持每日打卡，积累稀缺积分</p>
+            <p className="text-xs text-text-secondary mt-1">坚持每日打卡，积累积分</p>
           </div>
 
           <div className="text-right">
@@ -179,7 +179,7 @@ export default function CheckInModal() {
               <Calendar className="w-3.5 h-3.5" />
               {currentYear}年 {currentMonth + 1}月 打卡概览
             </span>
-            <span className="text-[11px] text-text-tertiary">稀缺积分规则</span>
+            <span className="text-[11px] text-text-tertiary">积分规则</span>
           </div>
 
           {/* 整月全勤进度 */}

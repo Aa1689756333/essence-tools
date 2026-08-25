@@ -231,7 +231,7 @@ export default function AdminSettingsPage() {
     { id: 'seo', name: 'SEO 元数据设置', icon: Globe },
     { id: 'auth', name: '注册与邮箱策略', icon: ShieldCheck },
     { id: 'smtp', name: 'SMTP 发信配置', icon: Mail },
-    { id: 'checkin', name: '签到与稀缺积分规则', icon: Flame },
+    { id: 'checkin', name: '签到与积分规则', icon: Flame },
   ];
 
   return (
