@@ -157,6 +157,27 @@ export default function CheckInModal() {
           </button>
         </div>
 
+        {/* 里程碑进度预告 (高级质感) */}
+        {info?.nextMilestone && (
+          <div className="mb-5 p-3.5 rounded-2xl bg-gradient-to-br from-amber-500/5 to-amber-500/10 ring-1 ring-inset ring-amber-500/20">
+            <div className="flex items-center justify-between text-xs mb-2.5">
+              <span className="flex items-center gap-1.5 font-bold text-amber-700 dark:text-amber-400">
+                <Award className="w-4 h-4 text-amber-500 drop-shadow-sm" />
+                再连续签到 <span className="text-amber-600 dark:text-amber-300 text-sm tabular-nums px-0.5">{info.nextMilestone.daysRemaining}</span> 天可解锁大奖
+              </span>
+              <span className="font-extrabold tabular-nums text-amber-600 dark:text-amber-400 flex items-center gap-0.5">
+                +{info.nextMilestone.bonus} <span className="text-[10px] font-medium opacity-70 tracking-wide">积分</span>
+              </span>
+            </div>
+            <div className="h-2 w-full rounded-full bg-amber-500/10 overflow-hidden ring-1 ring-inset ring-amber-500/10">
+              <div
+                className="h-full rounded-full bg-gradient-to-r from-amber-400 to-amber-500 transition-all duration-700 ease-out shadow-[inset_0_1px_2px_rgba(255,255,255,0.3)]"
+                style={{ width: `${Math.min(100, Math.max(0, ((info.cycleDay || 1) / info.nextMilestone.day) * 100))}%` }}
+              />
+            </div>
+          </div>
+        )}
+
         {/* 月度日历小组件 (高级游戏化日历) */}
         <div className="mb-2">
           <div className="flex items-center justify-between text-xs font-semibold text-text-secondary mb-3">
