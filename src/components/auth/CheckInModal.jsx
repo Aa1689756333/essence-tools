@@ -193,57 +193,68 @@ export default function CheckInModal() {
               const isPast = day < todayDate;
               const isChecked = (info?.checkedDays || []).includes(day) || (isToday && info?.todayChecked);
               const isMissed = isPast && !isChecked;
-
+              
               const pastPoints = historyPointsMap[day];
 
+              let projectedDay = 1;
               let isProjectedMilestone = false;
               let milestoneBonus = 0;
-              if (!isPast && !isToday && info?.nextMilestone) {
+              let projectedPoints = '?';
+
+              if (!isPast && !isToday) {
                 const diff = day - todayDate;
-                const projectedDay = (info.cycleDay || 1) + diff - (info.todayChecked ? 1 : 0);
-                if (projectedDay === info.nextMilestone.day) {
+                projectedDay = (info?.cycleDay || 1) + diff - (info?.todayChecked ? 1 : 0);
+                
+                // 精准预测未来积分
+                if (info?.config) {
+                  const cfg = info.config;
+                  if (cfg.mode === 'A') {
+                    projectedPoints = cfg.capped?.basePoints || 1;
+                  } else if (cfg.mode === 'B') {
+                    const tier = (cfg.tiered?.dailyTiers || []).find(t => projectedDay >= t.minDays && projectedDay <= t.maxDays);
+                    projectedPoints = tier ? tier.dailyPoints : 1;
+                  } else if (cfg.mode === 'C') {
+                    projectedPoints = cfg.daily?.days?.[projectedDay - 1] || 1;
+                  }
+                }
+
+                // 预测大奖
+                if (info?.nextMilestone && projectedDay === info.nextMilestone.day) {
                   isProjectedMilestone = true;
                   milestoneBonus = info.nextMilestone.bonus;
                 }
               }
 
-              let basePointsStr = '';
-              if (info?.config) {
-                if (info.mode === 'A') basePointsStr = info.config.capped?.basePoints || 1;
-                else if (info.mode === 'B') basePointsStr = '阶梯';
-                else if (info.mode === 'C') basePointsStr = '固定';
-              }
-
               return (
                 <div
                   key={day}
-                  className={`relative flex flex-col items-center justify-center rounded-xl p-1 transition-all
-                    ${isChecked ? 'bg-emerald-500/15 text-emerald-600 dark:text-emerald-400 border border-emerald-500/30' : ''}
-                    ${isMissed ? 'bg-bg-primary/40 text-text-tertiary opacity-40' : ''}
-                    ${isToday && !isChecked ? 'bg-gradient-to-br from-emerald-400 to-emerald-500 text-white shadow-lg shadow-emerald-500/30 animate-pulse border border-emerald-400' : ''}
-                    ${isProjectedMilestone ? 'bg-gradient-to-br from-amber-300 to-amber-500 text-white shadow-md shadow-amber-500/20' : ''}
-                    ${!isChecked && !isMissed && !isToday && !isProjectedMilestone ? 'bg-bg-primary/50 text-text-secondary border border-transparent' : ''}
+                  className={`relative flex flex-col items-center justify-between p-1.5 rounded-2xl border transition-all overflow-hidden
+                    ${isChecked ? 'bg-emerald-500/10 border-emerald-500/20 text-emerald-600 dark:text-emerald-400 shadow-[inset_0_0_10px_rgba(16,185,129,0.05)]' : ''}
+                    ${isMissed ? 'bg-bg-primary/30 border-transparent text-text-tertiary opacity-40' : ''}
+                    ${isToday && !isChecked ? 'bg-gradient-to-b from-emerald-400 to-emerald-500 text-white shadow-lg shadow-emerald-500/30 border-emerald-400 ring-2 ring-emerald-500/20 ring-offset-2 ring-offset-card animate-pulse' : ''}
+                    ${isProjectedMilestone ? 'bg-gradient-to-br from-amber-50 to-amber-100 dark:from-amber-900/40 dark:to-amber-800/20 border-amber-300 dark:border-amber-500/50 text-amber-600 dark:text-amber-400 shadow-sm' : ''}
+                    ${!isChecked && !isMissed && !isToday && !isProjectedMilestone ? 'bg-card border-border/60 text-text-secondary shadow-sm hover:border-border' : ''}
                   `}
-                  style={{ aspectRatio: '1/1.2' }}
+                  style={{ aspectRatio: '1/1.25' }}
                 >
                   {/* 顶部日期 */}
-                  <span className={`text-[11px] font-bold ${(isToday && !isChecked) || isProjectedMilestone ? 'text-white/90' : 'opacity-80'}`}>
+                  <span className={`text-[11px] font-bold tracking-tight ${(isToday && !isChecked) ? 'text-white' : isProjectedMilestone ? 'text-amber-700 dark:text-amber-300' : 'opacity-80'}`}>
                     {isToday ? '今天' : day}
                   </span>
 
                   {/* 底部状态/积分/图标 */}
-                  <div className="mt-0.5 flex items-center justify-center h-4 w-full">
+                  <div className="flex items-center justify-center w-full">
                     {isChecked ? (
-                      <span className="text-[10px] font-bold flex items-center gap-0.5">
+                      <span className="text-[10px] font-extrabold flex items-center gap-0.5">
                          {pastPoints ? `+${pastPoints}` : <CheckCircle2 className="w-3.5 h-3.5" />}
                       </span>
                     ) : isToday && !isChecked ? (
-                      <span className="text-[11px] font-bold">+{info?.todayExpected || 0}</span>
+                      <span className="text-[11px] font-extrabold drop-shadow-sm">+{info?.todayExpected || 0}</span>
                     ) : isProjectedMilestone ? (
-                      <span className="text-[10px] font-bold flex items-center gap-0.5"><Award className="w-3 h-3" />+{milestoneBonus}</span>
+                      <span className="text-[10px] font-extrabold flex items-center gap-0.5"><Award className="w-3 h-3 fill-amber-500/20" />+{milestoneBonus}</span>
                     ) : !isMissed ? (
-                      <span className="text-[9px] font-medium opacity-60 flex items-center">
-                        +{basePointsStr || '?'}
+                      <span className="text-[9px] font-bold opacity-50 flex items-center">
+                        +{projectedPoints}
                       </span>
                     ) : null}
                   </div>
