@@ -71,6 +71,17 @@ export default function CheckInModal() {
 
   const daysArray = Array.from({ length: daysInMonth }, (_, i) => i + 1);
 
+  // 映射历史积分以便在日历上显示精确数值
+  const historyPointsMap = {};
+  if (info?.history) {
+    info.history.forEach((tx) => {
+      if (tx.type === 'CHECKIN') {
+        const d = new Date(tx.createdAt).getDate();
+        historyPointsMap[d] = tx.amount;
+      }
+    });
+  }
+
   return (
     <Modal isOpen={showCheckInModal} onClose={closeCheckIn} maxWidth="max-w-lg">
         {/* 头部摘要 */}
@@ -171,7 +182,7 @@ export default function CheckInModal() {
             </div>
           )}
 
-          <div className="grid grid-cols-7 gap-1.5 text-center text-xs">
+          <div className="grid grid-cols-7 gap-2 text-center text-xs">
             {['日', '一', '二', '三', '四', '五', '六'].map((d) => (
               <div key={d} className="py-1 text-text-tertiary font-medium text-[11px]">
                 {d}
@@ -183,13 +194,24 @@ export default function CheckInModal() {
               const isChecked = (info?.checkedDays || []).includes(day) || (isToday && info?.todayChecked);
               const isMissed = isPast && !isChecked;
 
+              const pastPoints = historyPointsMap[day];
+
               let isProjectedMilestone = false;
+              let milestoneBonus = 0;
               if (!isPast && !isToday && info?.nextMilestone) {
                 const diff = day - todayDate;
                 const projectedDay = (info.cycleDay || 1) + diff - (info.todayChecked ? 1 : 0);
                 if (projectedDay === info.nextMilestone.day) {
                   isProjectedMilestone = true;
+                  milestoneBonus = info.nextMilestone.bonus;
                 }
+              }
+
+              let basePointsStr = '';
+              if (info?.config) {
+                if (info.mode === 'A') basePointsStr = info.config.capped?.basePoints || 1;
+                else if (info.mode === 'B') basePointsStr = '阶梯';
+                else if (info.mode === 'C') basePointsStr = '固定';
               }
 
               return (
@@ -197,29 +219,31 @@ export default function CheckInModal() {
                   key={day}
                   className={`relative flex flex-col items-center justify-center rounded-xl p-1 transition-all
                     ${isChecked ? 'bg-emerald-500/15 text-emerald-600 dark:text-emerald-400 border border-emerald-500/30' : ''}
-                    ${isMissed ? 'bg-bg-primary/30 text-text-tertiary opacity-40' : ''}
-                    ${isToday && !isChecked ? 'bg-emerald-500 text-white shadow-lg shadow-emerald-500/30 animate-pulse border border-emerald-400' : ''}
-                    ${isProjectedMilestone ? 'bg-amber-500/15 border border-amber-500/30 text-amber-600 dark:text-amber-400' : ''}
+                    ${isMissed ? 'bg-bg-primary/40 text-text-tertiary opacity-40' : ''}
+                    ${isToday && !isChecked ? 'bg-gradient-to-br from-emerald-400 to-emerald-500 text-white shadow-lg shadow-emerald-500/30 animate-pulse border border-emerald-400' : ''}
+                    ${isProjectedMilestone ? 'bg-gradient-to-br from-amber-300 to-amber-500 text-white shadow-md shadow-amber-500/20' : ''}
                     ${!isChecked && !isMissed && !isToday && !isProjectedMilestone ? 'bg-bg-primary/50 text-text-secondary border border-transparent' : ''}
                   `}
                   style={{ aspectRatio: '1/1.2' }}
                 >
                   {/* 顶部日期 */}
-                  <span className={`text-[11px] font-bold ${isToday && !isChecked ? 'text-white/90' : 'opacity-80'}`}>
-                    {isToday ? '今' : day}
+                  <span className={`text-[11px] font-bold ${(isToday && !isChecked) || isProjectedMilestone ? 'text-white/90' : 'opacity-80'}`}>
+                    {isToday ? '今天' : day}
                   </span>
 
                   {/* 底部状态/积分/图标 */}
-                  <div className="mt-0.5 flex items-center justify-center h-4">
+                  <div className="mt-0.5 flex items-center justify-center h-4 w-full">
                     {isChecked ? (
-                      <CheckCircle2 className="w-3.5 h-3.5" />
+                      <span className="text-[10px] font-bold flex items-center gap-0.5">
+                         {pastPoints ? `+${pastPoints}` : <CheckCircle2 className="w-3.5 h-3.5" />}
+                      </span>
                     ) : isToday && !isChecked ? (
-                      <span className="text-[10px] font-bold">+{info?.todayExpected || 0}</span>
+                      <span className="text-[11px] font-bold">+{info?.todayExpected || 0}</span>
                     ) : isProjectedMilestone ? (
-                      <Award className="w-3.5 h-3.5 text-amber-500" />
+                      <span className="text-[10px] font-bold flex items-center gap-0.5"><Award className="w-3 h-3" />+{milestoneBonus}</span>
                     ) : !isMissed ? (
-                      <span className="text-[9px] font-medium opacity-50 text-text-tertiary truncate max-w-[20px] overflow-hidden">
-                        待定
+                      <span className="text-[9px] font-medium opacity-60 flex items-center">
+                        +{basePointsStr || '?'}
                       </span>
                     ) : null}
                   </div>

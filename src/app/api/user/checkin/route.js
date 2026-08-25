@@ -106,6 +106,7 @@ export async function GET() {
     todayExpected: todayChecked ? 0 : expected.totalEarned,
     currentTier: getCurrentTierDescription(config, config.mode, cycleDay),
     nextMilestone: getNextMilestone(config, config.mode, cycleDay),
+    config,
   });
 }
 
