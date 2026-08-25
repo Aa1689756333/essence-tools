@@ -1,6 +1,7 @@
 import { NextResponse } from 'next/server';
 import db from '@/lib/db';
 import { getRequestUser } from '@/lib/request-user';
+import {  } from '@/lib/auth';
 import { validateBody, adminUserPatchSchema } from '@/lib/validate';
 
 export async function GET(req) {
@@ -69,7 +70,8 @@ export async function PATCH(req) {
   }
 
   try {
-    // 使用 zod 校验请求�?    const validation = await validateBody(req, adminUserPatchSchema);
+    // 使用 zod 校验请求体
+    const validation = await validateBody(req, adminUserPatchSchema);
     if (!validation.success) {
       return NextResponse.json(
         { error: validation.error, details: validation.details },
@@ -81,7 +83,7 @@ export async function PATCH(req) {
 
     const targetUser = await db.user.findUnique({ where: { id: userId } });
     if (!targetUser) {
-      return NextResponse.json({ error: '目标用户不存�? }, { status: 404 });
+      return NextResponse.json({ error: '目标用户不存在' }, { status: 404 });
     }
 
     if (action === 'update_role') {
@@ -103,13 +105,13 @@ export async function PATCH(req) {
         data: { role },
         select: { id: true, email: true, nickname: true, role: true, status: true, points: true },
       });
-      return NextResponse.json({ message: '用户角色已更�?, user: updated });
+      return NextResponse.json({ message: '用户角色已更新', user: updated });
     }
 
     if (action === 'update_status') {
       // 自我保护：防止管理员封禁自己
       if (userId === currentUser.id && status === 'BANNED') {
-        return NextResponse.json({ error: '不能封禁自己的账�? }, { status: 403 });
+        return NextResponse.json({ error: '不能封禁自己的账号' }, { status: 403 });
       }
 
       const updated = await db.user.update({
@@ -123,7 +125,7 @@ export async function PATCH(req) {
     if (action === 'adjust_points') {
       const delta = parseInt(pointsDelta || '0');
       if (isNaN(delta) || delta === 0) {
-        return NextResponse.json({ error: '请输入有效的积分变动数�? }, { status: 400 });
+        return NextResponse.json({ error: '请输入有效的积分变动数值' }, { status: 400 });
       }
 
       const newBalance = Math.max(0, targetUser.points + delta);
@@ -140,7 +142,7 @@ export async function PATCH(req) {
             amount: delta,
             balance: newBalance,
             type: 'ADMIN_ADJUST',
-            description: reason?.trim() || `管理员手动调整积�?(${delta > 0 ? '+' : ''}${delta})`,
+            description: reason?.trim() || `管理员手动调整积分 (${delta > 0 ? '+' : ''}${delta})`,
           },
         }),
       ]);
@@ -148,7 +150,7 @@ export async function PATCH(req) {
       return NextResponse.json({ message: '积分调整成功', user: updated });
     }
 
-    return NextResponse.json({ error: '未知的操作类�? }, { status: 400 });
+    return NextResponse.json({ error: '未知的操作类型' }, { status: 400 });
   } catch (error) {
     return NextResponse.json({ error: error.message || '更新操作失败' }, { status: 500 });
   }

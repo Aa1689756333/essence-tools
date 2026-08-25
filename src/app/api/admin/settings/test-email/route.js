@@ -1,5 +1,6 @@
 import { NextResponse } from 'next/server';
 import { getRequestUser } from '@/lib/request-user';
+import {  } from '@/lib/auth';
 import { testSmtpConnection } from '@/lib/mailer';
 
 export async function POST(req) {
@@ -12,7 +13,7 @@ export async function POST(req) {
     const { smtpConfig, targetEmail } = await req.json();
 
     if (!targetEmail || !targetEmail.includes('@')) {
-      return NextResponse.json({ error: '请提供有效的接收测试邮件的邮�? }, { status: 400 });
+      return NextResponse.json({ error: '请提供有效的接收测试邮件的邮箱' }, { status: 400 });
     }
 
     const result = await testSmtpConnection(smtpConfig, targetEmail);
@@ -22,6 +23,6 @@ export async function POST(req) {
 
     return NextResponse.json({ message: result.message });
   } catch (error) {
-    return NextResponse.json({ error: error.message || '测试邮件发送异�? }, { status: 500 });
+    return NextResponse.json({ error: error.message || '测试邮件发送异常' }, { status: 500 });
   }
 }

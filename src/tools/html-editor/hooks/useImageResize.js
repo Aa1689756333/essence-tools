@@ -1,6 +1,6 @@
 import { useCallback, useEffect, useRef, useState } from 'react';
 
-export default function useImageResize({ editorRef, updateEmptyState }) {
+export default function useImageResize({ editor, updateEmptyState }) {
   const [selectedImage, setSelectedImage] = useState(null);
   const [imageSize, setImageSize] = useState({ width: 0, height: 0 });
   const dragStateRef = useRef(null);
@@ -8,20 +8,21 @@ export default function useImageResize({ editorRef, updateEmptyState }) {
 
   const handleEditorClick = useCallback((event) => {
     const target = event.target;
-    if (target.tagName === 'IMG' && editorRef.current?.contains(target)) {
+    if (target.tagName === 'IMG' && editor?.view?.dom?.contains(target)) {
       setSelectedImage(target);
       setImageSize({ width: target.offsetWidth, height: target.offsetHeight });
     } else {
       setSelectedImage(null);
     }
-  }, [editorRef]);
+  }, [editor]);
 
   const handleEditorScroll = useCallback(() => {
-    if (!selectedImage || !editorRef.current) return;
+    if (!selectedImage || !editor || !editor.view.dom) return;
+    const editorDom = editor.view.dom;
     const imgRect = selectedImage.getBoundingClientRect();
-    const editorRect = editorRef.current.getBoundingClientRect();
+    const editorRect = editorDom.getBoundingClientRect();
     const left = imgRect.left - editorRect.left;
-    const top = imgRect.top - editorRect.top + editorRef.current.scrollTop;
+    const top = imgRect.top - editorRect.top + editorDom.scrollTop;
 
     const borderEl = document.getElementById('image-selected-border');
     if (borderEl) {
@@ -59,7 +60,7 @@ export default function useImageResize({ editorRef, updateEmptyState }) {
       imageToolbarRef.current.style.left = `${toolbarLeft}px`;
       imageToolbarRef.current.style.top = `${toolbarTop}px`;
     }
-  }, [editorRef, selectedImage]);
+  }, [editor, selectedImage]);
 
   useEffect(() => {
     handleEditorScroll();
@@ -81,13 +82,13 @@ export default function useImageResize({ editorRef, updateEmptyState }) {
     };
 
     const handleMouseMove = (moveEvent) => {
-      if (!dragStateRef.current || !selectedImage) return;
+      if (!dragStateRef.current || !selectedImage || !editor || !editor.view.dom) return;
       const { startX, startWidth, aspectRatio, corner } = dragStateRef.current;
       const deltaX = moveEvent.clientX - startX;
       let newWidth = corner === 'se' || corner === 'ne'
         ? startWidth + deltaX
         : startWidth - deltaX;
-      const maxWidth = editorRef.current?.offsetWidth || 800;
+      const maxWidth = editor.view.dom.offsetWidth || 800;
       newWidth = Math.max(50, Math.min(newWidth, maxWidth));
       const newHeight = newWidth / aspectRatio;
       selectedImage.style.width = `${newWidth}px`;
@@ -99,23 +100,27 @@ export default function useImageResize({ editorRef, updateEmptyState }) {
       dragStateRef.current = null;
       document.removeEventListener('mousemove', handleMouseMove);
       document.removeEventListener('mouseup', handleMouseUp);
+      if (editor && editor.view.dom) {
+        editor.commands.setContent(editor.view.dom.innerHTML, false);
+      }
       updateEmptyState();
     };
 
     document.addEventListener('mousemove', handleMouseMove);
     document.addEventListener('mouseup', handleMouseUp);
-  }, [editorRef, selectedImage, updateEmptyState]);
+  }, [editor, selectedImage, updateEmptyState]);
 
   const handleImagePresetSize = useCallback((percent) => {
-    if (!selectedImage || !editorRef.current) return;
-    const newWidth = Math.max(50, editorRef.current.clientWidth * percent / 100);
+    if (!selectedImage || !editor || !editor.view.dom) return;
+    const newWidth = Math.max(50, editor.view.dom.clientWidth * percent / 100);
     const aspectRatio = selectedImage.offsetWidth / selectedImage.offsetHeight;
     const newHeight = newWidth / aspectRatio;
     selectedImage.style.width = `${newWidth}px`;
     selectedImage.style.height = `${newHeight}px`;
     setImageSize({ width: Math.round(newWidth), height: Math.round(newHeight) });
+    editor.commands.setContent(editor.view.dom.innerHTML, false);
     updateEmptyState();
-  }, [editorRef, selectedImage, updateEmptyState]);
+  }, [editor, selectedImage, updateEmptyState]);
 
   const handleImageAlign = useCallback((align) => {
     if (!selectedImage) return;
@@ -134,8 +139,11 @@ export default function useImageResize({ editorRef, updateEmptyState }) {
       image.style.display = 'block';
       image.style.margin = '1em auto';
     }
+    if (editor && editor.view.dom) {
+      editor.commands.setContent(editor.view.dom.innerHTML, false);
+    }
     updateEmptyState();
-  }, [selectedImage, updateEmptyState]);
+  }, [editor, selectedImage, updateEmptyState]);
 
   return {
     selectedImage,

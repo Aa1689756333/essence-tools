@@ -1,5 +1,7 @@
+import { EditorContent } from '@tiptap/react';
+
 export default function EditorArea({
-  editorRef, showCode, htmlCode, handleCodeChange, applyCode, setShowCode,
+  editor, showCode, htmlCode, handleCodeChange, applyCode, setShowCode,
   isFullscreen, isEmpty, handleInput, handlePaste, handleContextMenu,
   handleEditorClick, handleEditorScroll, theme, selectedImage, handleResizeStart,
 }) {
@@ -15,14 +17,23 @@ export default function EditorArea({
           </div>
         </div>
       ) : (
-        <div ref={editorRef} contentEditable suppressContentEditableWarning onInput={handleInput} onPaste={handlePaste} onContextMenu={handleContextMenu} onClick={handleEditorClick} onScroll={handleEditorScroll} className={`editor-content ${isFullscreen ? 'flex-1 max-h-none' : ''}`} spellCheck={false} role="textbox" aria-multiline="true" aria-label="HTML 编辑区域" />
+        <EditorContent 
+          editor={editor} 
+          onContextMenu={handleContextMenu} 
+          onClick={handleEditorClick} 
+          onScroll={handleEditorScroll} 
+          className={`editor-content ${isFullscreen ? 'flex-1 max-h-none' : ''}`} 
+        />
       )}
+      {/* Rest of the component for image resize logic */}
       {selectedImage && !showCode && (() => {
         const imgRect = selectedImage.getBoundingClientRect();
-        const editorRect = editorRef.current?.getBoundingClientRect();
-        if (!editorRect) return null;
+        // Since we removed editorRef, we'll try to find the editor container DOM element
+        const editorContainer = editor?.view?.dom;
+        if (!editorContainer) return null;
+        const editorRect = editorContainer.getBoundingClientRect();
         const left = imgRect.left - editorRect.left;
-        const top = imgRect.top - editorRect.top + editorRef.current.scrollTop;
+        const top = imgRect.top - editorRect.top + editorContainer.scrollTop;
         const width = imgRect.width;
         const height = imgRect.height;
         return <>

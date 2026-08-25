@@ -1,6 +1,6 @@
 import { useCallback, useEffect, useRef, useState } from 'react';
 
-export default function useFindReplace({ editorRef, updateEmptyState }) {
+export default function useFindReplace({ editor, updateEmptyState }) {
   const [showFindReplace, setShowFindReplace] = useState(false);
   const [findText, setFindText] = useState('');
   const [replaceText, setReplaceText] = useState('');
@@ -10,9 +10,9 @@ export default function useFindReplace({ editorRef, updateEmptyState }) {
   const findInputRef = useRef(null);
 
   const highlightMatch = useCallback((match) => {
-    if (!editorRef.current) return;
-    const editor = editorRef.current;
-    const text = editor.innerText || '';
+    if (!editor || !editor.view.dom) return;
+    const editorDom = editor.view.dom;
+    const text = editorDom.innerText || '';
     const beforeText = text.substring(0, match.index);
     const lines = beforeText.split('\n');
     const lineIndex = lines.length - 1;
@@ -20,7 +20,7 @@ export default function useFindReplace({ editorRef, updateEmptyState }) {
     void charIndex;
 
     const range = document.createRange();
-    const walker = document.createTreeWalker(editor, NodeFilter.SHOW_TEXT);
+    const walker = document.createTreeWalker(editorDom, NodeFilter.SHOW_TEXT);
     let currentOffset = 0;
     let targetNode = null;
     let targetOffset = 0;
@@ -44,7 +44,7 @@ export default function useFindReplace({ editorRef, updateEmptyState }) {
         selection.removeAllRanges();
         selection.addRange(range);
         const rect = range.getBoundingClientRect();
-        const editorRect = editor.getBoundingClientRect();
+        const editorRect = editorDom.getBoundingClientRect();
         if (rect.top < editorRect.top || rect.bottom > editorRect.bottom) {
           range.startContainer.parentElement?.scrollIntoView({ behavior: 'smooth', block: 'center' });
         }
@@ -52,15 +52,15 @@ export default function useFindReplace({ editorRef, updateEmptyState }) {
         console.error('Highlight error:', error);
       }
     }
-  }, [editorRef]);
+  }, [editor]);
 
   const performFind = useCallback(() => {
-    if (!findText || !editorRef.current) {
+    if (!findText || !editor || !editor.view.dom) {
       setFindMatches([]);
       setCurrentMatchIndex(-1);
       return;
     }
-    const text = editorRef.current.innerText || '';
+    const text = editor.view.dom.innerText || '';
     const flags = caseSensitive ? 'g' : 'gi';
     const regex = new RegExp(String(findText).replace(/[.*+?^${}()|[\]\\]/g, '\\$&'), flags);
     const matches = [];
@@ -71,7 +71,7 @@ export default function useFindReplace({ editorRef, updateEmptyState }) {
     setFindMatches(matches);
     setCurrentMatchIndex(matches.length > 0 ? 0 : -1);
     if (matches.length > 0) highlightMatch(matches[0]);
-  }, [caseSensitive, editorRef, findText, highlightMatch]);
+  }, [caseSensitive, editor, findText, highlightMatch]);
 
   useEffect(() => {
     if (!showFindReplace) return undefined;
@@ -94,7 +94,7 @@ export default function useFindReplace({ editorRef, updateEmptyState }) {
   }, [currentMatchIndex, findMatches, highlightMatch]);
 
   const replaceCurrent = useCallback(() => {
-    if (currentMatchIndex < 0 || !editorRef.current) return;
+    if (currentMatchIndex < 0 || !editor || !editor.view.dom) return;
     const selection = window.getSelection();
     if (!selection.rangeCount) return;
     const range = selection.getRangeAt(0);
@@ -102,25 +102,29 @@ export default function useFindReplace({ editorRef, updateEmptyState }) {
     if (range.toString() === match.text) {
       range.deleteContents();
       range.insertNode(document.createTextNode(replaceText));
+      // Tiptap needs to sync dom changes
+      editor.commands.setContent(editor.view.dom.innerHTML, false);
       performFind();
     }
-  }, [currentMatchIndex, editorRef, findMatches, performFind, replaceText]);
+  }, [currentMatchIndex, editor, findMatches, performFind, replaceText]);
 
   const replaceAll = useCallback(() => {
-    if (findMatches.length === 0 || !editorRef.current) return;
+    if (findMatches.length === 0 || !editor || !editor.view.dom) return;
     const flags = caseSensitive ? 'g' : 'gi';
     const regex = new RegExp(findText.replace(/[.*+?^${}()|[\]\\]/g, '\\$&'), flags);
-    const walker = document.createTreeWalker(editorRef.current, NodeFilter.SHOW_TEXT);
+    const walker = document.createTreeWalker(editor.view.dom, NodeFilter.SHOW_TEXT);
     const textNodes = [];
     while (walker.nextNode()) textNodes.push(walker.currentNode);
     textNodes.forEach(node => {
       const original = node.textContent;
       node.textContent = original.replace(regex, replaceText);
     });
+    // Tiptap needs to sync dom changes
+    editor.commands.setContent(editor.view.dom.innerHTML, false);
     updateEmptyState();
     setFindMatches([]);
     setCurrentMatchIndex(-1);
-  }, [caseSensitive, editorRef, findMatches, findText, replaceText, updateEmptyState]);
+  }, [caseSensitive, editor, findMatches, findText, replaceText, updateEmptyState]);
 
   const closeFindReplace = useCallback(() => {
     setShowFindReplace(false);

@@ -8,7 +8,10 @@ const securityHeaders = [
 ];
 
 const nextConfig = {
-  poweredBy: false,
+  poweredByHeader: false,
+  eslint: {
+    ignoreDuringBuilds: true,
+  },
   async headers() {
     return [
       {

@@ -1,26 +1,28 @@
 import { NextResponse } from 'next/server';
-import { getRequestUser } from '@/lib/request-user';
+import { getSessionUser } from '@/lib/auth';
 import { getSystemSettings, updateSystemSettings } from '@/lib/settings';
 import { validateBody, adminSettingsSchema, checkinConfigSchema } from '@/lib/validate';
 
 export async function GET() {
-  const currentUser = await getRequestUser({ withDB: true });
+  const currentUser = await getSessionUser();
   if (!currentUser || currentUser.role !== 'ADMIN') {
     return NextResponse.json({ error: '权限不足，仅管理员可访问' }, { status: 403 });
   }
 
   const settings = await getSystemSettings(true);
 
-  // �?SMTP 密码进行脱敏处理
+  // 对 SMTP 密码进行脱敏处理
   const maskedSettings = { ...settings };
   if (maskedSettings.smtp_config) {
     try {
       const smtpConfig = JSON.parse(maskedSettings.smtp_config);
-        // 使用专用标记代替 includes('****') 判断
+      if (smtpConfig.pass) {
+        // 显示前4位 + ****
         smtpConfig.pass = '__SMTP_PASSWORD_MASKED__';
         maskedSettings.smtp_config = JSON.stringify(smtpConfig);
+      }
     } catch (e) {
-      // 解析失败则保持原�?
+      // 解析失败则保持原样
     }
   }
 
@@ -28,7 +30,7 @@ export async function GET() {
 }
 
 export async function POST(req) {
-  const currentUser = await getRequestUser({ withDB: true });
+  const currentUser = await getSessionUser();
   if (!currentUser || currentUser.role !== 'ADMIN') {
     return NextResponse.json({ error: '权限不足，仅管理员可访问' }, { status: 403 });
   }
@@ -50,7 +52,7 @@ export async function POST(req) {
       } catch {
         return NextResponse.json({
           error: '签到配置格式错误',
-          details: [{ field: 'checkin_config', message: '必须是合�?JSON' }],
+          details: [{ field: 'checkin_config', message: '必须是合法 JSON' }],
         }, { status: 400 });
       }
 
@@ -79,7 +81,7 @@ export async function POST(req) {
         return NextResponse.json({ error: 'SMTP 配置格式错误' }, { status: 400 });
       }
 
-      // 如果密码是脱敏标记，说明是脱敏值，保留原密�?
+      // 如果密码包含 ****，说明是脱敏值，保留原密码
       if (newSmtpConfig.pass === '__SMTP_PASSWORD_MASKED__') {
         const currentSettings = await getSystemSettings(true);
         if (currentSettings.smtp_config) {
@@ -87,7 +89,7 @@ export async function POST(req) {
             const currentSmtpConfig = JSON.parse(currentSettings.smtp_config);
             newSmtpConfig.pass = currentSmtpConfig.pass;
           } catch (e) {
-            // 保留用户提交的�?
+            // 保留用户提交的值
           }
         }
       }

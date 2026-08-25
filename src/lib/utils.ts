@@ -7,17 +7,21 @@
  * @param {string} text - 要统计的文本
  * @returns {{ words: number, chars: number }} - 返回字数和字符数
  */
-export function countWords(text) {
+export function countWords(text: string): { words: number; chars: number } {
   if (!text) return { words: 0, chars: 0 };
+
+  // 计算字符数（不包括纯空格，但包括标点符号）
+  const chars = text.replace(/\s/g, '').length;
+
+  // 计算字数：中文单字算作一个字，连续英文/数字算作一个词
+  // 1. 匹配中文字符、韩文、日文等
+  const cjkMatches = text.match(/[\u4e00-\u9fa5\uac00-\ud7a3\u0800-\u4e00]/g) || [];
   
-  // 字符数（含空格和标点）
-  const chars = text.length;
-  
-  // 字数：中文单字 + 英文单词
-  const chineseChars = (text.match(/[\u4e00-\u9fa5]/g) || []).length;
-  const englishWords = (text.replace(/[\u4e00-\u9fa5]/g, ' ').match(/[a-zA-Z0-9-]+/g) || []).length;
-  const words = chineseChars + englishWords;
-  
+  // 2. 匹配英文单词、数字序列
+  const wordMatches = text.match(/[a-zA-Z0-9_]+/g) || [];
+
+  const words = cjkMatches.length + wordMatches.length;
+
   return { words, chars };
 }
 
@@ -74,7 +78,7 @@ export function formatDate(date, format = 'YYYY-MM-DD') {
   const seconds = String(d.getSeconds()).padStart(2, '0');
   
   return format
-    .replace('YYYY', year)
+    .replace('YYYY', String(year))
     .replace('MM', month)
     .replace('DD', day)
     .replace('HH', hours)

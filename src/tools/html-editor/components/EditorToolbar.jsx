@@ -3,59 +3,61 @@ import {
   AlignLeft, AlignCenter, AlignRight, AlignJustify,
   List, ListOrdered, Heading1, Heading2, Heading3,
   Undo2, Redo2, Code, Indent, Outdent, Minus, Type,
-  Link, Image, Table, Search, Maximize, Minimize,
+  Link as LinkIcon, Image as ImageIcon, Table as TableIcon, Search, Maximize, Minimize,
   Quote, Terminal,
 } from 'lucide-react';
 import { useState, useRef, useEffect } from 'react';
 import { ToolbarBtn, ToolbarDivider, ToolbarSelect } from '@/components/ui/Toolbar';
 
 export default function EditorToolbar({
-  theme, formatState, exec, fontFamily, fontSize, fontFamilyOptions, fontSizeOptions,
+  theme, editor, fontFamily, fontSize, fontFamilyOptions, fontSizeOptions,
   handleFontFamily, handleFontSize, handleInsertHr, showCode, toggleCodeView,
   handleColor, handleBgColor, handleInsertLink, handleInsertImage, handleInsertTable,
   showFindReplace, setShowFindReplace, isFullscreen, toggleFullscreen, colors,
 }) {
+  if (!editor) {
+    return null;
+  }
+
   return (
     <div className="border-b border-gray-200 bg-gray-50/80 px-2 sm:px-3 py-2">
       <div className="flex items-center gap-0.5 flex-wrap">
-        <ToolbarBtn icon={Undo2} onClick={() => exec('undo')} title="撤销 (Ctrl+Z)" />
-        <ToolbarBtn icon={Redo2} onClick={() => exec('redo')} title="恢复 (Ctrl+Y)" />
+        <ToolbarBtn icon={Undo2} onClick={() => editor.chain().focus().undo().run()} disabled={!editor.can().undo()} title="撤销 (Ctrl+Z)" />
+        <ToolbarBtn icon={Redo2} onClick={() => editor.chain().focus().redo().run()} disabled={!editor.can().redo()} title="恢复 (Ctrl+Y)" />
         <ToolbarDivider />
         <ToolbarSelect value={fontFamily} options={fontFamilyOptions} onChange={handleFontFamily} title="字体" width="100px" />
         <ToolbarSelect value={fontSize} options={fontSizeOptions} onChange={handleFontSize} title="字号" width="70px" />
         <ToolbarDivider />
-        <ToolbarBtn icon={Bold} onClick={() => exec('bold')} active={formatState.bold} title="加粗 (Ctrl+B)" />
-        <ToolbarBtn icon={Italic} onClick={() => exec('italic')} active={formatState.italic} title="斜体 (Ctrl+I)" />
-        <ToolbarBtn icon={Underline} onClick={() => exec('underline')} active={formatState.underline} title="下划线 (Ctrl+U)" />
-        <ToolbarBtn icon={Strikethrough} onClick={() => exec('strikeThrough')} active={formatState.strikethrough} title="删除线" />
+        <ToolbarBtn icon={Bold} onClick={() => editor.chain().focus().toggleBold().run()} active={editor.isActive('bold')} title="加粗 (Ctrl+B)" />
+        <ToolbarBtn icon={Italic} onClick={() => editor.chain().focus().toggleItalic().run()} active={editor.isActive('italic')} title="斜体 (Ctrl+I)" />
+        <ToolbarBtn icon={Underline} onClick={() => editor.chain().focus().toggleUnderline().run()} active={editor.isActive('underline')} title="下划线 (Ctrl+U)" />
+        <ToolbarBtn icon={Strikethrough} onClick={() => editor.chain().focus().toggleStrike().run()} active={editor.isActive('strike')} title="删除线" />
         <ToolbarDivider />
-        <ToolbarBtn icon={Heading1} onClick={() => exec('formatBlock', 'h1')} active={formatState.h1} title="标题 1" />
-        <ToolbarBtn icon={Heading2} onClick={() => exec('formatBlock', 'h2')} active={formatState.h2} title="标题 2" />
-        <ToolbarBtn icon={Heading3} onClick={() => exec('formatBlock', 'h3')} active={formatState.h3} title="标题 3" />
-        <ToolbarBtn icon={Type} onClick={() => exec('formatBlock', 'p')} active={formatState.p} title="正文" />
+        <ToolbarBtn icon={Heading1} onClick={() => editor.chain().focus().toggleHeading({ level: 1 }).run()} active={editor.isActive('heading', { level: 1 })} title="标题 1" />
+        <ToolbarBtn icon={Heading2} onClick={() => editor.chain().focus().toggleHeading({ level: 2 }).run()} active={editor.isActive('heading', { level: 2 })} title="标题 2" />
+        <ToolbarBtn icon={Heading3} onClick={() => editor.chain().focus().toggleHeading({ level: 3 }).run()} active={editor.isActive('heading', { level: 3 })} title="标题 3" />
+        <ToolbarBtn icon={Type} onClick={() => editor.chain().focus().setParagraph().run()} active={editor.isActive('paragraph')} title="正文" />
         <ToolbarDivider />
-        <ToolbarBtn icon={AlignLeft} onClick={() => exec('justifyLeft')} active={formatState.alignLeft} title="左对齐" />
-        <ToolbarBtn icon={AlignCenter} onClick={() => exec('justifyCenter')} active={formatState.alignCenter} title="居中" />
-        <ToolbarBtn icon={AlignRight} onClick={() => exec('justifyRight')} active={formatState.alignRight} title="右对齐" />
-        <ToolbarBtn icon={AlignJustify} onClick={() => exec('justifyFull')} active={formatState.alignJustify} title="两端对齐" />
+        <ToolbarBtn icon={AlignLeft} onClick={() => editor.chain().focus().setTextAlign('left').run()} active={editor.isActive({ textAlign: 'left' })} title="左对齐" />
+        <ToolbarBtn icon={AlignCenter} onClick={() => editor.chain().focus().setTextAlign('center').run()} active={editor.isActive({ textAlign: 'center' })} title="居中" />
+        <ToolbarBtn icon={AlignRight} onClick={() => editor.chain().focus().setTextAlign('right').run()} active={editor.isActive({ textAlign: 'right' })} title="右对齐" />
+        <ToolbarBtn icon={AlignJustify} onClick={() => editor.chain().focus().setTextAlign('justify').run()} active={editor.isActive({ textAlign: 'justify' })} title="两端对齐" />
         <ToolbarDivider />
-        <ToolbarBtn icon={List} onClick={() => exec('insertUnorderedList')} active={formatState.unorderedList} title="无序列表" />
-        <ToolbarBtn icon={ListOrdered} onClick={() => exec('insertOrderedList')} active={formatState.orderedList} title="有序列表" />
-        <ToolbarBtn icon={Outdent} onClick={() => exec('outdent')} title="减少缩进" />
-        <ToolbarBtn icon={Indent} onClick={() => exec('indent')} title="增加缩进" />
+        <ToolbarBtn icon={List} onClick={() => editor.chain().focus().toggleBulletList().run()} active={editor.isActive('bulletList')} title="无序列表" />
+        <ToolbarBtn icon={ListOrdered} onClick={() => editor.chain().focus().toggleOrderedList().run()} active={editor.isActive('orderedList')} title="有序列表" />
         <ToolbarDivider />
-        <ToolbarBtn icon={Quote} onClick={() => exec('formatBlock', 'blockquote')} title="引用块" />
-        <ToolbarBtn icon={Terminal} onClick={() => exec('formatBlock', 'pre')} title="代码块" />
+        <ToolbarBtn icon={Quote} onClick={() => editor.chain().focus().toggleBlockquote().run()} active={editor.isActive('blockquote')} title="引用块" />
+        <ToolbarBtn icon={Terminal} onClick={() => editor.chain().focus().toggleCodeBlock().run()} active={editor.isActive('codeBlock')} title="代码块" />
         <ToolbarDivider />
-        <ToolbarBtn icon={Minus} onClick={handleInsertHr} title="分割线" />
+        <ToolbarBtn icon={Minus} onClick={() => editor.chain().focus().setHorizontalRule().run()} title="分割线" />
         <ToolbarBtn icon={Code} onClick={toggleCodeView} active={showCode} title="HTML 源码" />
         <ToolbarDivider />
-        <ColorPicker icon="A" label="文字颜色" colors={colors} onSelect={handleColor} theme={theme} />
-        <ColorPicker icon="BG" label="背景颜色" colors={colors} onSelect={handleBgColor} theme={theme} isBg />
+        <ColorPicker icon="A" label="文字颜色" colors={colors} onSelect={(color) => editor.chain().focus().setColor(color).run()} theme={theme} />
+        {/* Background color requires a custom extension or inline style, omit or adjust if unsupported */}
         <ToolbarDivider />
-        <ToolbarBtn icon={Link} onClick={handleInsertLink} title="插入链接" />
-        <ToolbarBtn icon={Image} onClick={handleInsertImage} title="插入图片" />
-        <ToolbarBtn icon={Table} onClick={handleInsertTable} title="插入表格" />
+        <ToolbarBtn icon={LinkIcon} onClick={handleInsertLink} active={editor.isActive('link')} title="插入链接" />
+        <ToolbarBtn icon={ImageIcon} onClick={handleInsertImage} active={editor.isActive('image')} title="插入图片" />
+        <ToolbarBtn icon={TableIcon} onClick={handleInsertTable} active={editor.isActive('table')} title="插入表格" />
         <ToolbarDivider />
         <ToolbarBtn icon={Search} onClick={() => setShowFindReplace(!showFindReplace)} active={showFindReplace} title="查找替换 (Ctrl+F)" />
         <ToolbarBtn icon={isFullscreen ? Minimize : Maximize} onClick={toggleFullscreen} active={isFullscreen} title={isFullscreen ? '退出全屏 (Esc)' : '全屏编辑'} />
