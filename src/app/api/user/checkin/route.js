@@ -1,6 +1,6 @@
-import { NextResponse } from 'next/server';
+﻿import { NextResponse } from 'next/server';
 import db from '@/lib/db';
-import { getSessionUser } from '@/lib/auth';
+import { getRequestUser } from '@/lib/request-user';
 import { getSystemSettings, normalizeCheckinConfig } from '@/lib/settings';
 import { computeEarned, getCycleDay } from '@/lib/checkin-core';
 
@@ -36,22 +36,22 @@ function getCurrentTierDescription(config, mode, cycleDay) {
       (rule) => cycleDay >= rule.minDays && cycleDay <= (rule.maxDays ?? Infinity)
     );
     const dailyEarned = computeEarned(mode, config, cycleDay).dailyEarned;
-    return `基础 ${config.capped.basePoints} 分，日常封顶 ${config.capped.dailyCap} 分${matchedRules.length ? `，当前额外奖励 ${matchedRules.reduce((sum, rule) => sum + (rule.extraPoints || 0), 0)} 分` : ''}，今日到手 ${dailyEarned} 分`;
+    return `基础 ${config.capped.basePoints} 分，日常封顶 ${config.capped.dailyCap} �?{matchedRules.length ? `，当前额外奖�?${matchedRules.reduce((sum, rule) => sum + (rule.extraPoints || 0), 0)} 分` : ''}，今日到�?${dailyEarned} 分`;
   }
 
   if (mode === 'B') {
     const tier = (config.tiered.dailyTiers || []).find(
       ({ minDays, maxDays }) => cycleDay >= minDays && cycleDay <= maxDays
     );
-    return tier ? `第 ${tier.minDays}-${tier.maxDays} 天，每日基准 ${tier.dailyPoints} 分` : '当前无匹配积分档位';
+    return tier ? `�?${tier.minDays}-${tier.maxDays} 天，每日基准 ${tier.dailyPoints} 分` : '当前无匹配积分档�?;
   }
 
   const dailyEarned = config.daily.days?.[cycleDay - 1] || 0;
-  return `第 ${cycleDay} 天自定义 ${dailyEarned} 分`;
+  return `�?${cycleDay} 天自定义 ${dailyEarned} 分`;
 }
 
 export async function GET() {
-  const user = await getSessionUser();
+  const user = await getRequestUser({ withDB: true });
   if (!user) {
     return NextResponse.json({ error: '请先登录' }, { status: 401 });
   }
@@ -110,7 +110,7 @@ export async function GET() {
 
 export async function POST() {
   try {
-    const user = await getSessionUser();
+    const user = await getRequestUser({ withDB: true });
     if (!user) {
       return NextResponse.json({ error: '请先登录' }, { status: 401 });
     }
@@ -150,7 +150,7 @@ export async function POST() {
             amount: earned.dailyEarned,
             balance: dailyBalance,
             type: 'CHECKIN',
-            description: `签到成功 (+${earned.dailyEarned} 积分，已连续 ${newContinuous} 天)`,
+            description: `签到成功 (+${earned.dailyEarned} 积分，已连续 ${newContinuous} �?`,
           },
         }));
       }
@@ -161,7 +161,7 @@ export async function POST() {
             amount: earned.milestoneBonus,
             balance: currentUser.points + earned.totalEarned,
             type: 'MILESTONE_BONUS',
-            description: `连签第 ${cycleDay} 天里程碑奖励 (+${earned.milestoneBonus} 积分)`,
+            description: `连签�?${cycleDay} 天里程碑奖励 (+${earned.milestoneBonus} 积分)`,
           },
         }));
       }
@@ -188,7 +188,7 @@ export async function POST() {
     });
 
     return NextResponse.json({
-      message: `签到成功！增加 ${result.earned.totalEarned} 积分`,
+      message: `签到成功！增�?${result.earned.totalEarned} 积分`,
       user: result.updatedUser,
       earned: result.earned.totalEarned,
       dailyEarned: result.earned.dailyEarned,
@@ -206,3 +206,4 @@ export async function POST() {
     return NextResponse.json({ error: error.message || '签到失败' }, { status: 500 });
   }
 }
+

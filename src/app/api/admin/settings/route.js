@@ -1,31 +1,26 @@
 import { NextResponse } from 'next/server';
-import { getSessionUser } from '@/lib/auth';
+import { getRequestUser } from '@/lib/request-user';
 import { getSystemSettings, updateSystemSettings } from '@/lib/settings';
 import { validateBody, adminSettingsSchema, checkinConfigSchema } from '@/lib/validate';
 
 export async function GET() {
-  const currentUser = await getSessionUser();
+  const currentUser = await getRequestUser({ withDB: true });
   if (!currentUser || currentUser.role !== 'ADMIN') {
     return NextResponse.json({ error: '权限不足，仅管理员可访问' }, { status: 403 });
   }
 
   const settings = await getSystemSettings(true);
 
-  // 对 SMTP 密码进行脱敏处理
+  // �?SMTP 密码进行脱敏处理
   const maskedSettings = { ...settings };
   if (maskedSettings.smtp_config) {
     try {
       const smtpConfig = JSON.parse(maskedSettings.smtp_config);
-      if (smtpConfig.pass) {
-        // 显示前4位 + ****
-        const maskedPass = smtpConfig.pass.length > 4
-          ? smtpConfig.pass.substring(0, 4) + '****'
-          : '****';
-        smtpConfig.pass = maskedPass;
+        // 使用专用标记代替 includes('****') 判断
+        smtpConfig.pass = '__SMTP_PASSWORD_MASKED__';
         maskedSettings.smtp_config = JSON.stringify(smtpConfig);
-      }
     } catch (e) {
-      // 解析失败则保持原样
+      // 解析失败则保持原�?
     }
   }
 
@@ -33,7 +28,7 @@ export async function GET() {
 }
 
 export async function POST(req) {
-  const currentUser = await getSessionUser();
+  const currentUser = await getRequestUser({ withDB: true });
   if (!currentUser || currentUser.role !== 'ADMIN') {
     return NextResponse.json({ error: '权限不足，仅管理员可访问' }, { status: 403 });
   }
@@ -55,7 +50,7 @@ export async function POST(req) {
       } catch {
         return NextResponse.json({
           error: '签到配置格式错误',
-          details: [{ field: 'checkin_config', message: '必须是合法 JSON' }],
+          details: [{ field: 'checkin_config', message: '必须是合�?JSON' }],
         }, { status: 400 });
       }
 
@@ -84,15 +79,15 @@ export async function POST(req) {
         return NextResponse.json({ error: 'SMTP 配置格式错误' }, { status: 400 });
       }
 
-      // 如果密码包含 ****，说明是脱敏值，保留原密码
-      if (newSmtpConfig.pass && newSmtpConfig.pass.includes('****')) {
+      // 如果密码是脱敏标记，说明是脱敏值，保留原密�?
+      if (newSmtpConfig.pass === '__SMTP_PASSWORD_MASKED__') {
         const currentSettings = await getSystemSettings(true);
         if (currentSettings.smtp_config) {
           try {
             const currentSmtpConfig = JSON.parse(currentSettings.smtp_config);
             newSmtpConfig.pass = currentSmtpConfig.pass;
           } catch (e) {
-            // 保留用户提交的值
+            // 保留用户提交的�?
           }
         }
       }

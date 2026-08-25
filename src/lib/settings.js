@@ -100,7 +100,7 @@ export function normalizeCheckinConfig(raw) {
 
 let settingsCache = null;
 let cacheTime = 0;
-const CACHE_TTL = 10000; // 10 秒内存缓存
+const CACHE_TTL = 60000; // 60 秒内存缓存
 
 export async function getSystemSettings(forceRefresh = false) {
   const now = Date.now();

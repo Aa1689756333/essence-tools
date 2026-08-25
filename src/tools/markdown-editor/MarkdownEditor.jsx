@@ -17,16 +17,9 @@ import {
 } from 'lucide-react';
 import { Marked } from 'marked';
 import DOMPurify from 'dompurify';
-import hljs from 'highlight.js/lib/core'; // from 'highlight.js'
-import javascript from 'highlight.js/lib/languages/javascript';
-import css from 'highlight.js/lib/languages/css';
-import xml from 'highlight.js/lib/languages/xml';
-import json from 'highlight.js/lib/languages/json';
 import { countWords } from '@/lib/utils';
 import 'highlight.js/styles/github.css';
 
-// 按需加载常用语言，减少打包体积（xml 覆盖 HTML）
-[['javascript', javascript], ['css', css], ['xml', xml], ['json', json]].forEach(([n, l]) => hljs.registerLanguage(n, l));
 import { safeGetItem, safeSetItemWithRetry, safeRemoveItem } from '@/lib/storage';
 import { ToolbarBtn, ToolbarDivider } from '@/components/ui/Toolbar';
 
@@ -118,15 +111,38 @@ export default function MarkdownEditor() {
     }
   }, [isMobile, viewMode]);
 
-  const renderedHtml = useMemo(() => {
-    if (!markdown.trim()) return '';
-    if (typeof window === 'undefined') return '';
-    const raw = md.parse(markdown);
-    return DOMPurify.sanitize(raw, {
-      FORBID_TAGS: ['form', 'style', 'script'],
-      ADD_ATTR: ['target', 'rel'],
-      ALLOW_DATA_ATTR: false
-    });
+  const [renderedHtml, setRenderedHtml] = useState('');
+
+  useEffect(() => {
+    if (!markdown.trim()) {
+      setRenderedHtml('');
+      return;
+    }
+    
+    if (typeof window === 'undefined') return;
+
+    const render = () => {
+      const raw = md.parse(markdown);
+      const clean = DOMPurify.sanitize(raw, {
+        FORBID_TAGS: ['form', 'style', 'script'],
+        ADD_ATTR: ['target', 'rel'],
+        ALLOW_DATA_ATTR: false
+      });
+      setRenderedHtml(clean);
+    };
+
+    let idleCallbackId;
+    let timeoutId;
+    if ('requestIdleCallback' in window) {
+      idleCallbackId = window.requestIdleCallback(render, { timeout: 1000 });
+    } else {
+      timeoutId = setTimeout(render, 50);
+    }
+
+    return () => {
+      if (idleCallbackId) window.cancelIdleCallback(idleCallbackId);
+      if (timeoutId) clearTimeout(timeoutId);
+    };
   }, [markdown]);
 
   const isEmpty = !markdown.trim();
@@ -233,15 +249,52 @@ export default function MarkdownEditor() {
     };
   }, [markdown, isEmpty]);
 
-  // 代码语法高亮：渲染后对 <pre><code> 元素调用 hljs
+  // 代码语法高亮：渲染后对 <pre><code> 元素调用 hljs，并按需加载
   useEffect(() => {
     if (!previewRef.current || !renderedHtml) return;
-    previewRef.current.querySelectorAll('pre code').forEach((block) => {
-      if (!block.dataset.highlighted) {
-        hljs.highlightElement(block);
-        block.dataset.highlighted = 'true';
+    const blocks = previewRef.current.querySelectorAll('pre code');
+    if (blocks.length === 0) return;
+
+    let mounted = true;
+
+    const highlightBlocks = async () => {
+      if (!window.hljs) {
+        const [
+          { default: hljs },
+          { default: javascript },
+          { default: css },
+          { default: xml },
+          { default: json }
+        ] = await Promise.all([
+          import('highlight.js/lib/core'),
+          import('highlight.js/lib/languages/javascript'),
+          import('highlight.js/lib/languages/css'),
+          import('highlight.js/lib/languages/xml'),
+          import('highlight.js/lib/languages/json')
+        ]);
+        
+        hljs.registerLanguage('javascript', javascript);
+        hljs.registerLanguage('css', css);
+        hljs.registerLanguage('xml', xml);
+        hljs.registerLanguage('json', json);
+        window.hljs = hljs;
       }
-    });
+
+      if (!mounted) return;
+
+      blocks.forEach((block) => {
+        if (!block.dataset.highlighted) {
+          window.hljs.highlightElement(block);
+          block.dataset.highlighted = 'true';
+        }
+      });
+    };
+
+    highlightBlocks();
+
+    return () => {
+      mounted = false;
+    };
   }, [renderedHtml, viewMode]);
 
   // 编辑区 ↔ 预览区 滚动同步（分屏模式，比例映射）

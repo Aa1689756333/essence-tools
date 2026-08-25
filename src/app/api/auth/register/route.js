@@ -11,7 +11,7 @@ export async function POST(req) {
   try {
     // 速率限制检查
     const clientIP = getClientIP(req);
-    const rateLimitResult = checkRateLimit(`register:${clientIP}`, RateLimitRules.REGISTER);
+    const rateLimitResult = await checkRateLimit(`register:${clientIP}`, RateLimitRules.REGISTER);
     
     if (!rateLimitResult.allowed) {
       return NextResponse.json(

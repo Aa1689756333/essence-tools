@@ -1,0 +1,16 @@
+{
+  "name": "ToolBox 工具箱",
+  "short_name": "ToolBox",
+  "description": "在线效率工具集合：小说排版、HTML编辑、Markdown编辑",
+  "start_url": "/",
+  "display": "standalone",
+  "background_color": "#ffffff",
+  "theme_color": "#10b981",
+  "icons": [
+    {
+      "src": "/favicon.ico",
+      "sizes": "64x64",
+      "type": "image/x-icon"
+    }
+  ]
+}

@@ -97,54 +97,40 @@ export default function NovelFormatter() {
     }
   }, [inputText]);
 
+  const [outputParagraphs, setOutputParagraphs] = useState([]);
+  const workerRef = useRef(null);
+  const promiseMapRef = useRef(new Map());
+  const workerMsgId = useRef(0);
+
+  useEffect(() => {
+    workerRef.current = new Worker(new URL('./lib/formatter.worker.js', import.meta.url), { type: 'module' });
+    workerRef.current.onmessage = (e) => {
+      const { type, paragraphs, formatted, id } = e.data;
+      if (type === 'paragraphs_result') {
+        setOutputParagraphs(paragraphs);
+      } else if (type === 'format_result') {
+        if (promiseMapRef.current.has(id)) {
+          promiseMapRef.current.get(id)(formatted);
+          promiseMapRef.current.delete(id);
+        }
+      }
+    };
+    return () => {
+      workerRef.current?.terminate();
+    };
+  }, []);
+
   // 声明式计算输出段落 (带内容匹配, 用于悬停高亮联动)
-  const outputParagraphs = useMemo(() => {
+  useEffect(() => {
     if (!formattedText || formattedText === '排版结果将显示在这里...' ||
         formattedText === '请先在左侧输入文本...') {
-      return [];
+      setOutputParagraphs([]);
+      return;
     }
-
-    const inputLines = inputText.split('\n');
-    const inputNorms = inputLines.map(l => normalizeForMatch(l));
-    const outputLines = formattedText.split('\n');
-    const paragraphs = [];
-    let lastMatch = -1;
-
-    for (const line of outputLines) {
-      if (line.trim() !== '') {
-        const outNorm = normalizeForMatch(line);
-        let bestIdx = -1;
-        let bestScore = 0;
-        const searchFrom = Math.max(0, lastMatch);
-        const searchTo = Math.min(inputLines.length, searchFrom + 30);
-
-        for (let j = searchFrom; j < searchTo; j++) {
-          if (!inputNorms[j]) continue;
-          const len = Math.min(outNorm.length, inputNorms[j].length);
-          if (len === 0) continue;
-          let score = 0;
-          for (let k = 0; k < len; k++) {
-            if (outNorm[k] === inputNorms[j][k]) score++;
-            else break;
-          }
-          if (score > bestScore) {
-            bestScore = score;
-            bestIdx = j;
-          }
-        }
-
-        if (bestIdx >= 0 && bestScore >= 2) {
-          paragraphs.push({ text: line, inputLine: bestIdx });
-          lastMatch = bestIdx + 1;
-        } else {
-          paragraphs.push({ text: line, inputLine: -1 });
-        }
-      } else {
-        paragraphs.push({ text: '', inputLine: -1 });
-      }
-    }
-
-    return paragraphs;
+    workerRef.current?.postMessage({
+      type: 'compute_paragraphs',
+      payload: { inputText, formattedText }
+    });
   }, [formattedText, inputText]);
 
   // textarea input 事件
@@ -172,37 +158,49 @@ export default function NovelFormatter() {
     setIsProcessing(true);
     setActivePhase(0);
 
+    const formatPromise = new Promise(resolve => {
+      const id = ++workerMsgId.current;
+      promiseMapRef.current.set(id, resolve);
+      workerRef.current?.postMessage({
+        type: 'format',
+        id,
+        payload: { text: raw }
+      });
+    });
+
     if (!isLarge) {
-      // 小文本：同步计算，进度动画快速闪过（~500ms 总时长，避免无意义等待）
-      const formatted = format(raw);
-      const after = formatted.length;
-      const diff = after - before;
+      // 小文本：异步计算，进度动画快速闪过（~500ms 总时长，避免无意义等待）
       const fastPhase = 120;
       setTimeout(() => setActivePhase(1), fastPhase);
       setTimeout(() => setActivePhase(2), fastPhase * 2);
       setTimeout(() => setActivePhase(3), fastPhase * 3);
-      setTimeout(() => {
+      
+      Promise.all([
+        formatPromise,
+        new Promise(r => setTimeout(r, fastPhase * 4 + 60))
+      ]).then(([formatted]) => {
+        const after = formatted.length;
+        const diff = after - before;
         setFormattedText(formatted);
         setOutputCount(after);
         setCanCopy(true);
         setDiffStats({ before, after, diff });
         setIsProcessing(false);
-      }, fastPhase * 4 + 60);
+      });
       return;
     }
 
-    // 大文本：先渲染"处理中"UI，再推迟 format 执行，避免点击后卡死主线程
-    // （原实现先同步执行 format 再显示动画，大文本点击后会卡几秒无响应）
+    // 大文本：后台 Worker 计算，避免卡死主线程
     const phaseDuration = 700;
     const finalDelay = 400;
-    let formatted = '';
-    setTimeout(() => {
-      formatted = format(raw);
-      setActivePhase(1);
-    }, phaseDuration);
+    setTimeout(() => setActivePhase(1), phaseDuration);
     setTimeout(() => setActivePhase(2), phaseDuration * 2);
     setTimeout(() => setActivePhase(3), phaseDuration * 3);
-    setTimeout(() => {
+    
+    Promise.all([
+      formatPromise,
+      new Promise(r => setTimeout(r, phaseDuration * 4 + finalDelay))
+    ]).then(([formatted]) => {
       const after = formatted.length;
       const diff = after - before;
       setFormattedText(formatted);
@@ -210,7 +208,7 @@ export default function NovelFormatter() {
       setCanCopy(true);
       setDiffStats({ before, after, diff });
       setIsProcessing(false);
-    }, phaseDuration * 4 + finalDelay);
+    });
   }, []);
 
   // 清空

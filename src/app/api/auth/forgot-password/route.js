@@ -1,4 +1,5 @@
 import { NextResponse } from 'next/server';
+import { randomInt } from 'crypto';
 import db from '@/lib/db';
 import { sendVerificationEmail } from '@/lib/mailer';
 import { checkRateLimit, getClientIP, RateLimitRules } from '@/lib/rateLimit';
@@ -12,7 +13,7 @@ export async function POST(request) {
   try {
     // 速率限制检查
     const clientIP = getClientIP(request);
-    const rateLimitResult = checkRateLimit(`forgot-password:${clientIP}`, RateLimitRules.FORGOT_PASSWORD);
+    const rateLimitResult = await checkRateLimit(`forgot-password:${clientIP}`, RateLimitRules.FORGOT_PASSWORD);
     
     if (!rateLimitResult.allowed) {
       return NextResponse.json(
@@ -59,9 +60,9 @@ export async function POST(request) {
       });
     }
 
-    // 生成 6 位验证码
-    const code = Math.floor(100000 + Math.random() * 900000).toString();
-    const expiresAt = new Date(Date.now() + 15 * 60 * 1000); // 15 分钟有效期
+    // 3. 生成 6 位重置验证码
+    const code = String(randomInt(100000, 1000000));
+    const expiresAt = new Date(Date.now() + 15 * 60 * 1000); // 15分钟有效期
 
     // 删除该邮箱之前的所有密码重置验证码
     await db.emailVerification.deleteMany({

@@ -1,6 +1,11 @@
+// =============================================================
+// 数据源配置
+// 当前开发环境使用 SQLite，生产部署前需切换为 PostgreSQL
+// 切换步骤见本文件底部注释 [生产部署指南]
+// =============================================================
 datasource db {
   provider = "sqlite"
-  url      = "file:./dev.db"
+  url      = env("DATABASE_URL")
 }
 
 generator client {
@@ -63,3 +68,23 @@ model EmailVerification {
 
   @@index([email])
 }
+
+// =============================================================
+// [生产部署指南] 切换到 PostgreSQL
+// =============================================================
+// 1. 将上方 provider 改为 "postgresql"
+//    provider = "postgresql"
+//
+// 2. 在生产环境配置 DATABASE_URL 环境变量，例如：
+//    DATABASE_URL="postgresql://user:password@host:5432/toolbox?sslmode=require"
+//    推荐使用 Neon (https://neon.tech) 或 Supabase 的免费 PostgreSQL
+//
+// 3. 生成迁移并部署：
+//    npx prisma migrate dev --name init   # 本地生成迁移文件
+//    npx prisma migrate deploy            # 生产环境执行迁移
+//
+// 4. 注意事项：
+//    - SQLite 和 PostgreSQL 的 Schema 完全兼容，无需修改 model 定义
+//    - 切换后本地开发也需使用 PostgreSQL（或维护两套 .env）
+//    - 切换前务必备份 dev.db 中的现有数据
+// =============================================================

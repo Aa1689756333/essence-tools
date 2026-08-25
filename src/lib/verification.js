@@ -1,3 +1,4 @@
+import { randomInt } from 'crypto';
 import db from './db';
 
 const CODE_TTL_MS = 10 * 60 * 1000; // 验证码有效期 10 分钟
@@ -5,7 +6,7 @@ const RESEND_INTERVAL_MS = 60 * 1000; // 同一邮箱 60 秒内不可重复发�
 const MAX_ATTEMPTS = 5; // 单个验证码最多校验次数
 
 function generateCode() {
-  return String(Math.floor(100000 + Math.random() * 900000));
+  return String(randomInt(100000, 1000000));
 }
 
 /**

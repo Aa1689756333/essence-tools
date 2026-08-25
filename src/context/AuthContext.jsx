@@ -11,9 +11,9 @@ export function AuthProvider({ children }) {
   const [authModalMode, setAuthModalMode] = useState('login'); // 'login' | 'register'
   const [showCheckInModal, setShowCheckInModal] = useState(false);
 
-  const fetchMe = useCallback(async () => {
+  const fetchMe = useCallback(async (retryCount = 0) => {
     try {
-      setLoading(true);
+      if (retryCount === 0) setLoading(true);
       const res = await fetch('/api/auth/me');
       if (res.ok) {
         const data = await res.json();
@@ -21,15 +21,24 @@ export function AuthProvider({ children }) {
       } else {
         setUser(null);
       }
-    } catch {
-      setUser(null);
-    } finally {
       setLoading(false);
+    } catch (err) {
+      if (retryCount < 2) {
+        const backoff = 1000 * Math.pow(2, retryCount);
+        setTimeout(() => fetchMe(retryCount + 1), backoff);
+      } else {
+        setUser(null);
+        setLoading(false);
+      }
     }
   }, []);
 
   useEffect(() => {
     fetchMe();
+    
+    const handleOnline = () => fetchMe();
+    window.addEventListener('online', handleOnline);
+    return () => window.removeEventListener('online', handleOnline);
   }, [fetchMe]);
 
   const login = async (email, password) => {

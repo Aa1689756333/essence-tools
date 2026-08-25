@@ -1,10 +1,10 @@
 import { NextResponse } from 'next/server';
 import db from '@/lib/db';
-import { getSessionUser } from '@/lib/auth';
+import { getRequestUser } from '@/lib/request-user';
 import { getSystemSettings } from '@/lib/settings';
 
 export async function GET() {
-  const user = await getSessionUser();
+  const user = await getRequestUser({ withDB: true });
   if (!user || user.role !== 'ADMIN') {
     return NextResponse.json({ error: '权限不足，仅管理员可访问' }, { status: 403 });
   }

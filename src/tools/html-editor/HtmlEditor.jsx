@@ -20,6 +20,7 @@ import {
 } from 'lucide-react';
 import { safeGetItem, safeSetItemWithRetry, safeRemoveItem } from '@/lib/storage';
 import { countWords } from '@/lib/utils';
+import { useDebouncedCallback } from '@/hooks/useDebounce';
 import Modal from '@/components/ui/Modal';
 import { ToolbarBtn, ToolbarDivider, ToolbarSelect } from '@/components/ui/Toolbar';
 import { formatHtml, cleanHtml, escapeHtml, isSafeUrl } from './lib/htmlUtils';
@@ -96,13 +97,18 @@ export default function HtmlEditor() {
   }, []);
 
   // 更新空状态与字数统计（提前定义，供 handleRestoreConfirm 引用）
+  const debouncedCountWords = useDebouncedCallback(() => {
+    if (!editorRef.current) return;
+    const text = editorRef.current.innerText || '';
+    setWordCount(countWords(text));
+  }, 300);
+
   const updateEmptyState = useCallback(() => {
     if (!editorRef.current) return;
     const content = editorRef.current.innerHTML;
     setIsEmpty(!content || content === '<br>' || content === '<div><br></div>');
-    const text = editorRef.current.innerText || '';
-    setWordCount(countWords(text));
-  }, []);
+    debouncedCountWords();
+  }, [debouncedCountWords]);
 
   const handleRestoreConfirm = useCallback(() => {
     if (editorRef.current && savedContentRef.current) {

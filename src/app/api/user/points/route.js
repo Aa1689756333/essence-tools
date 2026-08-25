@@ -1,6 +1,6 @@
 import { NextResponse } from 'next/server';
 import db from '@/lib/db';
-import { getSessionUser } from '@/lib/auth';
+import { getRequestUser } from '@/lib/request-user';
 
 const DEFAULT_PAGE_SIZE = 20;
 const MAX_PAGE_SIZE = 100;
@@ -20,7 +20,7 @@ function getCurrentMonthRange() {
 }
 
 export async function GET(request) {
-  const user = await getSessionUser();
+  const user = await getRequestUser({ withDB: true });
   if (!user) {
     return NextResponse.json({ error: '请先登录' }, { status: 401 });
   }

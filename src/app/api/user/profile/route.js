@@ -1,19 +1,20 @@
 import { NextResponse } from 'next/server';
-import { getSessionUser, hashPassword, verifyPassword, COOKIE_NAME } from '@/lib/auth';
+import { getRequestUser } from '@/lib/request-user';
+import { hashPassword, verifyPassword, COOKIE_NAME } from '@/lib/auth';
 import db from '@/lib/db';
 import { z } from 'zod';
 
 // 更新昵称 schema
 const updateNicknameSchema = z.object({
   action: z.literal('update_nickname'),
-  nickname: z.string().min(1, '昵称不能为空').max(50, '昵称不能超过50个字符'),
+  nickname: z.string().min(1, '昵称不能为空').max(50, '昵称不能超过50个字�?),
 });
 
 // 更新密码 schema
 const updatePasswordSchema = z.object({
   action: z.literal('update_password'),
-  currentPassword: z.string().min(1, '请输入当前密码'),
-  newPassword: z.string().min(6, '新密码至少6个字符').max(128, '密码不能超过128个字符'),
+  currentPassword: z.string().min(1, '请输入当前密�?),
+  newPassword: z.string().min(6, '新密码至�?个字�?).max(128, '密码不能超过128个字�?),
 });
 
 // 注销账号 schema
@@ -31,7 +32,7 @@ const profileSchema = z.discriminatedUnion('action', [
 // GET: 获取当前用户信息
 export async function GET() {
   try {
-    const user = await getSessionUser();
+    const user = await getRequestUser({ withDB: true });
     if (!user) {
       return NextResponse.json({ error: '请先登录' }, { status: 401 });
     }
@@ -46,14 +47,16 @@ export async function GET() {
 // PATCH: 更新用户资料
 export async function PATCH(request) {
   try {
-    const user = await getSessionUser(true);
+    const reqUser = await getRequestUser();
+    if (!reqUser) return NextResponse.json({ error: 'δ��¼' }, { status: 401 });
+    const user = await db.user.findUnique({ where: { id: reqUser.id } });
     if (!user) {
       return NextResponse.json({ error: '请先登录' }, { status: 401 });
     }
 
     const body = await request.json();
     
-    // 验证请求体
+    // 验证请求�?
     const validation = profileSchema.safeParse(body);
     if (!validation.success) {
       const errors = validation.error.errors.map(e => ({
@@ -70,7 +73,7 @@ export async function PATCH(request) {
 
     // 更新昵称
     if (data.action === 'update_nickname') {
-      // 检查昵称是否已被使用
+      // 检查昵称是否已被使�?
       const existingUser = await db.user.findFirst({
         where: {
           nickname: data.nickname,
@@ -80,7 +83,7 @@ export async function PATCH(request) {
 
       if (existingUser) {
         return NextResponse.json(
-          { error: '该昵称已被使用' },
+          { error: '该昵称已被使�? },
           { status: 409 }
         );
       }
@@ -119,7 +122,7 @@ export async function PATCH(request) {
         );
       }
 
-      // 哈希新密码
+      // 哈希新密�?
       const newPasswordHash = await hashPassword(data.newPassword);
 
       await db.user.update({
@@ -143,7 +146,7 @@ export async function PATCH(request) {
         );
       }
 
-      // 检查是否是唯一管理员
+      // 检查是否是唯一管理�?
       if (user.role === 'ADMIN') {
         const adminCount = await db.user.count({
           where: { role: 'ADMIN' },
@@ -156,7 +159,7 @@ export async function PATCH(request) {
         }
       }
 
-      // 删除用户（cascade 会自动删除关联的 PointTransaction）
+      // 删除用户（cascade 会自动删除关联的 PointTransaction�?
       await db.user.delete({
         where: { id: user.id },
       });

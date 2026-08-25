@@ -12,7 +12,20 @@
     "test:md2": "node test-md-editor-2.mjs",
     "test:html": "node test-html-editor.js",
     "test:fixes": "node --test test-fixes.mjs",
-    "test:checkin": "node --test test-checkin.mjs"
+    "test:checkin": "node --test test-checkin.mjs",
+    "lint": "next lint",
+    "format": "prettier --write .",
+    "format:check": "prettier --check .",
+    "prepare": "husky"
+  },
+  "lint-staged": {
+    "*.{js,jsx,mjs}": [
+      "eslint --fix",
+      "prettier --write"
+    ],
+    "*.{json,md,css}": [
+      "prettier --write"
+    ]
   },
   "dependencies": {
     "@prisma/client": "^5.22.0",
@@ -24,14 +37,20 @@
     "marked": "^18.0.6",
     "next": "^15.3.5",
     "nodemailer": "^9.0.3",
-    "prisma": "^5.22.0",
     "react": "^19.1.0",
     "react-dom": "^19.1.0",
     "zod": "^4.4.3"
   },
   "devDependencies": {
     "@tailwindcss/postcss": "^4.1.11",
+    "eslint": "^9.39.5",
+    "eslint-config-next": "^16.3.2",
+    "eslint-config-prettier": "^10.1.8",
+    "husky": "^9.1.7",
     "jsdom": "^29.1.1",
+    "lint-staged": "^17.3.0",
+    "prettier": "^3.9.6",
+    "prisma": "^7.9.1",
     "tailwindcss": "^4.1.11"
   }
 }

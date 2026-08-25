@@ -3,17 +3,23 @@ import { SignJWT, jwtVerify } from 'jose';
 import { cookies } from 'next/headers';
 import db from './db';
 
-// JWT 密钥初始化：生产环境必须配置环境变量，开发环境使用兜底值并警告
-let jwtSecretKey;
-if (process.env.JWT_SECRET) {
-  jwtSecretKey = new TextEncoder().encode(process.env.JWT_SECRET);
-} else if (process.env.NODE_ENV === 'production') {
-  throw new Error('JWT_SECRET environment variable is required in production');
-} else {
-  console.warn('⚠️ JWT_SECRET not configured, using development fallback. DO NOT use in production!');
-  jwtSecretKey = new TextEncoder().encode('toolbox-dev-secret-key');
+// JWT 密钥惰性初始化：避免模块顶层 throw 阻塞 next build
+// 密钥在首次调用时按环境解析，生产环境必须配置 JWT_SECRET 环境变量
+let _jwtSecretKey = null;
+
+function getJwtSecret() {
+  if (_jwtSecretKey) return _jwtSecretKey;
+
+  if (process.env.JWT_SECRET) {
+    _jwtSecretKey = new TextEncoder().encode(process.env.JWT_SECRET);
+  } else if (process.env.NODE_ENV === 'production') {
+    throw new Error('JWT_SECRET environment variable is required in production');
+  } else {
+    console.warn('⚠️ JWT_SECRET not configured, using development fallback. DO NOT use in production!');
+    _jwtSecretKey = new TextEncoder().encode('toolbox-dev-secret-key');
+  }
+  return _jwtSecretKey;
 }
-const JWT_SECRET = jwtSecretKey;
 
 export const COOKIE_NAME = 'toolbox_session';
 
@@ -30,12 +36,12 @@ export async function createToken(payload) {
     .setProtectedHeader({ alg: 'HS256' })
     .setIssuedAt()
     .setExpirationTime('7d')
-    .sign(JWT_SECRET);
+    .sign(getJwtSecret());
 }
 
 export async function verifyToken(token) {
   try {
-    const { payload } = await jwtVerify(token, JWT_SECRET);
+    const { payload } = await jwtVerify(token, getJwtSecret());
     return payload;
   } catch {
     return null;

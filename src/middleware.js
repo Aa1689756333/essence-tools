@@ -1,17 +1,24 @@
 import { NextResponse } from 'next/server';
 import { jwtVerify } from 'jose';
 
-// JWT 密钥初始化（与 auth.js 保持一致）
-let jwtSecretKey;
-if (process.env.JWT_SECRET) {
-  jwtSecretKey = new TextEncoder().encode(process.env.JWT_SECRET);
-} else if (process.env.NODE_ENV === 'production') {
-  // 在生产环境中，如果未配置 JWT_SECRET，middleware 无法正常工作
-  // 但这里不能抛出错误，只能记录警告
-  console.error('CRITICAL: JWT_SECRET not configured in production!');
-  jwtSecretKey = new TextEncoder().encode('toolbox-dev-secret-key');
-} else {
-  jwtSecretKey = new TextEncoder().encode('toolbox-dev-secret-key');
+// JWT 密钥惰性初始化（与 auth.js 保持一致策略）
+// 生产环境未配置时使用随机密钥，所有旧 session 自动失效，不暴露可预测密钥
+let _jwtSecretKey = null;
+
+function getJwtSecret() {
+  if (_jwtSecretKey) return _jwtSecretKey;
+
+  if (process.env.JWT_SECRET) {
+    _jwtSecretKey = new TextEncoder().encode(process.env.JWT_SECRET);
+  } else if (process.env.NODE_ENV === 'production') {
+    // Middleware 中不能 throw（会导致所有请求 500），
+    // 使用随机密钥确保旧 token 不可用，但服务仍可运行
+    _jwtSecretKey = crypto.getRandomValues(new Uint8Array(32));
+    console.error('CRITICAL: JWT_SECRET not configured in production! All sessions will be invalid.');
+  } else {
+    _jwtSecretKey = new TextEncoder().encode('toolbox-dev-secret-key');
+  }
+  return _jwtSecretKey;
 }
 
 const COOKIE_NAME = 'toolbox_session';
@@ -31,7 +38,7 @@ export async function middleware(request) {
     }
 
     try {
-      const { payload } = await jwtVerify(token, jwtSecretKey);
+      const { payload } = await jwtVerify(token, getJwtSecret());
       
       if (!payload || !payload.id) {
         return NextResponse.json(
@@ -48,8 +55,17 @@ export async function middleware(request) {
         );
       }
 
-      // 验证通过，继续处理请求
-      return NextResponse.next();
+      // 验证通过，继续处理请求并注入用户信息
+      const requestHeaders = new Headers(request.headers);
+      requestHeaders.set('x-user-id', payload.id);
+      requestHeaders.set('x-user-role', payload.role);
+      requestHeaders.set('x-user-email', payload.email || '');
+
+      return NextResponse.next({
+        request: {
+          headers: requestHeaders,
+        },
+      });
     } catch (error) {
       return NextResponse.json(
         { error: '会话无效或已过期' },
@@ -70,7 +86,7 @@ export async function middleware(request) {
     }
 
     try {
-      const { payload } = await jwtVerify(token, jwtSecretKey);
+      const { payload } = await jwtVerify(token, getJwtSecret());
       
       if (!payload || !payload.id) {
         return NextResponse.json(
@@ -79,8 +95,17 @@ export async function middleware(request) {
         );
       }
 
-      // 验证通过，继续处理请求
-      return NextResponse.next();
+      // 验证通过，继续处理请求并注入用户信息
+      const requestHeaders = new Headers(request.headers);
+      requestHeaders.set('x-user-id', payload.id);
+      requestHeaders.set('x-user-role', payload.role || 'USER');
+      requestHeaders.set('x-user-email', payload.email || '');
+
+      return NextResponse.next({
+        request: {
+          headers: requestHeaders,
+        },
+      });
     } catch (error) {
       return NextResponse.json(
         { error: '会话无效或已过期' },
@@ -100,7 +125,7 @@ export async function middleware(request) {
     }
 
     try {
-      const { payload } = await jwtVerify(token, jwtSecretKey);
+      const { payload } = await jwtVerify(token, getJwtSecret());
 
       if (!payload || !payload.id) {
         const loginUrl = new URL('/', request.url);
