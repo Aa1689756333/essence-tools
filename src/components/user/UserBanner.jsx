@@ -17,7 +17,10 @@ export default function UserBanner({ user }) {
     <div className="mb-6 rounded-2xl border border-border bg-card p-5 shadow-sm">
       <div className="flex flex-col gap-5 md:flex-row md:items-center md:justify-between">
         <Link href="/user/profile" className="flex min-w-0 items-center gap-3 rounded-xl transition-opacity hover:opacity-80">
-          <div className="flex h-12 w-12 shrink-0 items-center justify-center overflow-hidden rounded-2xl bg-[var(--theme-gradient)] text-lg font-bold text-white">
+          <div
+            className="flex h-12 w-12 shrink-0 items-center justify-center overflow-hidden rounded-2xl text-lg font-bold text-white"
+            style={{ background: 'var(--theme-gradient, linear-gradient(135deg, #10b981, #34d399))' }}
+          >
             {user.avatar ? <img src={user.avatar} alt="用户头像" className="h-full w-full object-cover" /> : getInitial(user.nickname)}
           </div>
           <div className="min-w-0">

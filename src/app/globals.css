@@ -55,6 +55,11 @@ body {
   font-feature-settings: "cv02", "cv03", "cv04", "cv11";
 }
 
+:focus-visible {
+  outline: 2px solid var(--theme-accent, #34d399);
+  outline-offset: 2px;
+}
+
 /* ===== 动画 ===== */
 
 @keyframes fade-up {

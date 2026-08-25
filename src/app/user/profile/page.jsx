@@ -103,7 +103,10 @@ export default function UserProfilePage() {
         </div>
 
         <div className="mb-6 flex items-center gap-4 rounded-2xl border border-border bg-bg-primary p-4">
-          <div className="flex h-16 w-16 shrink-0 items-center justify-center overflow-hidden rounded-2xl bg-[var(--theme-gradient)] text-2xl font-bold text-white">
+          <div
+            className="flex h-16 w-16 shrink-0 items-center justify-center overflow-hidden rounded-2xl text-2xl font-bold text-white"
+            style={{ background: 'var(--theme-gradient, linear-gradient(135deg, #10b981, #34d399))' }}
+          >
             {user.avatar ? <img src={user.avatar} alt="用户头像" className="h-full w-full object-cover" /> : getInitial(user.nickname)}
           </div>
           <div>
