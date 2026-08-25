@@ -228,32 +228,32 @@ export default function CheckInModal() {
               return (
                 <div
                   key={day}
-                  className={`relative flex flex-col items-center justify-between p-1.5 rounded-2xl border transition-all overflow-hidden
+                  className={`relative flex flex-col items-center justify-center gap-0.5 sm:gap-1 p-1 rounded-xl border transition-all overflow-hidden aspect-square
                     ${isChecked ? 'bg-emerald-500/10 border-emerald-500/20 text-emerald-600 dark:text-emerald-400 shadow-[inset_0_0_10px_rgba(16,185,129,0.05)]' : ''}
                     ${isMissed ? 'bg-bg-primary/30 border-transparent text-text-tertiary opacity-40' : ''}
                     ${isToday && !isChecked ? 'bg-gradient-to-b from-emerald-400 to-emerald-500 text-white shadow-lg shadow-emerald-500/30 border-emerald-400 ring-2 ring-emerald-500/20 ring-offset-2 ring-offset-card animate-pulse' : ''}
                     ${isProjectedMilestone ? 'bg-gradient-to-br from-amber-50 to-amber-100 dark:from-amber-900/40 dark:to-amber-800/20 border-amber-300 dark:border-amber-500/50 text-amber-600 dark:text-amber-400 shadow-sm' : ''}
                     ${!isChecked && !isMissed && !isToday && !isProjectedMilestone ? 'bg-card border-border/60 text-text-secondary shadow-sm hover:border-border' : ''}
                   `}
-                  style={{ aspectRatio: '1/1.25' }}
+                  
                 >
                   {/* 顶部日期 */}
-                  <span className={`text-[11px] font-bold tracking-tight ${(isToday && !isChecked) ? 'text-white' : isProjectedMilestone ? 'text-amber-700 dark:text-amber-300' : 'opacity-80'}`}>
+                  <span className={`text-xs sm:text-sm font-semibold ${(isToday && !isChecked) ? 'text-white' : isProjectedMilestone ? 'text-amber-700 dark:text-amber-300' : 'text-text-secondary'}`}>
                     {isToday ? '今天' : day}
                   </span>
 
                   {/* 底部状态/积分/图标 */}
-                  <div className="flex items-center justify-center w-full">
+                  <div className="flex items-center justify-center mt-0.5">
                     {isChecked ? (
-                      <span className="text-[10px] font-extrabold flex items-center gap-0.5">
-                         {pastPoints ? `+${pastPoints}` : <CheckCircle2 className="w-3.5 h-3.5" />}
+                      <span className="text-[10px] sm:text-[11px] font-bold flex items-center gap-0.5">
+                         {pastPoints ? `+${pastPoints}` : <CheckCircle2 className="w-3.5 h-3.5 sm:w-4 sm:h-4" />}
                       </span>
                     ) : isToday && !isChecked ? (
-                      <span className="text-[11px] font-extrabold drop-shadow-sm">+{info?.todayExpected || 0}</span>
+                      <span className="text-xs sm:text-sm font-bold drop-shadow-sm">+{info?.todayExpected || 0}</span>
                     ) : isProjectedMilestone ? (
-                      <span className="text-[10px] font-extrabold flex items-center gap-0.5"><Award className="w-3 h-3 fill-amber-500/20" />+{milestoneBonus}</span>
+                      <span className="text-[10px] sm:text-[11px] font-bold flex items-center gap-0.5"><Award className="w-3 h-3 sm:w-3.5 sm:h-3.5 fill-amber-500/20" />+{milestoneBonus}</span>
                     ) : !isMissed ? (
-                      <span className="text-[9px] font-bold opacity-50 flex items-center">
+                      <span className="text-[9px] sm:text-[11px] font-medium text-text-tertiary flex items-center">
                         +{projectedPoints}
                       </span>
                     ) : null}
