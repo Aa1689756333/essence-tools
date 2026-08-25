@@ -146,63 +146,28 @@ export default function CheckInModal() {
           </button>
         </div>
 
-        <div className="mb-6 p-3 rounded-xl bg-bg-primary border border-border">
-          <div className="flex items-center justify-between text-[11px] text-text-secondary">
-            <span>{info?.mode ? `${info.mode} 模式` : '签到规则'} · 连签第 {info?.cycleDay || 1} 天</span>
-            <span className="text-text-tertiary">{info?.currentTier || '正在计算今日奖励'}</span>
-          </div>
-          {info?.nextMilestone ? (
-            <div className="mt-2">
-              <div className="flex items-center justify-between text-[11px] mb-1.5">
-                <span className="flex items-center gap-1 font-semibold text-amber-600 dark:text-amber-400">
-                  <Award className="w-3.5 h-3.5" />
-                  距离下个里程碑还差 {info.nextMilestone.daysRemaining} 天
-                </span>
-                <span className="text-text-tertiary">第 {info.nextMilestone.day} 天 +{info.nextMilestone.bonus}</span>
-              </div>
-              <div className="h-1.5 rounded-full bg-bg overflow-hidden">
-                <div
-                  className="h-full rounded-full bg-gradient-to-r from-amber-400 to-amber-500 transition-all"
-                  style={{ width: `${Math.min(100, Math.max(0, ((info.cycleDay || 1) / info.nextMilestone.day) * 100))}%` }}
-                />
-              </div>
-            </div>
-          ) : (
-            <div className="mt-2 text-[11px] text-text-tertiary">当前周期暂无下一个里程碑</div>
-          )}
-        </div>
-
-        {/* 月度日历小组件 */}
-        <div className="mb-6">
+        {/* 月度日历小组件 (高级游戏化日历) */}
+        <div className="mb-2">
           <div className="flex items-center justify-between text-xs font-semibold text-text-secondary mb-3">
             <span className="flex items-center gap-1">
               <Calendar className="w-3.5 h-3.5" />
-              {currentYear}年 {currentMonth + 1}月 打卡概览
+              {currentYear}年 {currentMonth + 1}月 打卡日历
             </span>
-            <span className="text-[11px] text-text-tertiary">积分规则</span>
+            <span className="text-[11px] text-text-tertiary flex items-center gap-1">
+              连续签到 <span className="text-emerald-500 font-bold">{info?.continuousCheckIn || user?.continuousCheckIn || 0}</span> 天
+            </span>
           </div>
 
-          {/* 整月全勤进度 */}
+          {/* 整月全勤进度 (极简版) */}
           {(info?.monthFullBonus ?? 0) > 0 && (
-            <div className="mb-3 p-2.5 rounded-xl bg-amber-500/10 border border-amber-500/20">
-              <div className="flex items-center justify-between text-[11px] mb-1.5">
-                <span className="flex items-center gap-1 font-semibold text-amber-600 dark:text-amber-400">
-                  <Award className="w-3.5 h-3.5" />
-                  整月全勤奖励 +{info.monthFullBonus} 积分
-                </span>
-                <span className="text-text-tertiary">
-                  {info?.monthCheckinCount || 0}/{info?.daysInMonth || daysInMonth} 天
-                </span>
-              </div>
-              <div className="h-1.5 rounded-full bg-bg-primary overflow-hidden">
-                <div
-                  className="h-full rounded-full bg-gradient-to-r from-amber-400 to-amber-500 transition-all"
-                  style={{ width: `${Math.min(100, ((info?.monthCheckinCount || 0) / (info?.daysInMonth || daysInMonth)) * 100)}%` }}
-                />
-              </div>
-              <p className="text-[10px] text-text-tertiary mt-1.5">
-                当月每天签到，月末最后一天可领取全勤奖励
-              </p>
+            <div className="mb-3 p-2.5 rounded-xl bg-amber-500/10 border border-amber-500/20 flex items-center justify-between">
+              <span className="flex items-center gap-1 text-[11px] font-semibold text-amber-600 dark:text-amber-400">
+                <Sparkles className="w-3.5 h-3.5" />
+                全月满签可额外获 +{info.monthFullBonus} 积分
+              </span>
+              <span className="text-[11px] text-text-tertiary font-medium">
+                {info?.monthCheckinCount || 0}/{info?.daysInMonth || daysInMonth}
+              </span>
             </div>
           )}
 
@@ -214,58 +179,53 @@ export default function CheckInModal() {
             ))}
             {daysArray.map((day) => {
               const isToday = day === todayDate;
+              const isPast = day < todayDate;
               const isChecked = (info?.checkedDays || []).includes(day) || (isToday && info?.todayChecked);
+              const isMissed = isPast && !isChecked;
+
+              let isProjectedMilestone = false;
+              if (!isPast && !isToday && info?.nextMilestone) {
+                const diff = day - todayDate;
+                const projectedDay = (info.cycleDay || 1) + diff - (info.todayChecked ? 1 : 0);
+                if (projectedDay === info.nextMilestone.day) {
+                  isProjectedMilestone = true;
+                }
+              }
 
               return (
                 <div
                   key={day}
-                  className={`h-8 rounded-lg flex items-center justify-center text-xs font-medium transition-all ${
-                    isChecked
-                      ? 'bg-emerald-500/20 text-emerald-600 dark:text-emerald-400 border border-emerald-500/30 font-bold'
-                      : isToday
-                      ? 'border border-border bg-bg-primary text-text font-bold'
-                      : 'bg-bg-primary/50 text-text-secondary'
-                  }`}
+                  className={`relative flex flex-col items-center justify-center rounded-xl p-1 transition-all
+                    ${isChecked ? 'bg-emerald-500/15 text-emerald-600 dark:text-emerald-400 border border-emerald-500/30' : ''}
+                    ${isMissed ? 'bg-bg-primary/30 text-text-tertiary opacity-40' : ''}
+                    ${isToday && !isChecked ? 'bg-emerald-500 text-white shadow-lg shadow-emerald-500/30 animate-pulse border border-emerald-400' : ''}
+                    ${isProjectedMilestone ? 'bg-amber-500/15 border border-amber-500/30 text-amber-600 dark:text-amber-400' : ''}
+                    ${!isChecked && !isMissed && !isToday && !isProjectedMilestone ? 'bg-bg-primary/50 text-text-secondary border border-transparent' : ''}
+                  `}
+                  style={{ aspectRatio: '1/1.2' }}
                 >
-                  {day}
+                  {/* 顶部日期 */}
+                  <span className={`text-[11px] font-bold ${isToday && !isChecked ? 'text-white/90' : 'opacity-80'}`}>
+                    {isToday ? '今' : day}
+                  </span>
+
+                  {/* 底部状态/积分/图标 */}
+                  <div className="mt-0.5 flex items-center justify-center h-4">
+                    {isChecked ? (
+                      <CheckCircle2 className="w-3.5 h-3.5" />
+                    ) : isToday && !isChecked ? (
+                      <span className="text-[10px] font-bold">+{info?.todayExpected || 0}</span>
+                    ) : isProjectedMilestone ? (
+                      <Award className="w-3.5 h-3.5 text-amber-500" />
+                    ) : !isMissed ? (
+                      <span className="text-[9px] font-medium opacity-50 text-text-tertiary truncate max-w-[20px] overflow-hidden">
+                        待定
+                      </span>
+                    ) : null}
+                  </div>
                 </div>
               );
             })}
-          </div>
-        </div>
-
-        {/* 近期积分明细 */}
-        <div>
-          <h4 className="text-xs font-semibold text-text-secondary mb-2">积分交易记录</h4>
-          <div className="max-h-36 overflow-y-auto space-y-1.5 custom-scrollbar pr-1">
-            {loading ? (
-              <div className="text-center py-4 text-xs text-text-tertiary flex items-center justify-center gap-2">
-                <Loader2 className="w-3.5 h-3.5 animate-spin" /> 加载中...
-              </div>
-            ) : info?.history && info.history.length > 0 ? (
-              info.history.map((tx) => (
-                <div
-                  key={tx.id}
-                  className="flex items-center justify-between p-2 rounded-lg bg-bg-primary/40 border border-border/50 text-xs"
-                >
-                  <div>
-                    <div className="font-medium text-text">{tx.description}</div>
-                    <div className="text-[10px] text-text-tertiary">
-                      {new Date(tx.createdAt).toLocaleString('zh-CN')}
-                    </div>
-                  </div>
-                  <div
-                    className={`font-semibold ${
-                      tx.amount > 0 ? 'text-emerald-500' : 'text-rose-500'
-                    }`}
-                  >
-                    {tx.amount > 0 ? `+${tx.amount}` : tx.amount}
-                  </div>
-                </div>
-              ))
-            ) : (
-              <div className="text-center py-4 text-xs text-text-tertiary">暂无积分记录</div>
-            )}
           </div>
         </div>
     </Modal>
