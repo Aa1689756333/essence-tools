@@ -89,6 +89,33 @@ export async function middleware(request) {
     }
   }
 
+  // 用户中心页面鉴权：/user/*
+  if (pathname === '/user' || pathname.startsWith('/user/')) {
+    const token = request.cookies.get(COOKIE_NAME)?.value;
+
+    if (!token) {
+      const loginUrl = new URL('/', request.url);
+      loginUrl.searchParams.set('redirect', pathname);
+      return NextResponse.redirect(loginUrl);
+    }
+
+    try {
+      const { payload } = await jwtVerify(token, jwtSecretKey);
+
+      if (!payload || !payload.id) {
+        const loginUrl = new URL('/', request.url);
+        loginUrl.searchParams.set('redirect', pathname);
+        return NextResponse.redirect(loginUrl);
+      }
+
+      return NextResponse.next();
+    } catch (error) {
+      const loginUrl = new URL('/', request.url);
+      loginUrl.searchParams.set('redirect', pathname);
+      return NextResponse.redirect(loginUrl);
+    }
+  }
+
   // 其他路径不拦截
   return NextResponse.next();
 }
@@ -97,5 +124,7 @@ export const config = {
   matcher: [
     '/api/admin/:path*',
     '/api/user/:path*',
+    '/user',
+    '/user/:path*',
   ],
 };

@@ -6,7 +6,6 @@ import { SidebarProvider } from '@/shell/useSidebar';
 import { AuthProvider } from '@/context/AuthContext';
 import AuthModal from '@/components/auth/AuthModal';
 import CheckInModal from '@/components/auth/CheckInModal';
-import ProfileModal from '@/components/auth/ProfileModal';
 import ErrorBoundary from '@/components/ErrorBoundary';
 import { ToastProvider } from '@/context/ToastContext';
 import Toast from '@/components/ui/Toast';
@@ -66,7 +65,6 @@ export default async function RootLayout({ children }) {
               </div>
               <AuthModal />
               <CheckInModal />
-              <ProfileModal />
             </SidebarProvider>
             <Toast />
           </AuthProvider>

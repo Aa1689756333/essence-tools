@@ -3,7 +3,7 @@
 import { useState, useRef, useEffect, useCallback } from 'react';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
-import { Search, Palette, Check, Menu, Sun, Moon, Flame, Coins, ChevronDown, Shield, LogOut, Settings } from 'lucide-react';
+import { Search, Palette, Check, Menu, Sun, Moon, Flame, Coins, ChevronDown, Shield, ShieldCheck, LogOut, UserRound } from 'lucide-react';
 import { tools } from '@/tools/registry';
 import { useTheme } from './ThemeProvider';
 import { useSidebar } from './useSidebar';
@@ -15,7 +15,7 @@ export default function Topbar() {
   const pathname = usePathname();
   const { theme, themes, setTheme, isDark, setIsDark } = useTheme();
   const { toggle, isMobile } = useSidebar();
-  const { user, logout, openAuth, openCheckIn, openProfileModal } = useAuth();
+  const { user, logout, openAuth, openCheckIn } = useAuth();
   const [showPicker, setShowPicker] = useState(false);
   const [showUserMenu, setShowUserMenu] = useState(false);
   const [showSearch, setShowSearch] = useState(false);
@@ -181,13 +181,32 @@ export default function Topbar() {
                   )}
                 </div>
 
-                <button
-                  onClick={() => { setShowUserMenu(false); openProfileModal(); }}
+                <Link
+                  href="/user"
+                  onClick={() => setShowUserMenu(false)}
                   className="w-full text-left px-2.5 py-1.5 rounded-lg text-xs font-medium text-text-secondary hover:text-text hover:bg-bg-primary flex items-center gap-2 cursor-pointer transition-colors"
                 >
-                  <Settings className="w-3.5 h-3.5 text-blue-500" />
-                  <span>个人设置</span>
-                </button>
+                  <UserRound className="w-3.5 h-3.5 text-blue-500" />
+                  <span>个人中心</span>
+                </Link>
+
+                <Link
+                  href="/user/points"
+                  onClick={() => setShowUserMenu(false)}
+                  className="w-full text-left px-2.5 py-1.5 rounded-lg text-xs font-medium text-text-secondary hover:text-text hover:bg-bg-primary flex items-center gap-2 cursor-pointer transition-colors"
+                >
+                  <Coins className="w-3.5 h-3.5 text-amber-500" />
+                  <span>我的积分</span>
+                </Link>
+
+                <Link
+                  href="/user/security"
+                  onClick={() => setShowUserMenu(false)}
+                  className="w-full text-left px-2.5 py-1.5 rounded-lg text-xs font-medium text-text-secondary hover:text-text hover:bg-bg-primary flex items-center gap-2 cursor-pointer transition-colors"
+                >
+                  <ShieldCheck className="w-3.5 h-3.5 text-emerald-500" />
+                  <span>账号安全</span>
+                </Link>
 
                 {user.role === 'ADMIN' && (
                   <Link

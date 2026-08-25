@@ -10,7 +10,6 @@ export function AuthProvider({ children }) {
   const [showAuthModal, setShowAuthModal] = useState(false);
   const [authModalMode, setAuthModalMode] = useState('login'); // 'login' | 'register'
   const [showCheckInModal, setShowCheckInModal] = useState(false);
-  const [showProfileModal, setShowProfileModal] = useState(false);
 
   const fetchMe = useCallback(async () => {
     try {
@@ -96,16 +95,6 @@ export function AuthProvider({ children }) {
 
   const closeCheckIn = () => setShowCheckInModal(false);
 
-  const openProfileModal = () => {
-    if (!user) {
-      openAuth('login');
-      return;
-    }
-    setShowProfileModal(true);
-  };
-
-  const closeProfileModal = () => setShowProfileModal(false);
-
   const updateUser = (updatedUser) => {
     setUser(prev => (prev ? { ...prev, ...updatedUser } : updatedUser));
   };
@@ -118,7 +107,6 @@ export function AuthProvider({ children }) {
         showAuthModal,
         authModalMode,
         showCheckInModal,
-        showProfileModal,
         login,
         register,
         sendCode,
@@ -127,8 +115,6 @@ export function AuthProvider({ children }) {
         closeAuth,
         openCheckIn,
         closeCheckIn,
-        openProfileModal,
-        closeProfileModal,
         updateUser,
         refreshUser: fetchMe,
       }}

@@ -32,6 +32,8 @@ model PointTransaction {
   type        String
   description String
   createdAt   DateTime @default(now())
+
+  @@index([userId, createdAt])
 }
 
 model SystemSetting {
