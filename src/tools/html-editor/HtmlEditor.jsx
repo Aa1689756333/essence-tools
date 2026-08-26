@@ -586,6 +586,7 @@ ${html}
           colors={COLORS}
         />
 
+        {showFindReplace && (
         <FindReplaceBar
           theme={theme}
           findInputRef={findInputRef}
@@ -603,6 +604,7 @@ ${html}
           replaceAll={replaceAll}
           closeFindReplace={closeFindReplace}
         />
+      )}
 
         <EditorArea
           editor={editor}
