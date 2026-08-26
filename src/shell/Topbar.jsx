@@ -231,7 +231,7 @@ export default function Topbar() {
                     className="w-full text-left px-2.5 py-1.5 rounded-lg text-xs font-semibold text-primary dark:text-primary-light hover:bg-primary/10 flex items-center gap-2 cursor-pointer transition-colors"
                   >
                     <Shield className="w-3.5 h-3.5" />
-                    <span>管理后台 Dashboard</span>
+                    <span>管理后台</span>
                   </Link>
                 )}
 
