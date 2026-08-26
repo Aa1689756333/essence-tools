@@ -98,8 +98,8 @@ export function useTheme() {
 }
 
 export default function ThemeProvider({ children }) {
-  const [themeId, setThemeId] = useLocalStorage('toolbox-theme', themes[0].id);
-  const [isDark, setIsDark] = useLocalStorage('toolbox-dark', false, {
+  const [themeId, setThemeId] = useLocalStorage('essence-theme', themes[0].id);
+  const [isDark, setIsDark] = useLocalStorage('essence-dark', false, {
     serialize: (v) => String(v),
     deserialize: (raw) => raw === 'true',
   });

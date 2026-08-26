@@ -55,9 +55,7 @@ export default function Sidebar({ tools, toolsByCategory }) {
             className={`text-[16.5px] font-bold text-text tracking-tight whitespace-nowrap transition-all duration-200 ${
               !isMobile && collapsed ? 'opacity-0 w-0 overflow-hidden' : 'opacity-100'
             }`}
-          >
-            ToolBox
-          </span>
+          >Essence Tools</span>
         </div>
         {isMobile && (
           <button

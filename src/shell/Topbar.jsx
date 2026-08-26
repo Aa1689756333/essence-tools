@@ -97,7 +97,7 @@ export default function Topbar() {
             <Menu className="w-4 h-4" />
           </button>
         )}
-        <span className="text-text-secondary font-medium">ToolBox</span>
+        <span className="text-text-secondary font-medium">Essence Tools</span>
         <span className="text-text-tertiary text-base">/</span>
         <span className="text-text font-semibold">{currentPageName}</span>
       </div>

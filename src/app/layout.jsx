@@ -22,7 +22,7 @@ const inter = Inter({
 export async function generateMetadata() {
   const settings = await getSystemSettings();
   return {
-    title: settings.site_title || 'ToolBox · 在线工具箱',
+    title: settings.site_title || '极粹工具 (Essence Tools)',
     description: settings.site_description || '免费在线工具集合，所有工具在浏览器本地运行，不上传任何数据。',
     keywords: settings.site_keywords || '在线工具, 小说排版, HTML编辑器, Markdown编辑器, 开发工具',
   };
@@ -34,7 +34,7 @@ export default async function RootLayout({ children }) {
   const inlineScript = `
     (function() {
       try {
-        const isDark = localStorage.getItem('toolbox-dark') === 'true';
+        const isDark = localStorage.getItem('essence-dark') === 'true';
         if (isDark) {
           document.documentElement.classList.add('dark');
         }
