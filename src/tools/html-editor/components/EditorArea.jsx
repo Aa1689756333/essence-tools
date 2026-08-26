@@ -10,7 +10,7 @@ export default function EditorArea({
       {isEmpty && !showCode && <div className="absolute inset-0 flex items-center justify-center pointer-events-none z-10"><span className="text-[14px] text-text-tertiary">点击此处开始编辑内容...</span></div>}
       {showCode ? (
         <div className={`code-view ${isFullscreen ? 'flex-1 flex flex-col' : ''}`}>
-          <textarea value={htmlCode} onChange={handleCodeChange} className={`w-full p-3 sm:p-4 font-mono text-[13px] text-text bg-bg resize-none focus:outline-none border-none leading-relaxed ${isFullscreen ? 'flex-1' : 'h-[400px] sm:h-[500px]'}`} spellCheck={false} />
+          <textarea value={htmlCode} onChange={handleCodeChange} className={`custom-scrollbar w-full p-3 sm:p-4 font-mono text-[13px] text-text bg-bg resize-none focus:outline-none border-none leading-relaxed ${isFullscreen ? 'flex-1' : 'h-[400px] sm:h-[500px]'}`} spellCheck={false} />
           <div className="flex gap-2 px-4 py-2 border-t border-border bg-bg">
             <button onClick={applyCode} className="px-4 py-[6px] rounded-md text-[12px] font-semibold text-white cursor-pointer transition-all" style={{ backgroundColor: theme.accent }}>应用修改</button>
             <button onClick={() => setShowCode(false)} className="px-4 py-[6px] rounded-md text-[12px] font-semibold text-text-secondary bg-card border border-border cursor-pointer hover:bg-bg transition-all">取消</button>
@@ -22,7 +22,7 @@ export default function EditorArea({
           onContextMenu={handleContextMenu} 
           onClick={handleEditorClick} 
           onScroll={handleEditorScroll} 
-          className={`editor-content ${isFullscreen ? 'flex-1 max-h-none' : ''}`} 
+          className={`editor-content custom-scrollbar ${isFullscreen ? 'flex-1 max-h-none' : ''}`} 
         />
       )}
       {/* Rest of the component for image resize logic */}

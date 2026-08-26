@@ -700,7 +700,7 @@ export default function MarkdownEditor() {
                 onChange={handleChange}
                 onKeyDown={handleKeyDown}
                 onScroll={() => syncScroll(textareaRef.current)}
-                className="md-textarea"
+                className="md-textarea custom-scrollbar"
                 spellCheck={false}
                 placeholder=""
                 aria-label="Markdown 编辑区"
@@ -711,7 +711,7 @@ export default function MarkdownEditor() {
             <div
               ref={previewRef}
               onScroll={() => syncScroll(previewRef.current)}
-              className={`md-preview-pane ${viewMode === 'split' ? 'md-preview-pane--split' : ''}`}
+              className={`md-preview-pane custom-scrollbar ${viewMode === 'split' ? 'md-preview-pane--split' : ''}`}
               role="region"
               aria-label="预览区"
             >

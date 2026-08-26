@@ -20,7 +20,7 @@ export default function OutputPanel({
       </div>
       <div
         ref={outputRef}
-        className={`relative flex-1 overflow-y-auto p-3 sm:p-5 font-serif-cjk text-[15px] leading-[1.9] whitespace-pre-wrap break-all text-text ${isEmpty ? 'text-text-tertiary' : ''}`}
+        className={`custom-scrollbar relative flex-1 overflow-y-auto p-3 sm:p-5 font-serif-cjk text-[15px] leading-[1.9] whitespace-pre-wrap break-all text-text ${isEmpty ? 'text-text-tertiary' : ''}`}
         onMouseOver={onMouseOver}
         onMouseLeave={onMouseLeave}
       >

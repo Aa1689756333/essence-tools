@@ -41,18 +41,6 @@
   background: rgba(var(--theme-accent-rgb), 0.15);
 }
 
-.dark .textarea-invisible::-webkit-scrollbar-thumb,
-.dark .highlight-overlay::-webkit-scrollbar-thumb,
-.dark .custom-scrollbar::-webkit-scrollbar-thumb {
-  background: #4b5563;
-}
-
-.dark .textarea-invisible::-webkit-scrollbar-thumb:hover,
-.dark .highlight-overlay::-webkit-scrollbar-thumb:hover,
-.dark .custom-scrollbar::-webkit-scrollbar-thumb:hover {
-  background: #6b7280;
-}
-
 .dark .textarea-invisible {
   caret-color: #f3f4f6;
 }

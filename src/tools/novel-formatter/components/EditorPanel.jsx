@@ -17,11 +17,11 @@ export default function EditorPanel({
       <div className="relative flex-1 overflow-hidden">
         <div
           ref={overlayRef}
-          className="highlight-overlay absolute top-0 left-0 w-full h-full overflow-hidden p-3 sm:p-5 pr-[37px] pointer-events-none z-[1] font-serif-cjk text-[15px] leading-[1.9] whitespace-pre-wrap break-all box-border text-text bg-card"
+          className="highlight-overlay custom-scrollbar absolute top-0 left-0 w-full h-full overflow-hidden p-3 sm:p-5 pr-[37px] pointer-events-none z-[1] font-serif-cjk text-[15px] leading-[1.9] whitespace-pre-wrap break-all box-border text-text bg-card"
         />
         <textarea
           ref={textareaRef}
-          className="textarea-invisible absolute top-0 left-0 w-full h-full overflow-y-scroll p-3 sm:p-5 border-none outline-none resize-none font-serif-cjk text-[15px] leading-[1.9] whitespace-pre-wrap break-all box-border z-[2] bg-transparent text-text"
+          className="textarea-invisible custom-scrollbar absolute top-0 left-0 w-full h-full overflow-y-scroll p-3 sm:p-5 border-none outline-none resize-none font-serif-cjk text-[15px] leading-[1.9] whitespace-pre-wrap break-all box-border z-[2] bg-transparent text-text"
           placeholder="在此粘贴小说纯文本..."
           aria-label="原文输入框"
           onInput={onInput}

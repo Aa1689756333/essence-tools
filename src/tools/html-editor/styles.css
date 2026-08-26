@@ -139,49 +139,7 @@
   margin: 1.5em 0;
 }
 
-.editor-content::-webkit-scrollbar {
-  width: 8px;
-}
-
-.editor-content::-webkit-scrollbar-track {
-  background: transparent;
-}
-
-.editor-content::-webkit-scrollbar-thumb {
-  background: #d1d5db;
-  border-radius: 4px;
-}
-
-.editor-content::-webkit-scrollbar-thumb:hover {
-  background: #9ca3af;
-}
-
 .code-view textarea {
   tab-size: 2;
 }
 
-.code-view textarea::-webkit-scrollbar {
-  width: 8px;
-}
-
-.code-view textarea::-webkit-scrollbar-track {
-  background: transparent;
-}
-
-.code-view textarea::-webkit-scrollbar-thumb {
-  background: #d1d5db;
-  border-radius: 4px;
-}
-
-.code-view textarea::-webkit-scrollbar-thumb:hover {
-  background: #9ca3af;
-}
-
-.dark .editor-content::-webkit-scrollbar-thumb,
-.dark .code-view textarea::-webkit-scrollbar-thumb {
-  background: #4b5563;
-}
-.dark .editor-content::-webkit-scrollbar-thumb:hover,
-.dark .code-view textarea::-webkit-scrollbar-thumb:hover {
-  background: #6b7280;
-}
