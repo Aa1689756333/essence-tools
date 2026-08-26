@@ -6,22 +6,18 @@
   --font-sans:
     var(--font-inter), 'PingFang SC', 'Noto Sans SC', 'Microsoft YaHei', system-ui, sans-serif;
 
-  /* 背景�?*/
   --color-bg: var(--bg-primary);
   --color-bg-sidebar: var(--bg-sidebar);
   --color-card: var(--bg-card);
   --color-card-bg: var(--bg-card);
 
-  /* 文字�?*/
   --color-text: var(--text-primary);
   --color-text-secondary: var(--text-secondary);
   --color-text-tertiary: var(--text-tertiary);
 
-  /* 边框 */
   --color-border: var(--border-primary);
   --color-border-light: var(--border-secondary);
 
-  /* ����ɫ */
   --color-primary: var(--theme-accent);
   --color-primary-hover: var(--theme-hover);
   --color-primary-subtle: var(--theme-subtle);
@@ -50,8 +46,6 @@
   --border-secondary: #1f2937;
 }
 
-/* ===== 基础 ===== */
-
 body {
   font-family: var(--font-sans);
   color: var(--color-text);
@@ -66,8 +60,6 @@ body {
   outline: 2px solid var(--theme-accent, #34d399);
   outline-offset: 2px;
 }
-
-/* ===== 动画 ===== */
 
 @keyframes fade-up {
   from {
@@ -160,8 +152,6 @@ body {
   }
 }
 
-/* ===== 滚动�?===== */
-
 .custom-scrollbar::-webkit-scrollbar {
   width: 5px;
 }
@@ -175,8 +165,6 @@ body {
 .custom-scrollbar::-webkit-scrollbar-thumb:hover {
   background: #9ca3af;
 }
-
-/* ===== 隐藏滚动条但保留滚动功能 ===== */
 
 .scrollbar-hide {
   -ms-overflow-style: none;
