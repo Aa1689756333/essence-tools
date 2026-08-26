@@ -65,6 +65,38 @@ export default function MarkdownEditor() {
   const isSyncingScroll = useRef(false);
   const [markdown, setMarkdown] = useState('');
   const [viewMode, setViewMode] = useState('split'); // 'edit' | 'preview' | 'split'
+
+  const [splitRatio, setSplitRatio] = useState(50);
+  const isDraggingRef = useRef(false);
+  const containerRef = useRef(null);
+
+  const startResize = useCallback((e) => {
+    e.preventDefault();
+    isDraggingRef.current = true;
+    document.body.style.cursor = 'col-resize';
+    document.body.style.userSelect = 'none';
+
+    const onMouseMove = (e) => {
+      if (!isDraggingRef.current || !containerRef.current) return;
+      const containerRect = containerRef.current.getBoundingClientRect();
+      let newRatio = ((e.clientX - containerRect.left) / containerRect.width) * 100;
+      if (newRatio < 20) newRatio = 20;
+      if (newRatio > 80) newRatio = 80;
+      setSplitRatio(newRatio);
+    };
+
+    const onMouseUp = () => {
+      isDraggingRef.current = false;
+      document.body.style.cursor = '';
+      document.body.style.userSelect = '';
+      document.removeEventListener('mousemove', onMouseMove);
+      document.removeEventListener('mouseup', onMouseUp);
+    };
+
+    document.addEventListener('mousemove', onMouseMove);
+    document.addEventListener('mouseup', onMouseUp);
+  }, []);
+
   const [copiedMd, setCopiedMd] = useState(false);
   const [isFullscreen, setIsFullscreen] = useState(false);
   const [lastSavedTime, setLastSavedTime] = useState(null);
@@ -686,9 +718,9 @@ export default function MarkdownEditor() {
         )}
 
         {/* 编辑/预览区域 */}
-        <div className={`md-editor-body ${isFullscreen ? 'flex-1 max-h-none' : ''}`}>
+        <div ref={containerRef} className={`md-editor-body ${isFullscreen ? 'flex-1 max-h-none' : ''}`}>
           {(viewMode === 'edit' || viewMode === 'split') && (
-            <div className={`md-editor-pane ${viewMode === 'split' ? 'md-editor-pane--split' : ''}`}>
+            <div className={`md-editor-pane ${viewMode === 'split' ? 'md-editor-pane--split' : ''}`} style={viewMode === 'split' ? { flex: `${splitRatio} 1 0%` } : {}}>
               {isEmpty && (
                 <div className="absolute inset-0 flex items-center justify-center pointer-events-none z-10">
                   <span className="text-[14px] text-text-tertiary">点击此处开始编写 Markdown...</span>
@@ -707,11 +739,19 @@ export default function MarkdownEditor() {
               />
             </div>
           )}
+          
+          {viewMode === 'split' && (
+            <div
+              className="w-1.5 hover:w-1.5 bg-transparent hover:bg-primary/50 active:bg-primary cursor-col-resize transition-colors z-20 flex-shrink-0"
+              style={{ marginLeft: '-3px', marginRight: '-3px' }}
+              onMouseDown={startResize}
+            />
+          )}
           {(viewMode === 'preview' || viewMode === 'split') && (
             <div
               ref={previewRef}
               onScroll={() => syncScroll(previewRef.current)}
-              className={`md-preview-pane custom-scrollbar ${viewMode === 'split' ? 'md-preview-pane--split' : ''}`}
+              className={`md-preview-pane custom-scrollbar ${viewMode === 'split' ? 'md-preview-pane--split' : ''}`} style={viewMode === 'split' ? { flex: `${100 - splitRatio} 1 0%` } : {}}
               role="region"
               aria-label="预览区"
             >

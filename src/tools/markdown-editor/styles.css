@@ -30,7 +30,7 @@
 }
 
 .md-editor-pane--split {
-  border-right: 1px solid #e5e7eb;
+  border-right: 1px solid var(--color-border);
 }
 
 .md-textarea {
