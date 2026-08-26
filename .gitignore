@@ -44,6 +44,8 @@ next-env.d.ts
 # database
 prisma/dev.db
 prisma/dev.db-journal
+
+# AI assistant / IDE local state
 .agents/
 .trae/
 .workbuddy/
