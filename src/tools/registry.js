@@ -29,7 +29,7 @@ export const tools = [
     desc: '像 Word 一样编辑富文本，导出为 HTML 代码',
     icon: 'Code',
     emoji: '📝',
-    color: 'sky',
+    color: 'mint',
     path: '/html-editor',
     category: '文本',
     tags: ['编辑', 'HTML'],
