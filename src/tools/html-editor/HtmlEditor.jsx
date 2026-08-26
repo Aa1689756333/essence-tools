@@ -563,7 +563,7 @@ ${html}
       )}
 
       {/* 编辑器容器 */}
-      <div className={`rounded-xl border border-gray-200 bg-white overflow-hidden shadow-[0_1px_3px_rgba(0,0,0,0.04)] ${isFullscreen ? 'fixed inset-0 z-[9999] rounded-none' : ''}`}>
+      <div className={`rounded-xl border border-border bg-card overflow-hidden shadow-[0_1px_3px_rgba(0,0,0,0.04)] ${isFullscreen ? 'fixed inset-0 z-[9999] rounded-none' : ''}`}>
         <EditorToolbar
           theme={theme}
           editor={editor}
@@ -624,15 +624,15 @@ ${html}
         />
 
         {/* 底部操作栏 */}
-        <div className={`flex items-center justify-between flex-wrap gap-2 ${isFullscreen ? 'px-4 py-3 border-t border-gray-200 bg-gray-50' : 'mt-4'}`}>
-          <div className="text-[12px] text-gray-400 flex items-center gap-3">
+        <div className={`flex items-center justify-between flex-wrap gap-2 ${isFullscreen ? 'px-4 py-3 border-t border-border bg-bg' : 'mt-4'}`}>
+          <div className="text-[12px] text-text-tertiary flex items-center gap-3">
             {isEmpty ? '暂无内容' : `${wordCount.words} 字 / ${wordCount.chars} 字符`}
             {saveError && !isEmpty ? (
               <span className="text-amber-500" title="localStorage 配额超限或被禁用，内容不会自动保存，请及时导出">
                 · 自动保存已暂停（存储空间不足）
               </span>
             ) : lastSavedTime && !isEmpty && (
-              <span className="text-gray-300">
+              <span className="text-text-tertiary">
                 · 自动保存于 {lastSavedTime.toLocaleTimeString('zh-CN', { hour: '2-digit', minute: '2-digit' })}
               </span>
             )}
@@ -641,7 +641,7 @@ ${html}
             <button
               onClick={handleOptimizeHtml}
               disabled={isEmpty}
-              className="flex items-center gap-1.5 px-3 sm:px-4 py-[7px] rounded-lg text-[12.5px] font-medium text-gray-500 border border-gray-200 bg-white cursor-pointer hover:bg-gray-50 hover:border-gray-300 transition-all disabled:opacity-40 disabled:cursor-not-allowed"
+              className="flex items-center gap-1.5 px-3 sm:px-4 py-[7px] rounded-lg text-[12.5px] font-medium text-text-secondary border border-border bg-card cursor-pointer hover:bg-bg hover:border-border-light transition-all disabled:opacity-40 disabled:cursor-not-allowed"
               title="格式化 HTML 代码，添加缩进和换行"
             >
               <Sparkles className="w-3.5 h-3.5" />
@@ -650,7 +650,7 @@ ${html}
             {isOptimized && (
               <button
                 onClick={handleRestoreHtml}
-                className="flex items-center gap-1.5 px-3 sm:px-4 py-[7px] rounded-lg text-[12.5px] font-medium text-orange-600 border border-orange-200 bg-orange-50 cursor-pointer hover:bg-orange-100 hover:border-orange-300 transition-all"
+                className="flex items-center gap-1.5 px-3 sm:px-4 py-[7px] rounded-lg text-[12.5px] font-medium text-amber-600 dark:text-amber-400 border border-amber-500/20 bg-amber-500/10 cursor-pointer hover:bg-amber-500/20 hover:border-amber-500/30 transition-all"
                 title="恢复到格式化前的代码"
               >
                 <Undo2 className="w-3.5 h-3.5" />
@@ -660,7 +660,7 @@ ${html}
             <button
               onClick={handleClear}
               disabled={isEmpty}
-              className="flex items-center gap-1.5 px-3 sm:px-4 py-[7px] rounded-lg text-[12.5px] font-medium text-gray-500 border border-gray-200 bg-white cursor-pointer hover:bg-gray-50 hover:border-gray-300 transition-all disabled:opacity-40 disabled:cursor-not-allowed"
+              className="flex items-center gap-1.5 px-3 sm:px-4 py-[7px] rounded-lg text-[12.5px] font-medium text-text-secondary border border-border bg-card cursor-pointer hover:bg-bg hover:border-border-light transition-all disabled:opacity-40 disabled:cursor-not-allowed"
             >
               <Trash2 className="w-3.5 h-3.5" />
               <span className="hidden sm:inline">清空</span>
@@ -668,7 +668,7 @@ ${html}
             <button
               onClick={handleCopyHtml}
               disabled={isEmpty}
-              className="flex items-center gap-1.5 px-3 sm:px-4 py-[7px] rounded-lg text-[12.5px] font-medium text-gray-500 border border-gray-200 bg-white cursor-pointer hover:bg-gray-50 hover:border-gray-300 transition-all disabled:opacity-40 disabled:cursor-not-allowed"
+              className="flex items-center gap-1.5 px-3 sm:px-4 py-[7px] rounded-lg text-[12.5px] font-medium text-text-secondary border border-border bg-card cursor-pointer hover:bg-bg hover:border-border-light transition-all disabled:opacity-40 disabled:cursor-not-allowed"
             >
               <Code className="w-3.5 h-3.5" />
               <span className="hidden sm:inline">{copied ? '已复制!' : '复制 HTML'}</span>
@@ -681,7 +681,7 @@ ${html}
                   toggleCodeView();
                 }
               }}
-              className="flex items-center gap-1.5 px-3 sm:px-4 py-[7px] rounded-lg text-[12.5px] font-medium text-gray-500 border border-gray-200 bg-white cursor-pointer hover:bg-gray-50 hover:border-gray-300 transition-all"
+              className="flex items-center gap-1.5 px-3 sm:px-4 py-[7px] rounded-lg text-[12.5px] font-medium text-text-secondary border border-border bg-card cursor-pointer hover:bg-bg hover:border-border-light transition-all"
             >
               {showCode ? <Eye className="w-3.5 h-3.5" /> : <EyeOff className="w-3.5 h-3.5" />}
               <span className="hidden sm:inline">{showCode ? '预览' : '查看源码'}</span>
@@ -752,7 +752,7 @@ ${html}
           return (
             <div
               ref={imageToolbarRef}
-              className="fixed bg-white border border-gray-200 rounded-lg shadow-lg px-2 py-1.5 flex items-center gap-2 z-[9999]"
+              className="fixed bg-card border border-border rounded-lg shadow-lg px-2 py-1.5 flex items-center gap-2 z-[9999]"
               style={{
                 left: `${toolbarLeft}px`,
                 top: `${toolbarTop}px`,
@@ -761,7 +761,7 @@ ${html}
               onClick={(e) => e.stopPropagation()}
             >
               {/* 尺寸显示 */}
-              <span className="text-xs text-gray-500 px-1">
+              <span className="text-xs text-text-secondary px-1">
                 {imageSize.width}×{imageSize.height}
               </span>
               {/* 分隔线 */}
@@ -774,7 +774,7 @@ ${html}
                     e.preventDefault();
                     handleImagePresetSize(percent);
                   }}
-                  className="px-2 py-1 text-xs text-gray-700 bg-gray-50 rounded hover:bg-gray-100 transition-colors"
+                  className="px-2 py-1 text-xs text-text bg-bg rounded hover:bg-bg transition-colors"
                 >
                   {percent}%
                 </button>
@@ -787,7 +787,7 @@ ${html}
                   e.preventDefault();
                   handleImageAlign('left');
                 }}
-                className="p-1 text-gray-600 hover:bg-gray-100 rounded transition-colors"
+                className="p-1 text-text-secondary hover:bg-bg rounded transition-colors"
                 title="左对齐"
               >
                 <AlignLeft className="w-4 h-4" />
@@ -797,7 +797,7 @@ ${html}
                   e.preventDefault();
                   handleImageAlign('center');
                 }}
-                className="p-1 text-gray-600 hover:bg-gray-100 rounded transition-colors"
+                className="p-1 text-text-secondary hover:bg-bg rounded transition-colors"
                 title="居中"
               >
                 <AlignCenter className="w-4 h-4" />
@@ -807,7 +807,7 @@ ${html}
                   e.preventDefault();
                   handleImageAlign('right');
                 }}
-                className="p-1 text-gray-600 hover:bg-gray-100 rounded transition-colors"
+                className="p-1 text-text-secondary hover:bg-bg rounded transition-colors"
                 title="右对齐"
               >
                 <AlignRight className="w-4 h-4" />
@@ -821,25 +821,25 @@ ${html}
       {/* 表格右键菜单 */}
       {tableMenu && (
         <div
-          className="fixed z-[200] bg-white rounded-lg shadow-lg border border-gray-200 py-1 min-w-[140px]"
+          className="fixed z-[200] bg-card rounded-lg shadow-lg border border-border py-1 min-w-[140px]"
           style={{ left: tableMenu.x, top: tableMenu.y }}
           onClick={(e) => e.stopPropagation()}
         >
-          <button onClick={handleAddRow} className="w-full px-3 py-1.5 text-left text-[13px] text-gray-700 hover:bg-gray-100 transition-colors">
+          <button onClick={handleAddRow} className="w-full px-3 py-1.5 text-left text-[13px] text-text hover:bg-bg transition-colors">
             向下插入行
           </button>
-          <button onClick={handleAddCol} className="w-full px-3 py-1.5 text-left text-[13px] text-gray-700 hover:bg-gray-100 transition-colors">
+          <button onClick={handleAddCol} className="w-full px-3 py-1.5 text-left text-[13px] text-text hover:bg-bg transition-colors">
             向右插入列
           </button>
-          <div className="h-px bg-gray-100 my-1" />
-          <button onClick={handleDeleteRow} className="w-full px-3 py-1.5 text-left text-[13px] text-red-600 hover:bg-red-50 transition-colors">
+          <div className="h-px bg-bg my-1" />
+          <button onClick={handleDeleteRow} className="w-full px-3 py-1.5 text-left text-[13px] text-rose-500 hover:bg-rose-500/10 transition-colors">
             删除行
           </button>
-          <button onClick={handleDeleteCol} className="w-full px-3 py-1.5 text-left text-[13px] text-red-600 hover:bg-red-50 transition-colors">
+          <button onClick={handleDeleteCol} className="w-full px-3 py-1.5 text-left text-[13px] text-rose-500 hover:bg-rose-500/10 transition-colors">
             删除列
           </button>
-          <div className="h-px bg-gray-100 my-1" />
-          <button onClick={handleDeleteTable} className="w-full px-3 py-1.5 text-left text-[13px] text-red-600 hover:bg-red-50 transition-colors">
+          <div className="h-px bg-bg my-1" />
+          <button onClick={handleDeleteTable} className="w-full px-3 py-1.5 text-left text-[13px] text-rose-500 hover:bg-rose-500/10 transition-colors">
             删除表格
           </button>
         </div>
@@ -850,7 +850,7 @@ ${html}
       {/* 恢复确认模态框 */}
       <Modal isOpen={showRestoreModal} onClose={handleRestoreDismiss} title="恢复内容" theme={theme}>
         <div className="space-y-4">
-          <p className="text-sm text-gray-700">检测到未保存的内容，是否恢复？</p>
+          <p className="text-sm text-text">检测到未保存的内容，是否恢复？</p>
           <div className="flex gap-2">
             <button
               onClick={handleRestoreConfirm}
@@ -861,7 +861,7 @@ ${html}
             </button>
             <button
               onClick={handleRestoreDismiss}
-              className="flex-1 h-9 rounded-lg text-sm font-semibold text-gray-500 bg-white border border-gray-200 cursor-pointer hover:bg-gray-50 transition-all"
+              className="flex-1 h-9 rounded-lg text-sm font-semibold text-text-secondary bg-card border border-border cursor-pointer hover:bg-bg transition-all"
             >
               丢弃
             </button>

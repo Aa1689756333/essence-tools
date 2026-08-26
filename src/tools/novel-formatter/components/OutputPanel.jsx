@@ -14,9 +14,9 @@ export default function OutputPanel({
 
   return (
     <div className="flex flex-col bg-card border border-border rounded-xl overflow-hidden" role="region" aria-label="排版结果">
-      <div className="flex justify-between items-center px-3 sm:px-4 py-2.5 bg-bg-primary border-b border-border text-[13px] font-semibold text-text-secondary">
+      <div className="flex justify-between items-center px-3 sm:px-4 py-2.5 bg-bg border-b border-border text-[13px] font-semibold text-text-secondary">
         <span>排版结果</span>
-        <span className="text-[11.5px] text-text-secondary font-normal bg-bg-primary border border-border px-2 py-0.5 rounded-[5px]">{outputCount} 字</span>
+        <span className="text-[11.5px] text-text-secondary font-normal bg-bg border border-border px-2 py-0.5 rounded-[5px]">{outputCount} 字</span>
       </div>
       <div
         ref={outputRef}

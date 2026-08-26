@@ -179,3 +179,14 @@
 .code-view textarea::-webkit-scrollbar-thumb:hover {
   background: #9ca3af;
 }
+
+
+/* ===== Dark Mode Specifics ===== */
+.dark .editor-content::-webkit-scrollbar-thumb,
+.dark .code-view textarea::-webkit-scrollbar-thumb {
+  background: #4b5563;
+}
+.dark .editor-content::-webkit-scrollbar-thumb:hover,
+.dark .code-view textarea::-webkit-scrollbar-thumb:hover {
+  background: #6b7280;
+}

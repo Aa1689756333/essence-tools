@@ -494,7 +494,7 @@ export default function AvatarGenerator() {
                 />
                 <button
                   onClick={randomizeSeedOnly}
-                  className="px-3 h-8 bg-card border border-border rounded-[9px] text-text-secondary hover:bg-bg-primary hover:text-text transition-colors flex items-center justify-center gap-1.5 cursor-pointer whitespace-nowrap"
+                  className="px-3 h-8 bg-card border border-border rounded-[9px] text-text-secondary hover:bg-bg hover:text-text transition-colors flex items-center justify-center gap-1.5 cursor-pointer whitespace-nowrap"
                   title="仅随机魔法词"
                 >
                   <RefreshCw className="w-[14px] h-[14px]" />
@@ -555,7 +555,7 @@ export default function AvatarGenerator() {
 
                 <button
                   onClick={randomizeColorOnly}
-                  className="px-3 h-8 bg-card border border-border rounded-[9px] text-text-secondary hover:bg-bg-primary hover:text-text transition-colors flex items-center justify-center gap-1.5 cursor-pointer whitespace-nowrap flex-shrink-0"
+                  className="px-3 h-8 bg-card border border-border rounded-[9px] text-text-secondary hover:bg-bg hover:text-text transition-colors flex items-center justify-center gap-1.5 cursor-pointer whitespace-nowrap flex-shrink-0"
                   title="仅随机背景颜色"
                 >
                   <RefreshCw className="w-[14px] h-[14px]" />
@@ -567,7 +567,7 @@ export default function AvatarGenerator() {
             <div className="pt-2 flex gap-2">
               <button
                 onClick={() => setBgColor('transparent')}
-                className={`flex items-center justify-center gap-1.5 px-4 py-2 rounded-[9px] text-[13px] font-semibold cursor-pointer transition-all border flex-shrink-0 ${bgColor === 'transparent' ? 'border-text text-text bg-bg-secondary shadow-sm ring-1 ring-text/10' : 'bg-card border-border text-text-secondary hover:bg-bg-primary hover:text-text'}`}
+                className={`flex items-center justify-center gap-1.5 px-4 py-2 rounded-[9px] text-[13px] font-semibold cursor-pointer transition-all border flex-shrink-0 ${bgColor === 'transparent' ? 'border-text text-text bg-bg-secondary shadow-sm ring-1 ring-text/10' : 'bg-card border-border text-text-secondary hover:bg-bg hover:text-text'}`}
               >
                 <div
                   className="w-3.5 h-3.5 rounded-full border border-border"
@@ -599,7 +599,7 @@ export default function AvatarGenerator() {
                   <button
                     key={s}
                     onClick={() => setStyle(s)}
-                    className={`flex flex-col items-center p-2 rounded-[9px] border cursor-pointer transition-all ${style === s ? 'border-text/30 bg-bg-primary' : 'border-transparent hover:bg-bg-secondary hover:border-border'}`}
+                    className={`flex flex-col items-center p-2 rounded-[9px] border cursor-pointer transition-all ${style === s ? 'border-text/30 bg-bg' : 'border-transparent hover:bg-bg-secondary hover:border-border'}`}
                   >
                     <img
                       src={`/api/avatar/${s}/preview.svg`}
@@ -670,14 +670,14 @@ export default function AvatarGenerator() {
             <div className="flex gap-2">
               <button
                 onClick={handleDownloadPng}
-                className="flex-1 flex items-center justify-center gap-1.5 px-3 py-[9px] rounded-[9px] text-[12.5px] font-semibold cursor-pointer transition-all bg-bg-secondary text-text border border-border hover:bg-bg-primary hover:border-text-secondary/40"
+                className="flex-1 flex items-center justify-center gap-1.5 px-3 py-[9px] rounded-[9px] text-[12.5px] font-semibold cursor-pointer transition-all bg-bg-secondary text-text border border-border hover:bg-bg hover:border-text-secondary/40"
               >
                 <ImageIcon className="w-3.5 h-3.5" />
                 下载 PNG
               </button>
               <button
                 onClick={handleDownloadSvg}
-                className="flex-1 flex items-center justify-center gap-1.5 px-3 py-[9px] rounded-[9px] text-[12.5px] font-semibold cursor-pointer transition-all bg-bg-secondary text-text border border-border hover:bg-bg-primary hover:border-text-secondary/40"
+                className="flex-1 flex items-center justify-center gap-1.5 px-3 py-[9px] rounded-[9px] text-[12.5px] font-semibold cursor-pointer transition-all bg-bg-secondary text-text border border-border hover:bg-bg hover:border-text-secondary/40"
               >
                 <Download className="w-3.5 h-3.5" />
                 下载 SVG

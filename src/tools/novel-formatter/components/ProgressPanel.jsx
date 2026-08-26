@@ -26,7 +26,7 @@ export default function ProgressPanel({ activePhase }) {
   const { theme } = useTheme();
 
   return (
-    <div className="mt-4 px-3 sm:px-5 py-4 bg-bg-primary border border-border rounded-md" role="progressbar" aria-valuenow={((activePhase + 1) / 4) * 100} aria-valuemin="0" aria-valuemax="100" aria-label="排版进度">
+    <div className="mt-4 px-3 sm:px-5 py-4 bg-bg border border-border rounded-md" role="progressbar" aria-valuenow={((activePhase + 1) / 4) * 100} aria-valuemin="0" aria-valuemax="100" aria-label="排版进度">
       <div className="flex items-center gap-2 mb-3">
         <span style={{ color: theme.accent }}>{spinner}</span>
         <span className="text-[13px] font-semibold text-text-secondary">排版处理中...</span>

@@ -43,7 +43,7 @@ function Modal({ isOpen, onClose, title, children, theme }) {
           <button
             onClick={onClose}
             aria-label="关闭弹窗"
-            className="w-7 h-7 rounded-lg flex items-center justify-center text-text-secondary hover:bg-bg-primary hover:text-text transition-colors border border-transparent"
+            className="w-7 h-7 rounded-lg flex items-center justify-center text-text-secondary hover:bg-bg hover:text-text transition-colors border border-transparent"
           >
             <X className="w-4 h-4" />
           </button>
@@ -542,9 +542,9 @@ export default function MarkdownEditor() {
       )}
 
       {/* 编辑器容器 */}
-      <div className={`rounded-xl border border-gray-200 bg-white overflow-hidden shadow-[0_1px_3px_rgba(0,0,0,0.04)] ${isFullscreen ? 'fixed inset-0 z-[9999] rounded-none flex flex-col' : ''}`}>
+      <div className={`rounded-xl border border-border bg-card overflow-hidden shadow-[0_1px_3px_rgba(0,0,0,0.04)] ${isFullscreen ? 'fixed inset-0 z-[9999] rounded-none flex flex-col' : ''}`}>
         {/* 工具栏 */}
-        <div className="border-b border-gray-200 bg-gray-50/80 px-2 sm:px-3 py-2">
+        <div className="border-b border-border bg-bg/80 px-2 sm:px-3 py-2">
           <div className="flex items-center gap-0.5 overflow-x-auto scrollbar-hide" role="toolbar" aria-label="Markdown 编辑工具栏">
             <ToolbarBtn icon={Undo2} onClick={handleUndo} title="撤销 (Ctrl+Z)" variant="gray" />
             <ToolbarBtn icon={Redo2} onClick={handleRedo} title="恢复 (Ctrl+Y)" variant="gray" />
@@ -581,7 +581,7 @@ export default function MarkdownEditor() {
                 aria-label="仅编辑"
                 aria-pressed={viewMode === 'edit'}
                 className={`h-[30px] px-2 rounded-md flex items-center gap-1 cursor-pointer transition-all duration-150 text-[12px] ${
-                  viewMode === 'edit' ? 'bg-bg-primary border border-border text-text font-semibold' : 'text-text-secondary hover:bg-bg-primary hover:text-text'
+                  viewMode === 'edit' ? 'bg-bg border border-border text-text font-semibold' : 'text-text-secondary hover:bg-bg hover:text-text'
                 }`}
               >
                 <Code2 className="w-3.5 h-3.5" />
@@ -594,7 +594,7 @@ export default function MarkdownEditor() {
                   aria-label="分屏"
                   aria-pressed={viewMode === 'split'}
                   className={`h-[30px] px-2 rounded-md flex items-center gap-1 cursor-pointer transition-all duration-150 text-[12px] ${
-                    viewMode === 'split' ? 'bg-bg-primary border border-border text-text font-semibold' : 'text-text-secondary hover:bg-bg-primary hover:text-text'
+                    viewMode === 'split' ? 'bg-bg border border-border text-text font-semibold' : 'text-text-secondary hover:bg-bg hover:text-text'
                   }`}
                 >
                   <Columns className="w-3.5 h-3.5" />
@@ -607,7 +607,7 @@ export default function MarkdownEditor() {
                 aria-label="仅预览"
                 aria-pressed={viewMode === 'preview'}
                 className={`h-[30px] px-2 rounded-md flex items-center gap-1 cursor-pointer transition-all duration-150 text-[12px] ${
-                  viewMode === 'preview' ? 'bg-bg-primary border border-border text-text font-semibold' : 'text-text-secondary hover:bg-bg-primary hover:text-text'
+                  viewMode === 'preview' ? 'bg-bg border border-border text-text font-semibold' : 'text-text-secondary hover:bg-bg hover:text-text'
                 }`}
               >
                 <Eye className="w-3.5 h-3.5" />
@@ -627,7 +627,7 @@ export default function MarkdownEditor() {
 
         {/* 查找替换面板 */}
         {showFindReplace && (
-          <div className="border-b border-gray-200 bg-gray-50/95 px-3 py-2.5 flex flex-col gap-2">
+          <div className="border-b border-border bg-bg/95 px-3 py-2.5 flex flex-col gap-2">
             <div className="flex items-center gap-2">
               <input
                 ref={findInputRef}
@@ -638,18 +638,18 @@ export default function MarkdownEditor() {
                   if (e.key === 'Enter') { e.preventDefault(); e.shiftKey ? findPrev() : findNext(); }
                 }}
                 placeholder="查找..."
-                className="flex-1 h-8 px-3 rounded-md text-[13px] bg-white border border-gray-200 focus:outline-none focus:border-gray-400"
+                className="flex-1 h-8 px-3 rounded-md text-[13px] bg-card border border-border focus:outline-none focus:border-text-tertiary"
               />
               <button
                 onClick={() => setCaseSensitive(prev => !prev)}
                 className={`h-8 px-2.5 rounded-md text-[12px] font-medium transition-all ${
-                  caseSensitive ? 'bg-gray-200 text-gray-800' : 'text-gray-400 hover:bg-gray-100'
+                  caseSensitive ? 'bg-gray-200 text-text' : 'text-text-tertiary hover:bg-bg'
                 }`}
                 title="区分大小写"
               >
                 Aa
               </button>
-              <span className="text-[12px] text-gray-400 min-w-[60px] text-center">
+              <span className="text-[12px] text-text-tertiary min-w-[60px] text-center">
                 {findText ? `${currentMatchIndex + 1}/${findMatches.length}` : ''}
               </span>
               <ToolbarBtn icon={ChevronUp} onClick={findPrev} title="上一个 (Shift+Enter)" variant="gray" />
@@ -665,19 +665,19 @@ export default function MarkdownEditor() {
                   if (e.key === 'Enter') { e.preventDefault(); replaceCurrent(); }
                 }}
                 placeholder="替换为..."
-                className="flex-1 h-8 px-3 rounded-md text-[13px] bg-white border border-gray-200 focus:outline-none focus:border-gray-400"
+                className="flex-1 h-8 px-3 rounded-md text-[13px] bg-card border border-border focus:outline-none focus:border-text-tertiary"
               />
               <button
                 onClick={replaceCurrent}
                 disabled={currentMatchIndex < 0}
-                className="h-8 px-3 rounded-md text-[12px] font-medium text-gray-600 bg-white border border-gray-200 hover:bg-gray-50 transition-all disabled:opacity-40 disabled:cursor-not-allowed"
+                className="h-8 px-3 rounded-md text-[12px] font-medium text-text-secondary bg-card border border-border hover:bg-bg transition-all disabled:opacity-40 disabled:cursor-not-allowed"
               >
                 替换
               </button>
               <button
                 onClick={replaceAll}
                 disabled={!findText}
-                className="h-8 px-3 rounded-md text-[12px] font-medium text-gray-600 bg-white border border-gray-200 hover:bg-gray-50 transition-all disabled:opacity-40 disabled:cursor-not-allowed"
+                className="h-8 px-3 rounded-md text-[12px] font-medium text-text-secondary bg-card border border-border hover:bg-bg transition-all disabled:opacity-40 disabled:cursor-not-allowed"
               >
                 全部替换
               </button>
@@ -691,7 +691,7 @@ export default function MarkdownEditor() {
             <div className={`md-editor-pane ${viewMode === 'split' ? 'md-editor-pane--split' : ''}`}>
               {isEmpty && (
                 <div className="absolute inset-0 flex items-center justify-center pointer-events-none z-10">
-                  <span className="text-[14px] text-gray-300">点击此处开始编写 Markdown...</span>
+                  <span className="text-[14px] text-text-tertiary">点击此处开始编写 Markdown...</span>
                 </div>
               )}
               <textarea
@@ -717,7 +717,7 @@ export default function MarkdownEditor() {
             >
               {isEmpty ? (
                 <div className="flex items-center justify-center h-full">
-                  <span className="text-[14px] text-gray-300">预览区域</span>
+                  <span className="text-[14px] text-text-tertiary">预览区域</span>
                 </div>
               ) : (
                 <div
@@ -730,15 +730,15 @@ export default function MarkdownEditor() {
         </div>
 
         {/* 底部操作栏 */}
-        <div className={`flex items-center justify-between flex-wrap gap-2 ${isFullscreen ? 'px-3 py-2 border-t border-gray-200 bg-gray-50' : 'mt-4'}`}>
-          <div className="flex items-center gap-3 text-[12px] text-gray-400">
+        <div className={`flex items-center justify-between flex-wrap gap-2 ${isFullscreen ? 'px-3 py-2 border-t border-border bg-bg' : 'mt-4'}`}>
+          <div className="flex items-center gap-3 text-[12px] text-text-tertiary">
             <span>{isEmpty ? '暂无内容' : `${wordCount.words} 字 / ${wordCount.chars} 字符`}</span>
             {saveError && !isEmpty ? (
               <span className="text-amber-500" title="localStorage 配额超限或被禁用，内容不会自动保存，请及时导出">
                 · 自动保存已暂停（存储空间不足）
               </span>
             ) : lastSavedTime && !isEmpty && (
-              <span className="text-gray-300">
+              <span className="text-text-tertiary">
                 · 自动保存于 {lastSavedTime.toLocaleTimeString('zh-CN', { hour: '2-digit', minute: '2-digit' })}
               </span>
             )}
@@ -747,7 +747,7 @@ export default function MarkdownEditor() {
           <button
             onClick={handleClear}
             disabled={isEmpty}
-            className="flex items-center gap-1.5 px-3 sm:px-4 py-[7px] rounded-lg text-[12.5px] font-medium text-gray-500 border border-gray-200 bg-white cursor-pointer hover:bg-gray-50 hover:border-gray-300 transition-all disabled:opacity-40 disabled:cursor-not-allowed"
+            className="flex items-center gap-1.5 px-3 sm:px-4 py-[7px] rounded-lg text-[12.5px] font-medium text-text-secondary border border-border bg-card cursor-pointer hover:bg-bg hover:border-border-light transition-all disabled:opacity-40 disabled:cursor-not-allowed"
           >
             <Trash2 className="w-3.5 h-3.5" />
             <span className="hidden sm:inline">清空</span>
@@ -755,7 +755,7 @@ export default function MarkdownEditor() {
           <button
             onClick={handleCopyMarkdown}
             disabled={isEmpty}
-            className="flex items-center gap-1.5 px-3 sm:px-4 py-[7px] rounded-lg text-[12.5px] font-medium text-gray-500 border border-gray-200 bg-white cursor-pointer hover:bg-gray-50 hover:border-gray-300 transition-all disabled:opacity-40 disabled:cursor-not-allowed"
+            className="flex items-center gap-1.5 px-3 sm:px-4 py-[7px] rounded-lg text-[12.5px] font-medium text-text-secondary border border-border bg-card cursor-pointer hover:bg-bg hover:border-border-light transition-all disabled:opacity-40 disabled:cursor-not-allowed"
           >
             {copiedMd ? <Check className="w-3.5 h-3.5 text-green-500" /> : <Copy className="w-3.5 h-3.5" />}
             <span className="hidden sm:inline">{copiedMd ? '已复制!' : '复制 MD'}</span>
@@ -789,7 +789,7 @@ export default function MarkdownEditor() {
       {/* 恢复内容弹窗 */}
       <Modal isOpen={showRestoreModal} onClose={handleRestoreDismiss} title="恢复内容" theme={theme}>
         <div className="space-y-4">
-          <p className="text-sm text-gray-700">检测到未保存的内容，是否恢复？</p>
+          <p className="text-sm text-text">检测到未保存的内容，是否恢复？</p>
           <div className="flex gap-2">
             <button
               onClick={handleRestoreConfirm}
@@ -800,7 +800,7 @@ export default function MarkdownEditor() {
             </button>
             <button
               onClick={handleRestoreDismiss}
-              className="flex-1 h-9 rounded-lg text-sm font-semibold text-gray-500 bg-white border border-gray-200 cursor-pointer hover:bg-gray-50 transition-all"
+              className="flex-1 h-9 rounded-lg text-sm font-semibold text-text-secondary bg-card border border-border cursor-pointer hover:bg-bg transition-all"
             >
               丢弃
             </button>

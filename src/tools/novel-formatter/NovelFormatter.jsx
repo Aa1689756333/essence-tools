@@ -301,7 +301,7 @@ export default function NovelFormatter() {
       </div>
 
       {saveError && (
-        <div className="mb-3 px-3 py-2 rounded-lg bg-amber-50 border border-amber-200 text-[12.5px] text-amber-700" title="localStorage 配额超限或被禁用，输入内容不会自动保存">
+        <div className="mb-3 px-3 py-2 rounded-lg bg-amber-500/10 border border-amber-500/20 text-[12.5px] text-amber-600 dark:text-amber-400" title="localStorage 配额超限或被禁用，输入内容不会自动保存">
           自动保存已暂停（存储空间不足），请及时复制或排版后复制结果
         </div>
       )}
@@ -346,7 +346,7 @@ export default function NovelFormatter() {
               <div className="flex justify-end gap-2">
                 <button
                   onClick={handleRestoreDismiss}
-                  className="px-3 py-1.5 rounded-lg text-[12.5px] font-medium text-text-secondary border border-border bg-card cursor-pointer hover:bg-bg-primary hover:text-text transition-colors"
+                  className="px-3 py-1.5 rounded-lg text-[12.5px] font-medium text-text-secondary border border-border bg-card cursor-pointer hover:bg-bg hover:text-text transition-colors"
                 >
                   放弃
                 </button>

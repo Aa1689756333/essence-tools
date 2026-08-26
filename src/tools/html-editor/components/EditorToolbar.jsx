@@ -20,7 +20,7 @@ export default function EditorToolbar({
   }
 
   return (
-    <div className="border-b border-gray-200 bg-gray-50/80 px-2 sm:px-3 py-2">
+    <div className="border-b border-border bg-bg/80 px-2 sm:px-3 py-2">
       <div className="flex items-center gap-0.5 flex-wrap">
         <ToolbarBtn icon={Undo2} onClick={() => editor.chain().focus().undo().run()} disabled={!editor.can().undo()} title="撤销 (Ctrl+Z)" />
         <ToolbarBtn icon={Redo2} onClick={() => editor.chain().focus().redo().run()} disabled={!editor.can().redo()} title="恢复 (Ctrl+Y)" />
@@ -80,15 +80,15 @@ function ColorPicker({ icon, label, colors, onSelect, theme, isBg }) {
 
   return (
     <div ref={ref} className="relative">
-      <button onMouseDown={(e) => { e.preventDefault(); setOpen(!open); }} title={label} className="w-[30px] h-[30px] rounded-md flex items-center justify-center cursor-pointer transition-all duration-150 shrink-0 text-gray-500 hover:bg-gray-100 hover:text-gray-700 relative">
+      <button onMouseDown={(e) => { e.preventDefault(); setOpen(!open); }} title={label} className="w-[30px] h-[30px] rounded-md flex items-center justify-center cursor-pointer transition-all duration-150 shrink-0 text-text-secondary hover:bg-bg hover:text-text relative">
         <span className="text-[11px] font-bold">{icon}</span>
         <span className="absolute bottom-[4px] left-1/2 -translate-x-1/2 w-3.5 h-[3px] rounded-sm" style={{ backgroundColor: isBg ? '#fde68a' : theme.accent }} />
       </button>
       {open && (
-        <div className="absolute top-full left-0 mt-1 p-2 bg-white rounded-lg border border-gray-200 shadow-lg z-50 w-[180px]">
+        <div className="absolute top-full left-0 mt-1 p-2 bg-card rounded-lg border border-border shadow-lg z-50 w-[180px]">
           <div className="grid grid-cols-10 gap-[2px]">
             {colors.map(color => (
-              <button key={color} onMouseDown={(e) => { e.preventDefault(); onSelect(color); setOpen(false); }} className="w-4 h-4 rounded-sm border border-gray-200 cursor-pointer hover:scale-125 transition-transform" style={{ backgroundColor: color }} />
+              <button key={color} onMouseDown={(e) => { e.preventDefault(); onSelect(color); setOpen(false); }} className="w-4 h-4 rounded-sm border border-border cursor-pointer hover:scale-125 transition-transform" style={{ backgroundColor: color }} />
             ))}
           </div>
         </div>

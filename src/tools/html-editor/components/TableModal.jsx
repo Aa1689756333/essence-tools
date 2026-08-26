@@ -25,23 +25,23 @@ export default function TableModal({ isOpen, onConfirm, onCancel, theme }) {
     <Modal isOpen={isOpen} onClose={onCancel} title="插入表格">
       <div className="space-y-3">
         <div>
-          <label className="block text-[13px] text-gray-600 mb-1.5">行数</label>
+          <label className="block text-[13px] text-text-secondary mb-1.5">行数</label>
           <input
             type="number"
             value={rows}
             onChange={(e) => setRows(e.target.value)}
-            className="w-full h-[36px] px-3 rounded-lg border border-gray-200 text-[13px] focus:outline-none focus:border-gray-300"
+            className="w-full h-[36px] px-3 rounded-lg border border-border text-[13px] focus:outline-none focus:border-border-light"
             min="1"
             max="20"
           />
         </div>
         <div>
-          <label className="block text-[13px] text-gray-600 mb-1.5">列数</label>
+          <label className="block text-[13px] text-text-secondary mb-1.5">列数</label>
           <input
             type="number"
             value={cols}
             onChange={(e) => setCols(e.target.value)}
-            className="w-full h-[36px] px-3 rounded-lg border border-gray-200 text-[13px] focus:outline-none focus:border-gray-300"
+            className="w-full h-[36px] px-3 rounded-lg border border-border text-[13px] focus:outline-none focus:border-border-light"
             min="1"
             max="10"
           />
@@ -56,7 +56,7 @@ export default function TableModal({ isOpen, onConfirm, onCancel, theme }) {
           </button>
           <button
             onClick={onCancel}
-            className="flex-1 h-[36px] rounded-lg text-[13px] font-semibold text-gray-500 bg-white border border-gray-200 cursor-pointer hover:bg-gray-50 transition-all"
+            className="flex-1 h-[36px] rounded-lg text-[13px] font-semibold text-text-secondary bg-card border border-border cursor-pointer hover:bg-bg transition-all"
           >
             取消
           </button>

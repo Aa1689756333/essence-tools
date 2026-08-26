@@ -26,23 +26,23 @@ export default function LinkModal({ isOpen, onConfirm, onCancel, initialData = {
     <Modal isOpen={isOpen} onClose={onCancel} title="插入链接">
       <div className="space-y-3">
         <div>
-          <label className="block text-[13px] text-gray-600 mb-1.5">链接地址</label>
+          <label className="block text-[13px] text-text-secondary mb-1.5">链接地址</label>
           <input
             type="text"
             value={url}
             onChange={(e) => setUrl(e.target.value)}
-            className="w-full h-[36px] px-3 rounded-lg border border-gray-200 text-[13px] focus:outline-none focus:border-gray-300"
+            className="w-full h-[36px] px-3 rounded-lg border border-border text-[13px] focus:outline-none focus:border-border-light"
             placeholder="https://"
           />
         </div>
         {text && (
           <div>
-            <label className="block text-[13px] text-gray-600 mb-1.5">链接文本</label>
+            <label className="block text-[13px] text-text-secondary mb-1.5">链接文本</label>
             <input
               type="text"
               value={text}
               onChange={(e) => setText(e.target.value)}
-              className="w-full h-[36px] px-3 rounded-lg border border-gray-200 text-[13px] focus:outline-none focus:border-gray-300"
+              className="w-full h-[36px] px-3 rounded-lg border border-border text-[13px] focus:outline-none focus:border-border-light"
             />
           </div>
         )}
@@ -56,7 +56,7 @@ export default function LinkModal({ isOpen, onConfirm, onCancel, initialData = {
           </button>
           <button
             onClick={onCancel}
-            className="flex-1 h-[36px] rounded-lg text-[13px] font-semibold text-gray-500 bg-white border border-gray-200 cursor-pointer hover:bg-gray-50 transition-all"
+            className="flex-1 h-[36px] rounded-lg text-[13px] font-semibold text-text-secondary bg-card border border-border cursor-pointer hover:bg-bg transition-all"
           >
             取消
           </button>

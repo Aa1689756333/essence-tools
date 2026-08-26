@@ -16,7 +16,7 @@
   -webkit-text-fill-color: #d1d5db;
 }
 
-/* ===== 高亮覆盖层 ===== */
+/* ===== 高亮覆盖�?===== */
 .highlight-overlay .line {
   display: block;
   border-radius: 3px;
@@ -43,4 +43,25 @@
 
 .output-paragraph.active {
   background: rgba(var(--theme-accent-rgb), 0.15);
+}
+
+
+/* ===== Dark Mode Specifics ===== */
+.dark .textarea-invisible::-webkit-scrollbar-thumb,
+.dark .highlight-overlay::-webkit-scrollbar-thumb,
+.dark .custom-scrollbar::-webkit-scrollbar-thumb {
+  background: #4b5563;
+}
+.dark .textarea-invisible::-webkit-scrollbar-thumb:hover,
+.dark .highlight-overlay::-webkit-scrollbar-thumb:hover,
+.dark .custom-scrollbar::-webkit-scrollbar-thumb:hover {
+  background: #6b7280;
+}
+
+/* Adjust highlight marker opacity for dark mode */
+.dark .textarea-invisible { caret-color: #f3f4f6; }
+.dark .textarea-invisible::placeholder { color: #4b5563; -webkit-text-fill-color: #4b5563; }
+
+.dark .highlight-marker {
+  opacity: 0.8;
 }

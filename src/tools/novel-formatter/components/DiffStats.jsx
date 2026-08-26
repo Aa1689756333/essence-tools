@@ -7,7 +7,7 @@ export default function DiffStats({ stats }) {
   if (!stats) return null;
 
   return (
-    <div className="mt-3.5 px-3 sm:px-[18px] py-2.5 bg-bg-primary border border-border rounded-[10px] text-[12.5px] text-text-secondary text-center">
+    <div className="mt-3.5 px-3 sm:px-[18px] py-2.5 bg-bg border border-border rounded-[10px] text-[12.5px] text-text-secondary text-center">
       {stats.diff !== 0 ? (
         <>
           排版完成：原文 <span className="font-bold" style={{ color: theme.accent }}>{stats.before}</span> 字
