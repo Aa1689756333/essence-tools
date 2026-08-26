@@ -84,14 +84,9 @@ export default function UserPointsPage() {
       setError('');
       const query = new URLSearchParams({ page: String(page), pageSize: '20' });
       if (type) query.set('type', type);
-      const [checkInResponse, pointsResponse] = await Promise.all([
-        fetch('/api/user/checkin'),
-        fetch(`/api/user/points?${query.toString()}`),
-      ]);
-      const [checkInData, pointsResult] = await Promise.all([checkInResponse.json(), pointsResponse.json()]);
-      if (!checkInResponse.ok) throw new Error(checkInData.error || '签到数据加载失败');
+      const pointsResponse = await fetch(`/api/user/points?${query.toString()}`);
+      const pointsResult = await pointsResponse.json();
       if (!pointsResponse.ok) throw new Error(pointsResult.error || '积分数据加载失败');
-      setCheckInInfo(checkInData);
       setPointsData(pointsResult);
     } catch (requestError) {
       setError(requestError.message || '积分数据加载失败');
