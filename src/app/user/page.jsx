@@ -74,14 +74,6 @@ export default function UserOverviewPage() {
       href: '/user/points',
     },
     {
-      label: '本月签到',
-      value: `${checkInInfo?.monthCheckinCount ?? 0} 天`,
-      detail: checkInInfo?.todayChecked ? '今日已签到' : '今日待签到',
-      icon: Flame,
-      color: 'text-emerald-500',
-      action: openCheckIn,
-    },
-    {
       label: '账号状态',
       value: user?.status === 'ACTIVE' ? '正常' : '已停用',
       detail: user?.role === 'ADMIN' ? '管理员账户' : '普通用户账户',
@@ -105,7 +97,7 @@ export default function UserOverviewPage() {
         <p className="mt-1 text-sm text-text-secondary">查看账户状态，并快速进入常用用户功能。</p>
       </div>
 
-      <div className="grid grid-cols-2 gap-3 lg:grid-cols-4">
+      <div className="grid grid-cols-1 gap-3 sm:grid-cols-3">
         {stats.map((stat) => {
           const Icon = stat.icon;
           const content = (
