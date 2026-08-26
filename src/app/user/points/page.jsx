@@ -1,6 +1,6 @@
 'use client';
 
-import { useCallback, useEffect, useMemo, useState } from 'react';
+import { useCallback, useEffect, useState } from 'react';
 import { Award, CalendarDays, ChevronLeft, ChevronRight, Coins, Flame, Loader2, RefreshCw } from 'lucide-react';
 import { useAuth } from '@/context/AuthContext';
 
@@ -53,15 +53,10 @@ export default function UserPointsPage() {
     fetchData();
   }, [fetchData]);
 
-  const calendarDays = useMemo(() => {
-    const now = new Date();
-    const firstDay = new Date(now.getFullYear(), now.getMonth(), 1).getDay();
-    const daysInMonth = checkInInfo?.daysInMonth || new Date(now.getFullYear(), now.getMonth() + 1, 0).getDate();
-    return [...Array(firstDay).fill(null), ...Array.from({ length: daysInMonth }, (_, index) => index + 1)];
-  }, [checkInInfo?.daysInMonth]);
+
 
   const currentMonthLabel = new Date().toLocaleDateString('zh-CN', { year: 'numeric', month: 'long' });
-  const currentDay = new Date().getDate();
+
   const totalPages = pointsData?.totalPages || 0;
 
   const handleTypeChange = (nextType) => {
@@ -96,9 +91,78 @@ export default function UserPointsPage() {
       </section>
 
       <section className="rounded-2xl border border-border bg-card p-5">
-        <div className="mb-4 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between"><div><div className="flex items-center gap-2"><Flame className="h-4 w-4 text-emerald-500" aria-hidden="true" /><h3 className="text-sm font-bold text-text">签到状态</h3></div><p className="mt-1 text-xs text-text-secondary">{currentMonthLabel} · 连签第 {checkInInfo?.cycleDay || 1} 天</p></div><button type="button" onClick={openCheckIn} className="inline-flex items-center justify-center gap-1.5 rounded-xl border border-border px-3 py-2 text-xs font-semibold text-text transition-colors hover:bg-bg-primary"><Flame className="h-3.5 w-3.5 text-emerald-500" aria-hidden="true" />去签到</button></div>
-        <div className="mb-5 rounded-xl bg-bg-primary p-3"><div className="flex items-center justify-between gap-3 text-xs text-text-secondary"><span>{checkInInfo?.currentTier || '正在计算签到奖励'}</span><span className="shrink-0">{checkInInfo?.todayChecked ? '今日已签到' : '今日未签到'}</span></div>{checkInInfo?.nextMilestone && <div className="mt-3"><div className="mb-1.5 flex items-center justify-between text-[11px] text-text-secondary"><span>距离第 {checkInInfo.nextMilestone.day} 天里程碑</span><span>还差 {checkInInfo.nextMilestone.daysRemaining} 天</span></div><div className="h-1.5 overflow-hidden rounded-full bg-bg"><div className="h-full rounded-full bg-gradient-to-r from-amber-400 to-amber-500" style={{ width: `${Math.min(100, ((checkInInfo.cycleDay || 1) / checkInInfo.nextMilestone.day) * 100)}%` }} /></div></div>}</div>
-        <div className="grid grid-cols-7 gap-1.5 text-center">{['日', '一', '二', '三', '四', '五', '六'].map((day) => <span key={day} className="py-1 text-[11px] font-medium text-text-tertiary">{day}</span>)}{calendarDays.map((day, index) => { const checked = day && (checkInInfo?.checkedDays || []).includes(day); const today = day === currentDay; return <div key={`${day || 'empty'}-${index}`} className={`flex h-8 items-center justify-center rounded-lg text-xs font-medium ${!day ? '' : checked ? 'border border-emerald-500/30 bg-emerald-500/20 font-bold text-emerald-600 dark:text-emerald-400' : today ? 'border border-border bg-bg-primary font-bold text-text' : 'bg-bg-primary/50 text-text-secondary'}`}>{day}</div>; })}</div>
+        <div className="mb-4 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+          <div>
+            <div className="flex items-center gap-2">
+              <Flame className="h-4 w-4 text-emerald-500" aria-hidden="true" />
+              <h3 className="text-sm font-bold text-text">签到状态</h3>
+            </div>
+            <p className="mt-1 text-xs text-text-secondary">{currentMonthLabel} · 开启新的连签周期赚取奖励</p>
+          </div>
+          <button 
+            type="button" 
+            onClick={openCheckIn} 
+            className={`inline-flex items-center justify-center gap-1.5 rounded-xl border px-4 py-2 text-xs font-semibold transition-colors ${
+              checkInInfo?.todayChecked 
+                ? 'bg-bg-primary border-border text-text-secondary cursor-default' 
+                : 'bg-emerald-500 border-emerald-500 text-white hover:bg-emerald-600 shadow-sm'
+            }`}
+          >
+            <Flame className={`h-3.5 w-3.5 ${checkInInfo?.todayChecked ? 'text-text-tertiary' : 'text-white'}`} aria-hidden="true" />
+            {checkInInfo?.todayChecked ? '今日已签到' : '立即打卡'}
+          </button>
+        </div>
+
+        <div className="grid grid-cols-1 gap-3 sm:grid-cols-3">
+          {/* Card 1: 本月打卡 */}
+          <div className="rounded-xl bg-bg-primary p-4 border border-border/50">
+            <div className="text-[11px] text-text-secondary mb-1">本月打卡</div>
+            <div className="flex items-baseline gap-1">
+              <span className="text-xl font-bold text-text">{checkInInfo?.monthCheckinCount || 0}</span>
+              <span className="text-xs text-text-tertiary">/ {checkInInfo?.daysInMonth || 30} 天</span>
+            </div>
+            <div className="mt-1.5 text-[10px] text-text-tertiary truncate">
+              {checkInInfo?.currentTier || '正在计算签到奖励'}
+            </div>
+          </div>
+          
+          {/* Card 2: 连签进度 */}
+          <div className="rounded-xl bg-bg-primary p-4 border border-border/50">
+            <div className="text-[11px] text-text-secondary mb-1">当前连续签到</div>
+            <div className="flex items-baseline gap-1">
+              <span className="text-xl font-bold text-emerald-500">{checkInInfo?.cycleDay || 1}</span>
+              <span className="text-xs text-text-tertiary">天</span>
+            </div>
+            <div className="mt-1.5 text-[10px] text-emerald-600/70 dark:text-emerald-400/70 truncate">
+              保持连签，获取更高基础奖励
+            </div>
+          </div>
+
+          {/* Card 3: 下一个里程碑 */}
+          <div className="relative overflow-hidden rounded-xl bg-bg-primary p-4 border border-border/50">
+            {checkInInfo?.nextMilestone ? (
+              <>
+                <div className="text-[11px] text-text-secondary mb-1">距离下个大奖</div>
+                <div className="flex items-baseline gap-1">
+                  <span className="text-xl font-bold text-amber-500">{checkInInfo.nextMilestone.daysRemaining}</span>
+                  <span className="text-xs text-text-tertiary">天</span>
+                </div>
+                <div className="mt-1.5 text-[10px] font-medium text-amber-600 dark:text-amber-400 truncate">
+                  可额外获得 +{checkInInfo.nextMilestone.bonus} 积分
+                </div>
+              </>
+            ) : (
+              <>
+                <div className="text-[11px] text-text-secondary mb-1">里程碑状态</div>
+                <div className="text-sm font-semibold text-text-secondary mt-1">暂无下一阶段</div>
+                <div className="mt-1.5 text-[10px] text-text-tertiary truncate">
+                  当前周期奖励已全部解锁
+                </div>
+              </>
+            )}
+            <Award className="absolute -right-3 -bottom-3 h-16 w-16 -rotate-12 text-amber-500/10 pointer-events-none" />
+          </div>
+        </div>
       </section>
 
       <section className="rounded-2xl border border-border bg-card p-5">
