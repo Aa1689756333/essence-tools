@@ -157,26 +157,85 @@ export default function CheckInModal() {
           </button>
         </div>
 
-        {/* 里程碑进度预告 (高级质感) */}
-        {info?.nextMilestone && (
-          <div className="mb-5 p-3.5 rounded-2xl bg-gradient-to-br from-amber-500/5 to-amber-500/10 ring-1 ring-inset ring-amber-500/20">
-            <div className="flex items-center justify-between text-xs mb-2.5">
-              <span className="flex items-center gap-1.5 font-bold text-amber-700 dark:text-amber-400">
-                <Award className="w-4 h-4 text-amber-500 drop-shadow-sm" />
-                再连续签到 <span className="text-amber-600 dark:text-amber-300 text-sm tabular-nums px-0.5">{info.nextMilestone.daysRemaining}</span> 天可解锁大奖
-              </span>
-              <span className="font-extrabold tabular-nums text-amber-600 dark:text-amber-400 flex items-center gap-0.5">
-                +{info.nextMilestone.bonus} <span className="text-[10px] font-medium opacity-70 tracking-wide">积分</span>
-              </span>
+        {/* 里程碑进度预告 (多节点全景图) */}
+        {(() => {
+          const allMilestones = info?.config
+            ? (info.config.mode === 'A' ? info.config.capped?.milestones :
+               info.config.mode === 'B' ? info.config.tiered?.milestones : []) || []
+            : [];
+          
+          if (!allMilestones.length || !info?.nextMilestone) return null;
+          
+          const maxDay = Math.max(...allMilestones.map(m => m.day));
+          const currentDay = info?.cycleDay || 1;
+          const progressPercent = Math.min(100, Math.max(0, (currentDay / maxDay) * 100));
+
+          return (
+            <div className="mb-5 p-4 pb-6 rounded-2xl bg-gradient-to-br from-amber-500/5 to-amber-500/10 ring-1 ring-inset ring-amber-500/20">
+              <div className="flex items-center justify-between text-xs mb-6">
+                <span className="flex items-center gap-1.5 font-bold text-amber-700 dark:text-amber-400">
+                  <Award className="w-4 h-4 text-amber-500 drop-shadow-sm" />
+                  再连续签到 <span className="text-amber-600 dark:text-amber-300 text-sm tabular-nums px-0.5">{info.nextMilestone.daysRemaining}</span> 天可解锁大奖
+                </span>
+                <span className="font-extrabold tabular-nums text-amber-600 dark:text-amber-400 flex items-center gap-0.5">
+                  +{info.nextMilestone.bonus} <span className="text-[10px] font-medium opacity-70 tracking-wide">积分</span>
+                </span>
+              </div>
+              
+              {/* 多节点进度条 */}
+              <div className="w-full mt-2 mb-2 px-4">
+                <div className="relative">
+                  {/* 背景轨道 */}
+                  <div className="absolute top-1/2 left-0 w-full h-1.5 bg-amber-500/10 rounded-full -translate-y-1/2 ring-1 ring-inset ring-amber-500/10" />
+                  {/* 激活轨道 */}
+                  <div 
+                    className="absolute top-1/2 left-0 h-1.5 bg-gradient-to-r from-amber-400 to-amber-500 rounded-full -translate-y-1/2 transition-all duration-700 ease-out shadow-[inset_0_1px_2px_rgba(255,255,255,0.3)]"
+                    style={{ width: `${progressPercent}%` }}
+                  />
+                  
+                  {/* 节点 */}
+                  {allMilestones.map((m) => {
+                    const isCompleted = currentDay >= m.day;
+                    const isNext = info.nextMilestone.day === m.day;
+                    const leftPercent = (m.day / maxDay) * 100;
+                    
+                    return (
+                      <div 
+                        key={m.day} 
+                        className="absolute top-1/2 flex flex-col items-center z-10"
+                        style={{ left: `${leftPercent}%`, transform: `translate(-50%, -50%)` }}
+                      >
+                        <div className={`w-3.5 h-3.5 rounded-full ring-4 transition-all ${
+                          isCompleted ? 'bg-amber-500 ring-[#fffbeb] dark:ring-[#2d1b06]' :
+                          isNext ? 'bg-amber-400 ring-amber-200 dark:ring-amber-900/80 scale-125 shadow-sm' :
+                          'bg-amber-500/20 ring-[#fffbeb] dark:ring-[#2d1b06]'
+                        }`} />
+                        
+                        {/* 底部天数 */}
+                        <div className={`absolute top-3.5 text-[10px] font-bold tabular-nums whitespace-nowrap mt-1 ${
+                          isNext ? 'text-amber-600 dark:text-amber-400' :
+                          isCompleted ? 'text-amber-600/80 dark:text-amber-400/80' :
+                          'text-amber-700/40 dark:text-amber-400/40'
+                        }`}>
+                          {m.day}天
+                        </div>
+                        
+                        {/* 顶部积分 */}
+                        <div className={`absolute bottom-3.5 text-[9px] font-extrabold tabular-nums whitespace-nowrap mb-1 ${
+                          isNext ? 'text-amber-500 drop-shadow-sm' :
+                          isCompleted ? 'text-amber-500/80' :
+                          'text-amber-500/40'
+                        }`}>
+                          +{m.bonus}
+                        </div>
+                      </div>
+                    );
+                  })}
+                </div>
+              </div>
             </div>
-            <div className="h-2 w-full rounded-full bg-amber-500/10 overflow-hidden ring-1 ring-inset ring-amber-500/10">
-              <div
-                className="h-full rounded-full bg-gradient-to-r from-amber-400 to-amber-500 transition-all duration-700 ease-out shadow-[inset_0_1px_2px_rgba(255,255,255,0.3)]"
-                style={{ width: `${Math.min(100, Math.max(0, ((info.cycleDay || 1) / info.nextMilestone.day) * 100))}%` }}
-              />
-            </div>
-          </div>
-        )}
+          );
+        })()}
 
         {/* 月度日历小组件 (高级游戏化日历) */}
         <div className="mb-2">
