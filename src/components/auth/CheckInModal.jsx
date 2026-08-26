@@ -209,79 +209,98 @@ export default function CheckInModal() {
                 {d}
               </div>
             ))}
-            {daysArray.map((day) => {
-              const isToday = day === todayDate;
-              const isPast = day < todayDate;
-              const isChecked = (info?.checkedDays || []).includes(day) || (isToday && info?.todayChecked);
-              const isMissed = isPast && !isChecked;
+            {(() => {
+              let allMilestones = [];
+              if (info?.config) {
+                allMilestones = info.mode === 'A' ? (info.config.capped?.milestones || []) :
+                                info.mode === 'B' ? (info.config.tiered?.milestones || []) : [];
+              }
               
-              const pastPoints = historyPointsMap[day];
-
-              let projectedDay = 1;
-              let isProjectedMilestone = false;
-              let milestoneBonus = 0;
-              let projectedPoints = '?';
-
-              if (!isPast && !isToday) {
-                const diff = day - todayDate;
-                projectedDay = (info?.cycleDay || 1) + diff - (info?.todayChecked ? 1 : 0);
+              return daysArray.map((day) => {
+                const isToday = day === todayDate;
+                const isPast = day < todayDate;
+                const isChecked = (info?.checkedDays || []).includes(day) || (isToday && info?.todayChecked);
+                const isMissed = isPast && !isChecked;
                 
-                // 精准预测未来积分
-                if (info?.config) {
-                  const cfg = info.config;
-                  if (cfg.mode === 'A') {
-                    projectedPoints = cfg.capped?.basePoints || 1;
-                  } else if (cfg.mode === 'B') {
-                    const tier = (cfg.tiered?.dailyTiers || []).find(t => projectedDay >= t.minDays && projectedDay <= t.maxDays);
-                    projectedPoints = tier ? tier.dailyPoints : 1;
-                  } else if (cfg.mode === 'C') {
-                    projectedPoints = cfg.daily?.days?.[projectedDay - 1] || 1;
+                const pastPoints = historyPointsMap[day];
+
+                let projectedDay = 1;
+                let isNextMilestone = false;
+                let isFutureMilestone = false;
+                let milestoneBonus = 0;
+                let projectedPoints = '?';
+
+                if (!isPast && !isToday) {
+                  const diff = day - todayDate;
+                  projectedDay = (info?.cycleDay || 1) + diff - (info?.todayChecked ? 1 : 0);
+                  
+                  // 精准预测未来积分
+                  if (info?.config) {
+                    const cfg = info.config;
+                    if (cfg.mode === 'A') {
+                      projectedPoints = cfg.capped?.basePoints || 1;
+                    } else if (cfg.mode === 'B') {
+                      const tier = (cfg.tiered?.dailyTiers || []).find(t => projectedDay >= t.minDays && projectedDay <= t.maxDays);
+                      projectedPoints = tier ? tier.dailyPoints : 1;
+                    } else if (cfg.mode === 'C') {
+                      projectedPoints = cfg.daily?.days?.[projectedDay - 1] || 1;
+                    }
+                  }
+
+                  // 预测大奖 (区分"下一个"与"其余")
+                  const hitMilestone = allMilestones.find(m => m.day === projectedDay);
+                  if (hitMilestone) {
+                    milestoneBonus = hitMilestone.bonus;
+                    if (info?.nextMilestone && projectedDay === info.nextMilestone.day) {
+                      isNextMilestone = true;
+                    } else {
+                      isFutureMilestone = true;
+                    }
                   }
                 }
 
-                // 预测大奖
-                if (info?.nextMilestone && projectedDay === info.nextMilestone.day) {
-                  isProjectedMilestone = true;
-                  milestoneBonus = info.nextMilestone.bonus;
-                }
-              }
+                // 统一的里程碑标识 (用于顶部日期颜色等)
+                const isAnyProjectedMilestone = isNextMilestone || isFutureMilestone;
 
-              return (
-                <div
-                  key={day}
-                  className={`group relative flex flex-col items-center justify-center gap-0.5 p-1 rounded-[14px] transition-all duration-300 aspect-square
-                    ${isChecked ? 'bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 ring-1 ring-inset ring-emerald-500/20' : ''}
-                    ${isMissed ? 'bg-bg-primary/20 text-text-tertiary opacity-50' : ''}
-                    ${isToday && !isChecked ? 'bg-emerald-500 text-white shadow-[0_8px_16px_-4px_rgba(16,185,129,0.4)] ring-1 ring-inset ring-white/20' : ''}
-                    ${isProjectedMilestone ? 'bg-gradient-to-b from-amber-50 to-amber-100/50 dark:from-amber-900/30 dark:to-amber-800/20 text-amber-600 dark:text-amber-400 ring-1 ring-inset ring-amber-400/40 shadow-sm' : ''}
-                    ${!isChecked && !isMissed && !isToday && !isProjectedMilestone ? 'bg-bg-primary/30 text-text-secondary hover:bg-bg-primary/50' : ''}
-                  `}
-                  
-                >
-                  {/* 顶部日期 */}
-                  <span className={`text-xs sm:text-[13px] font-medium tabular-nums ${(isToday && !isChecked) ? 'text-white' : isProjectedMilestone ? 'text-amber-600 dark:text-amber-400' : 'text-text-secondary'}`}>
-                    {isToday ? '今' : day}
-                  </span>
+                return (
+                  <div
+                    key={day}
+                    className={`group relative flex flex-col items-center justify-center gap-0.5 p-1 rounded-[14px] transition-all duration-300 aspect-square
+                      ${isChecked ? 'bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 ring-1 ring-inset ring-emerald-500/20 shadow-[inset_0_0_10px_rgba(16,185,129,0.05)]' : ''}
+                      ${isMissed ? 'bg-bg-primary/20 text-text-tertiary opacity-50' : ''}
+                      ${isToday && !isChecked ? 'bg-emerald-500 text-white shadow-[0_8px_16px_-4px_rgba(16,185,129,0.4)] ring-1 ring-inset ring-white/20' : ''}
+                      ${isNextMilestone ? 'bg-gradient-to-b from-amber-50 to-amber-100/50 dark:from-amber-900/30 dark:to-amber-800/20 text-amber-600 dark:text-amber-400 ring-1 ring-inset ring-amber-400/40 shadow-sm' : ''}
+                      ${isFutureMilestone ? 'bg-amber-50/40 dark:bg-amber-900/10 text-amber-600/70 dark:text-amber-400/70 ring-1 ring-inset ring-amber-500/15' : ''}
+                      ${!isChecked && !isMissed && !isToday && !isAnyProjectedMilestone ? 'bg-bg-primary/30 text-text-secondary hover:bg-bg-primary/50' : ''}
+                    `}
+                  >
+                    {/* 顶部日期 */}
+                    <span className={`text-xs sm:text-[13px] font-medium tabular-nums tracking-tight ${(isToday && !isChecked) ? 'text-white' : isNextMilestone ? 'text-amber-600 dark:text-amber-400' : isFutureMilestone ? 'text-amber-600/70 dark:text-amber-400/70' : 'text-text-secondary'}`}>
+                      {isToday ? '今' : day}
+                    </span>
 
-                  {/* 底部状态/积分/图标 */}
-                  <div className="flex items-center justify-center mt-0.5">
-                    {isChecked ? (
-                      <span className="text-[10px] sm:text-[11px] font-semibold tabular-nums flex items-center gap-0.5">
-                         {pastPoints ? `+${pastPoints}` : <CheckCircle2 className="w-3.5 h-3.5 sm:w-4 sm:h-4" />}
-                      </span>
-                    ) : isToday && !isChecked ? (
-                      <span className="text-xs sm:text-[13px] font-bold tabular-nums drop-shadow-md">+{info?.todayExpected || 0}</span>
-                    ) : isProjectedMilestone ? (
-                      <span className="text-[10px] sm:text-[11px] font-bold tabular-nums flex items-center gap-0.5"><Award className="w-3 h-3 sm:w-3.5 sm:h-3.5 fill-amber-500/20 opacity-80" />+{milestoneBonus}</span>
-                    ) : !isMissed ? (
-                      <span className="text-[9px] sm:text-[11px] font-medium tabular-nums text-text-tertiary/70 flex items-center">
-                        +{projectedPoints}
-                      </span>
-                    ) : null}
+                    {/* 底部状态/积分/图标 */}
+                    <div className="flex items-center justify-center w-full">
+                      {isChecked ? (
+                        <span className="text-[10px] sm:text-[11px] font-semibold tabular-nums flex items-center gap-0.5">
+                           {pastPoints ? `+${pastPoints}` : <CheckCircle2 className="w-3.5 h-3.5 sm:w-4 sm:h-4" />}
+                        </span>
+                      ) : isToday && !isChecked ? (
+                        <span className="text-xs sm:text-[13px] font-bold tabular-nums drop-shadow-md">+{info?.todayExpected || 0}</span>
+                      ) : isNextMilestone ? (
+                        <span className="text-[10px] sm:text-[11px] font-bold tabular-nums flex items-center gap-0.5"><Award className="w-3 h-3 sm:w-3.5 sm:h-3.5 fill-amber-500/20 opacity-80" />+{milestoneBonus}</span>
+                      ) : isFutureMilestone ? (
+                        <span className="text-[9px] sm:text-[10px] font-semibold tabular-nums flex items-center gap-0.5"><Award className="w-3 h-3 sm:w-3.5 sm:h-3.5 opacity-40" />+{milestoneBonus}</span>
+                      ) : !isMissed ? (
+                        <span className="text-[9px] sm:text-[11px] font-medium tabular-nums text-text-tertiary/70 flex items-center">
+                          +{projectedPoints}
+                        </span>
+                      ) : null}
+                    </div>
                   </div>
-                </div>
-              );
-            })}
+                );
+              });
+            })()}
           </div>
         </div>
     </Modal>
