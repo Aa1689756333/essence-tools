@@ -6,7 +6,7 @@ import { useEffect } from 'react';
 import { useSidebar } from './useSidebar';
 import { useTheme } from './ThemeProvider';
 import { useAuth } from '@/context/AuthContext';
-import { LayoutGrid, ChevronLeft, Wrench, X, Shield, UserRound } from 'lucide-react';
+import { LayoutGrid, ChevronLeft, Wrench, X } from 'lucide-react';
 
 export default function Sidebar({ tools, toolsByCategory }) {
   const pathname = usePathname();
@@ -123,87 +123,6 @@ export default function Sidebar({ tools, toolsByCategory }) {
             工具总览
           </span>
         </Link>
-
-        {/* 用户中心 */}
-        {user && (
-          <Link
-            href="/user"
-            onClick={isMobile ? closeMobile : undefined}
-            className={`flex items-center rounded-lg mb-1 transition-all duration-[180ms] relative group ${
-              !isMobile && collapsed ? 'justify-center py-2' : 'gap-2 py-1.5 px-2'
-            } ${isActive('/user') ? 'bg-bg-primary' : 'hover:bg-bg-primary/50'}`}
-            aria-current={isActive('/user') ? 'page' : undefined}
-          >
-            {isActive('/user') && (
-              <span
-                className={`absolute top-1/2 -translate-y-1/2 w-[3px] h-[16px] rounded-r-[3px] ${
-                  !isMobile && collapsed ? 'left-0' : '-left-2.5'
-                }`}
-                style={{ backgroundColor: theme.accent }}
-              />
-            )}
-            <span
-              className={`w-7 h-7 rounded-md flex items-center justify-center shrink-0 transition-all duration-200 ${
-                isActive('/user') ? '' : 'bg-card border border-border'
-              }`}
-              style={
-                isActive('/user')
-                  ? { backgroundColor: theme.subtle, border: `1px solid ${theme.accent}1a` }
-                  : {}
-              }
-            >
-              <UserRound
-                className="w-3.5 h-3.5"
-                style={isActive('/user') ? { color: theme.accent } : {}}
-                aria-hidden="true"
-              />
-            </span>
-            <span
-              className={`text-[13.5px] whitespace-nowrap overflow-hidden transition-all duration-200 tracking-tight ${
-                !isMobile && collapsed ? 'opacity-0 w-0' : 'opacity-100'
-              } ${isActive('/user') ? 'text-text font-semibold' : 'text-text-secondary group-hover:text-text'}`}
-            >
-              个人中心
-            </span>
-          </Link>
-        )}
-
-        {/* 管理员控制台通道 */}
-        {user && user.role === 'ADMIN' && (
-          <Link
-            href="/admin"
-            onClick={isMobile ? closeMobile : undefined}
-            className={`flex items-center rounded-lg mb-1 transition-all duration-[180ms] relative group ${
-              !isMobile && collapsed ? 'justify-center py-2' : 'gap-2 py-1.5 px-2'
-            } ${isActive('/admin') ? 'bg-primary/10' : 'hover:bg-primary/5'}`}
-            aria-current={isActive('/admin') ? 'page' : undefined}
-          >
-            {isActive('/admin') && (
-              <span
-                className={`absolute top-1/2 -translate-y-1/2 w-[3px] h-[16px] rounded-r-[3px] ${
-                  !isMobile && collapsed ? 'left-0' : '-left-2.5'
-                }`}
-                style={{ backgroundColor: '#a855f7' }}
-              />
-            )}
-            <span
-              className={`w-7 h-7 rounded-md flex items-center justify-center shrink-0 transition-all duration-200 ${
-                isActive('/admin')
-                  ? 'bg-primary/20 text-primary dark:text-primary-light'
-                  : 'bg-card border border-border text-primary'
-              }`}
-            >
-              <Shield className="w-3.5 h-3.5" aria-hidden="true" />
-            </span>
-            <span
-              className={`text-[13.5px] whitespace-nowrap overflow-hidden transition-all duration-200 tracking-tight ${
-                !isMobile && collapsed ? 'opacity-0 w-0' : 'opacity-100'
-              } ${isActive('/admin') ? 'text-primary dark:text-primary-light font-bold' : 'text-primary/80 dark:text-primary-light/80 font-semibold group-hover:text-primary'}`}
-            >
-              管理后台
-            </span>
-          </Link>
-        )}
 
         {/* 分类工具 */}
         {Object.entries(toolsByCategory).map(([category, categoryTools]) => (
