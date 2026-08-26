@@ -29,7 +29,7 @@ export function ToolbarBtn({ icon: Icon, onClick, active, title }) {
       title={title}
       aria-label={title}
       aria-pressed={active !== undefined ? !!active : undefined}
-      className={`w-[30px] h-[30px] rounded-md flex items-center justify-center cursor-pointer transition-all duration-150 shrink-0${focusCls} ${
+      className={`w-[30px] h-[30px] rounded-md flex items-center justify-center cursor-pointer transition-all duration-150 shrink-0 ${
         active ? activeCls : inactiveCls
       }`}
     >
