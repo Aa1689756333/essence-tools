@@ -1,7 +1,7 @@
 'use client';
 
 import { useCallback, useEffect, useState } from 'react';
-import { Award, CalendarDays, ChevronLeft, ChevronRight, Coins, Flame, Loader2, RefreshCw } from 'lucide-react';
+import { Award, CalendarDays, ChevronLeft, ChevronRight, ChevronDown, Check, Coins, Flame, Loader2, RefreshCw } from 'lucide-react';
 import { useAuth } from '@/context/AuthContext';
 
 const typeOptions = [
@@ -16,6 +16,58 @@ function formatDate(value) {
 
 function getTypeLabel(type) {
   return type === 'CHECKIN' ? '签到' : type === 'MILESTONE_BONUS' ? '里程碑奖励' : type;
+}
+
+
+function CustomSelect({ options, value, onChange }) {
+  const [isOpen, setIsOpen] = useState(false);
+  const selectedOption = options.find(o => o.value === value) || options[0];
+
+  return (
+    <div 
+      className="relative" 
+      tabIndex={0} 
+      onBlur={(e) => {
+        if (!e.currentTarget.contains(e.relatedTarget)) {
+          setIsOpen(false);
+        }
+      }}
+    >
+      <button 
+        type="button"
+        onClick={() => setIsOpen(!isOpen)}
+        className="flex items-center justify-between min-w-[100px] px-3 py-1.5 bg-bg-primary hover:bg-bg-primary/80 border border-border/60 rounded-xl text-xs font-medium text-text transition-all focus:outline-none focus:ring-2 focus:ring-emerald-500/20"
+      >
+        <span>{selectedOption.label}</span>
+        <ChevronDown className={`w-3.5 h-3.5 text-text-tertiary transition-transform duration-200 ${isOpen ? 'rotate-180' : ''}`} />
+      </button>
+
+      {isOpen && (
+        <div className="absolute right-0 mt-1.5 w-32 bg-card border border-border/80 rounded-xl shadow-lg shadow-black/5 overflow-hidden z-20 origin-top-right animate-in fade-in zoom-in-95 duration-150">
+          <div className="p-1.5 flex flex-col gap-0.5">
+            {options.map((option) => (
+              <button
+                key={option.value}
+                type="button"
+                onClick={() => {
+                  onChange(option.value);
+                  setIsOpen(false);
+                }}
+                className={`flex items-center justify-between w-full px-2.5 py-2 text-left text-xs rounded-lg transition-colors ${
+                  value === option.value 
+                    ? 'bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 font-bold' 
+                    : 'text-text-secondary hover:bg-bg-primary hover:text-text'
+                }`}
+              >
+                {option.label}
+                {value === option.value && <Check className="w-3.5 h-3.5" />}
+              </button>
+            ))}
+          </div>
+        </div>
+      )}
+    </div>
+  );
 }
 
 export default function UserPointsPage() {
@@ -166,7 +218,10 @@ export default function UserPointsPage() {
       </section>
 
       <section className="rounded-2xl border border-border bg-card p-5">
-        <div className="mb-4 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between"><div className="flex items-center gap-2"><Coins className="h-4 w-4 text-amber-500" aria-hidden="true" /><h3 className="text-sm font-bold text-text">积分流水</h3></div><label className="flex items-center gap-2 text-xs text-text-secondary"><span>筛选</span><select value={type} onChange={(event) => handleTypeChange(event.target.value)} className="rounded-lg border border-border bg-bg px-2.5 py-1.5 text-xs text-text outline-none focus:border-[var(--theme-accent)]">{typeOptions.map((option) => <option key={option.value} value={option.value}>{option.label}</option>)}</select></label></div>
+        <div className="mb-4 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between"><div className="flex items-center gap-2"><Coins className="h-4 w-4 text-amber-500" aria-hidden="true" /><h3 className="text-sm font-bold text-text">积分流水</h3></div><div className="flex items-center gap-2 text-xs text-text-secondary">
+          <span className="font-medium">筛选</span>
+          <CustomSelect options={typeOptions} value={type} onChange={handleTypeChange} />
+        </div></div>
         {loading ? <div className="flex min-h-48 items-center justify-center text-xs text-text-secondary"><Loader2 className="mr-2 h-4 w-4 animate-spin" />加载中...</div> : pointsData?.items?.length ? <><div className="divide-y divide-border">{pointsData.items.map((transaction) => <div key={transaction.id} className="flex flex-col gap-2 py-3 sm:flex-row sm:items-center sm:justify-between"><div className="min-w-0"><div className="flex flex-wrap items-center gap-2"><span className="rounded-full bg-bg-primary px-2 py-0.5 text-[10px] font-medium text-text-secondary">{getTypeLabel(transaction.type)}</span><span className="text-xs font-medium text-text">{transaction.description}</span></div><p className="mt-1 text-[11px] text-text-secondary">{formatDate(transaction.createdAt)} · 余额 {transaction.balance}</p></div><span className={`text-sm font-bold ${transaction.amount >= 0 ? 'text-emerald-500' : 'text-rose-500'}`}>{transaction.amount >= 0 ? '+' : ''}{transaction.amount}</span></div>)}</div><div className="mt-4 flex items-center justify-between border-t border-border pt-4"><span className="text-xs text-text-secondary">共 {pointsData.total} 条记录</span><div className="flex items-center gap-2"><button type="button" disabled={page <= 1} onClick={() => setPage((current) => current - 1)} className="flex h-8 w-8 items-center justify-center rounded-lg border border-border text-text-secondary transition-colors hover:bg-bg-primary disabled:cursor-not-allowed disabled:opacity-40" aria-label="上一页"><ChevronLeft className="h-4 w-4" /></button><span className="min-w-16 text-center text-xs text-text-secondary">{page} / {totalPages || 1}</span><button type="button" disabled={page >= totalPages} onClick={() => setPage((current) => current + 1)} className="flex h-8 w-8 items-center justify-center rounded-lg border border-border text-text-secondary transition-colors hover:bg-bg-primary disabled:cursor-not-allowed disabled:opacity-40" aria-label="下一页"><ChevronRight className="h-4 w-4" /></button></div></div></> : <div className="flex min-h-48 flex-col items-center justify-center text-center"><Coins className="mb-3 h-8 w-8 text-text-secondary" aria-hidden="true" /><p className="text-sm font-medium text-text">暂无积分记录</p><button type="button" onClick={openCheckIn} className="mt-2 text-xs font-medium text-[var(--theme-accent)] hover:underline">去签到赚取第一笔积分</button></div>}
       </section>
     </div>
