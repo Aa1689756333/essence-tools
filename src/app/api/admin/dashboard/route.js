@@ -1,7 +1,7 @@
 import { NextResponse } from 'next/server';
 import db from '@/lib/db';
 import { getRequestUser } from '@/lib/request-user';
-import {  } from '@/lib/auth';
+import {} from '@/lib/auth';
 import { getSystemSettings } from '@/lib/settings';
 
 export async function GET() {
@@ -34,6 +34,8 @@ export async function GET() {
         email: true,
         nickname: true,
         avatar: true,
+        avatarStyle: true,
+        avatarSeed: true,
         role: true,
         status: true,
         points: true,
@@ -44,7 +46,9 @@ export async function GET() {
 
   const settings = await getSystemSettings();
   let smtpConfig = {};
-  try { smtpConfig = JSON.parse(settings.smtp_config || '{}'); } catch {}
+  try {
+    smtpConfig = JSON.parse(settings.smtp_config || '{}');
+  } catch {}
 
   const isSmtpConfigured = Boolean(smtpConfig.host && smtpConfig.user && smtpConfig.pass);
 

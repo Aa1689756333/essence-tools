@@ -1,31 +1,22 @@
-import { createAvatar } from '@dicebear/core';
-import {
-  bottts,
-  funEmoji,
-  identicon,
-  shapes,
-  initials,
-  pixelArt,
-  micah,
-  notionists,
-} from '@dicebear/collection';
+import { Avatar, Style } from '@dicebear/core';
+import clayJson from '@dicebear/styles/clay.json' with { type: 'json' };
+import crittersJson from '@dicebear/styles/critters.json' with { type: 'json' };
+import funEmojiJson from '@dicebear/styles/fun-emoji.json' with { type: 'json' };
+import voxelArtJson from '@dicebear/styles/voxel-art.json' with { type: 'json' };
+import voxelBotJson from '@dicebear/styles/voxel-bot.json' with { type: 'json' };
+import glyphsJson from '@dicebear/styles/glyphs.json' with { type: 'json' };
+import identiconJson from '@dicebear/styles/identicon.json' with { type: 'json' };
+import initialFaceJson from '@dicebear/styles/initial-face.json' with { type: 'json' };
 
-// 风格池映射
 const styleMap = {
-  'fun-emoji': { style: funEmoji, options: {} },
-  bottts: { style: bottts, options: {} },
-  'pixel-art': { style: pixelArt, options: {} },
-  shapes: { style: shapes, options: {} },
-  identicon: { style: identicon, options: {} },
-  initials: { style: initials, options: { backgroundType: ['gradientLinear'] } },
-  micah: {
-    style: micah,
-    options: { backgroundColor: ['ffdfbf', 'ffd5dc', 'd1d4f9', 'c0aede', 'b6e3f4'] },
-  },
-  notionists: {
-    style: notionists,
-    options: { backgroundColor: ['ffdfbf', 'ffd5dc', 'd1d4f9', 'c0aede', 'b6e3f4'] },
-  },
+  clay: { style: clayJson, options: {} },
+  critters: { style: crittersJson, options: {} },
+  'fun-emoji': { style: funEmojiJson, options: {} },
+  'voxel-art': { style: voxelArtJson, options: {} },
+  'voxel-bot': { style: voxelBotJson, options: {} },
+  glyphs: { style: glyphsJson, options: {} },
+  identicon: { style: identiconJson, options: {} },
+  'initial-face': { style: initialFaceJson, options: {} },
 };
 
 export async function GET(request, { params }) {
@@ -36,7 +27,7 @@ export async function GET(request, { params }) {
   }
 
   // 默认回退
-  const selectedStyle = styleMap[style] || styleMap['bottts'];
+  const selectedStyle = styleMap[style] || styleMap['fun-emoji'];
 
   // 如果传进来的是带后缀的，比如 seed.svg，去掉后缀
   if (seed.endsWith('.svg')) {
@@ -44,7 +35,8 @@ export async function GET(request, { params }) {
   }
 
   // 生成头像
-  const avatar = createAvatar(selectedStyle.style, {
+  const dicebearStyle = new Style(selectedStyle.style);
+  const avatar = new Avatar(dicebearStyle, {
     seed: seed,
     size: 128, // 输出尺寸
     ...selectedStyle.options, // 附加当前风格的特定参数

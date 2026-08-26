@@ -1,7 +1,7 @@
 import { NextResponse } from 'next/server';
 import db from '@/lib/db';
 import { getRequestUser } from '@/lib/request-user';
-import {  } from '@/lib/auth';
+import {} from '@/lib/auth';
 import { validateBody, adminUserPatchSchema } from '@/lib/validate';
 
 export async function GET(req) {
@@ -20,10 +20,7 @@ export async function GET(req) {
   const where = {};
 
   if (query) {
-    where.OR = [
-      { email: { contains: query } },
-      { nickname: { contains: query } },
-    ];
+    where.OR = [{ email: { contains: query } }, { nickname: { contains: query } }];
   }
 
   if (role !== 'ALL') where.role = role;
@@ -41,6 +38,8 @@ export async function GET(req) {
         email: true,
         nickname: true,
         avatar: true,
+        avatarStyle: true,
+        avatarSeed: true,
         role: true,
         status: true,
         points: true,
@@ -119,7 +118,10 @@ export async function PATCH(req) {
         data: { status },
         select: { id: true, email: true, nickname: true, role: true, status: true, points: true },
       });
-      return NextResponse.json({ message: status === 'BANNED' ? '用户已被封禁' : '用户已被解封', user: updated });
+      return NextResponse.json({
+        message: status === 'BANNED' ? '用户已被封禁' : '用户已被解封',
+        user: updated,
+      });
     }
 
     if (action === 'adjust_points') {

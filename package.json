@@ -32,8 +32,8 @@
     ]
   },
   "dependencies": {
-    "@dicebear/collection": "^9.4.2",
-    "@dicebear/core": "^9.4.3",
+    "@dicebear/core": "^10.6.1",
+    "@dicebear/styles": "^10.5.0",
     "@prisma/client": "^5.22.0",
     "@tiptap/extension-color": "^3.30.3",
     "@tiptap/extension-font-family": "^3.30.3",
@@ -79,7 +79,7 @@
     "jsdom": "^29.1.1",
     "lint-staged": "^17.3.0",
     "prettier": "^3.9.6",
-    "prisma": "^7.9.1",
+    "prisma": "^5.22.0",
     "tailwindcss": "^4.1.11",
     "typescript": "^6.0.3",
     "vitest": "^4.1.11"

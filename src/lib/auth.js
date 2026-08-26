@@ -15,7 +15,9 @@ function getJwtSecret() {
   } else if (process.env.NODE_ENV === 'production') {
     throw new Error('JWT_SECRET environment variable is required in production');
   } else {
-    console.warn('⚠️ JWT_SECRET not configured, using development fallback. DO NOT use in production!');
+    console.warn(
+      '⚠️ JWT_SECRET not configured, using development fallback. DO NOT use in production!'
+    );
     _jwtSecretKey = new TextEncoder().encode('toolbox-dev-secret-key');
   }
   return _jwtSecretKey;
@@ -65,6 +67,8 @@ export async function getSessionUser(includePasswordHash = false) {
         passwordHash: includePasswordHash,
         nickname: true,
         avatar: true,
+        avatarStyle: true,
+        avatarSeed: true,
         role: true,
         status: true,
         points: true,

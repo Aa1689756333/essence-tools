@@ -23,6 +23,8 @@ export async function getRequestUser({ withDB = false } = {}) {
         email: true,
         nickname: true,
         avatar: true,
+        avatarStyle: true,
+        avatarSeed: true,
         role: true,
         status: true,
         points: true,

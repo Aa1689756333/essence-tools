@@ -1,7 +1,6 @@
-/* eslint-disable */
 'use client';
 
-import { useEffect, useState } from 'react';
+import { useEffect, useState, useCallback } from 'react';
 import {
   CalendarDays,
   Check,
@@ -29,7 +28,7 @@ function formatDate(value) {
 }
 
 export default function UserProfilePage() {
-  const { user, refreshUser } = useAuth();
+  const { user, refreshUser, updateUser } = useAuth();
   const { toast } = useToast();
   const [nickname, setNickname] = useState(user?.nickname || '');
   const [avatarStyle, setAvatarStyle] = useState(user?.avatarStyle || '');
@@ -49,13 +48,10 @@ export default function UserProfilePage() {
     // Generate a new random seed (short string)
     const newSeed = Date.now().toString(36).substring(3, 9);
     setAvatarSeed(newSeed);
-    saveAvatar(avatarStyle, newSeed);
-  }, [avatarStyle]);
+  }, []);
 
   const handleStyleChange = (e) => {
-    const newStyle = e.target.value;
-    setAvatarStyle(newStyle);
-    saveAvatar(newStyle, avatarSeed);
+    setAvatarStyle(e.target.value);
   };
 
   const saveAvatar = async (style, seed) => {
@@ -75,6 +71,9 @@ export default function UserProfilePage() {
         targetStyle = AVATAR_STYLES[Math.abs(hash) % AVATAR_STYLES.length];
       }
 
+      // Eagerly update context to survive Fast Refresh remounts
+      updateUser({ avatarStyle: targetStyle, avatarSeed: seed });
+
       const response = await fetch('/api/user/profile', {
         method: 'PATCH',
         headers: { 'Content-Type': 'application/json' },
@@ -85,7 +84,7 @@ export default function UserProfilePage() {
         }),
       });
       if (response.ok) {
-        await refreshUser();
+        toast.success('头像已保存');
       } else {
         toast.error('头像保存失败');
       }
@@ -208,6 +207,24 @@ export default function UserProfilePage() {
               </button>
             </div>
           </div>
+
+          {(avatarStyle !== (user?.avatarStyle || '') ||
+            avatarSeed !== (user?.avatarSeed || user?.id || '')) && (
+            <div className="mt-4 flex justify-end pt-4 border-t border-border/50">
+              <button
+                type="button"
+                onClick={() => saveAvatar(avatarStyle, avatarSeed)}
+                disabled={savingAvatar}
+                className="flex items-center gap-2 rounded-xl px-4 py-2 text-xs font-semibold text-white shadow-sm transition-opacity disabled:cursor-not-allowed disabled:opacity-50"
+                style={{
+                  background: 'var(--theme-gradient, linear-gradient(135deg, #10b981, #34d399))',
+                }}
+              >
+                <Save className="h-3.5 w-3.5" aria-hidden="true" />
+                {savingAvatar ? '保存中...' : '保存新头像'}
+              </button>
+            </div>
+          )}
         </div>
 
         <form onSubmit={handleSubmit} noValidate>

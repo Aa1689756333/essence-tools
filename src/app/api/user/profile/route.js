@@ -55,7 +55,7 @@ export async function GET() {
 // PATCH: 更新用户资料
 export async function PATCH(request) {
   try {
-    const user = await getSessionUser(true);
+    const user = await getRequestUser({ withDB: true });
     if (!user) {
       return NextResponse.json({ error: '请先登录' }, { status: 401 });
     }
@@ -205,6 +205,9 @@ export async function PATCH(request) {
     return NextResponse.json({ error: '不支持的操作' }, { status: 400 });
   } catch (error) {
     console.error('PATCH /api/user/profile error:', error);
-    return NextResponse.json({ error: '更新用户资料失败' }, { status: 500 });
+    return NextResponse.json(
+      { error: '更新用户资料失败: ' + (error.message || String(error)) },
+      { status: 500 }
+    );
   }
 }
