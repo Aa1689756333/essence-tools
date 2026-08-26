@@ -165,12 +165,7 @@ export default function AdminUsersPage() {
                   <tr key={u.id} className="hover:bg-bg-primary/40 transition-colors">
                     <td className="py-3 px-4">
                       <div className="flex items-center gap-2.5">
-                        <div
-                          className="w-8 h-8 rounded-lg flex items-center justify-center text-white font-bold text-xs"
-                          style={{ background: 'var(--theme-gradient, linear-gradient(135deg, #10b981, #34d399))' }}
-                        >
-                          {u.nickname.substring(0, 1).toUpperCase()}
-                        </div>
+                        <img src={`/api/avatar/${u.id}`} alt="Avatar" className="w-8 h-8 rounded-lg object-cover bg-bg-primary ring-1 ring-border/50" />
                         <div>
                           <div className="font-bold text-text">{u.nickname}</div>
                           <div className="text-[11px] text-text-tertiary">{u.email}</div>

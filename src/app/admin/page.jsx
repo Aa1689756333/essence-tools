@@ -203,12 +203,7 @@ export default function AdminDashboardPage() {
               {recentUsers.map((u) => (
                 <tr key={u.id} className="hover:bg-bg-primary/50 transition-colors">
                   <td className="py-2.5 font-semibold text-text flex items-center gap-2">
-                    <div
-                      className="w-6 h-6 rounded-md flex items-center justify-center text-white text-[10px] font-bold"
-                      style={{ background: 'var(--theme-gradient, linear-gradient(135deg, #10b981, #34d399))' }}
-                    >
-                      {u.nickname.substring(0, 1).toUpperCase()}
-                    </div>
+                    <img src={`/api/avatar/${u.id}`} alt="Avatar" className="w-6 h-6 rounded-md object-cover bg-bg-primary ring-1 ring-border/50" />
                     <span>{u.nickname}</span>
                   </td>
                   <td className="py-2.5 text-text-secondary">{u.email}</td>

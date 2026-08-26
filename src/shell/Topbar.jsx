@@ -159,12 +159,7 @@ export default function Topbar() {
               className="h-[34px] pl-1.5 pr-2 rounded-lg border border-border bg-card flex items-center gap-2 text-xs font-semibold text-text hover:bg-bg-primary transition-all cursor-pointer"
               aria-label="用户菜单"
             >
-              <div
-                className="w-6 h-6 rounded-md flex items-center justify-center text-white text-[11px] font-bold"
-                style={{ background: 'var(--theme-gradient, linear-gradient(135deg, #10b981, #34d399))' }}
-              >
-                {user.nickname?.substring(0, 1).toUpperCase() || 'U'}
-              </div>
+              <img src={`/api/avatar/${user.id}`} alt="Avatar" className="w-6 h-6 rounded-md object-cover bg-bg-primary ring-1 ring-border/50" />
               <span className="max-w-[80px] truncate hidden sm:inline">{user.nickname}</span>
               <ChevronDown className="w-3.5 h-3.5 text-text-secondary" />
             </button>
