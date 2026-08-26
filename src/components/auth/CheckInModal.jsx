@@ -171,8 +171,8 @@ export default function CheckInModal() {
           const progressPercent = Math.min(100, Math.max(0, (currentDay / maxDay) * 100));
 
           return (
-            <div className="mb-5 p-4 pb-6 rounded-2xl bg-gradient-to-br from-amber-500/5 to-amber-500/10 ring-1 ring-inset ring-amber-500/20">
-              <div className="flex items-center justify-between text-xs mb-6">
+            <div className="mb-5 p-4 rounded-2xl bg-gradient-to-br from-amber-500/5 to-amber-500/10 ring-1 ring-inset ring-amber-500/20">
+              <div className="flex items-center justify-between text-xs mb-3">
                 <span className="flex items-center gap-1.5 font-bold text-amber-700 dark:text-amber-400">
                   <Award className="w-4 h-4 text-amber-500 drop-shadow-sm" />
                   再连续签到 <span className="text-amber-600 dark:text-amber-300 text-sm tabular-nums px-0.5">{info.nextMilestone.daysRemaining}</span> 天可解锁大奖
@@ -183,13 +183,13 @@ export default function CheckInModal() {
               </div>
               
               {/* 多节点进度条 */}
-              <div className="w-full mt-2 mb-2 px-4">
-                <div className="relative">
+              <div className="w-full mt-9 mb-7 px-5 sm:px-6">
+                <div className="relative h-1.5 w-full">
                   {/* 背景轨道 */}
-                  <div className="absolute top-1/2 left-0 w-full h-1.5 bg-amber-500/10 rounded-full -translate-y-1/2 ring-1 ring-inset ring-amber-500/10" />
+                  <div className="absolute top-0 left-0 w-full h-full bg-amber-500/10 rounded-full ring-1 ring-inset ring-amber-500/10" />
                   {/* 激活轨道 */}
                   <div 
-                    className="absolute top-1/2 left-0 h-1.5 bg-gradient-to-r from-amber-400 to-amber-500 rounded-full -translate-y-1/2 transition-all duration-700 ease-out shadow-[inset_0_1px_2px_rgba(255,255,255,0.3)]"
+                    className="absolute top-0 left-0 h-full bg-gradient-to-r from-amber-400 to-amber-500 rounded-full transition-all duration-700 ease-out shadow-[inset_0_1px_2px_rgba(255,255,255,0.3)]"
                     style={{ width: `${progressPercent}%` }}
                   />
                   
@@ -212,7 +212,7 @@ export default function CheckInModal() {
                         }`} />
                         
                         {/* 底部天数 */}
-                        <div className={`absolute top-3.5 text-[10px] font-bold tabular-nums whitespace-nowrap mt-1 ${
+                        <div className={`absolute top-full mt-1.5 text-[10px] font-bold tabular-nums whitespace-nowrap ${
                           isNext ? 'text-amber-600 dark:text-amber-400' :
                           isCompleted ? 'text-amber-600/80 dark:text-amber-400/80' :
                           'text-amber-700/40 dark:text-amber-400/40'
@@ -221,8 +221,8 @@ export default function CheckInModal() {
                         </div>
                         
                         {/* 顶部积分 */}
-                        <div className={`absolute bottom-3.5 text-[9px] font-extrabold tabular-nums whitespace-nowrap mb-1 ${
-                          isNext ? 'text-amber-500 drop-shadow-sm' :
+                        <div className={`absolute bottom-full mb-1.5 text-[9px] font-extrabold tabular-nums whitespace-nowrap ${
+                          isNext ? 'text-amber-500 drop-shadow-sm text-[10px]' :
                           isCompleted ? 'text-amber-500/80' :
                           'text-amber-500/40'
                         }`}>
