@@ -766,7 +766,7 @@ ${html}
                 {imageSize.width}×{imageSize.height}
               </span>
               {/* 分隔线 */}
-              <div className="w-px h-4 bg-gray-200" />
+              <div className="w-px h-4 bg-border" />
               {/* 预设尺寸 */}
               {[25, 50, 75, 100].map(percent => (
                 <button
@@ -781,7 +781,7 @@ ${html}
                 </button>
               ))}
               {/* 分隔线 */}
-              <div className="w-px h-4 bg-gray-200" />
+              <div className="w-px h-4 bg-border" />
               {/* 对齐按钮 */}
               <button
                 onMouseDown={(e) => {

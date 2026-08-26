@@ -16,20 +16,16 @@
  * @param {string} title - 提示文本（同时作为 aria-label）
  * @param {'theme'|'gray'} [variant] - 外观变体
  */
-export function ToolbarBtn({ icon: Icon, onClick, active, title, variant = 'theme' }) {
-  const activeCls = variant === 'gray'
-    ? 'bg-gray-200 text-gray-800'
-    : 'bg-bg-primary border border-border text-text font-semibold';
-  const inactiveCls = variant === 'gray'
-    ? 'text-gray-500 hover:bg-gray-100 hover:text-gray-700'
-    : 'text-text-secondary hover:bg-bg-primary hover:text-text';
-  const focusCls = variant === 'gray'
-    ? ' focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-gray-300'
-    : '';
+export function ToolbarBtn({ icon: Icon, onClick, active, title }) {
+  const activeCls = 'bg-bg-primary border border-border text-text font-semibold';
+  const inactiveCls = 'text-text-secondary hover:bg-bg-primary hover:text-text';
   return (
     <button
       type="button"
-      onMouseDown={(e) => { e.preventDefault(); onClick(); }}
+      onMouseDown={(e) => {
+        e.preventDefault();
+        onClick();
+      }}
       title={title}
       aria-label={title}
       aria-pressed={active !== undefined ? !!active : undefined}
@@ -66,8 +62,12 @@ export function ToolbarSelect({ value, options, onChange, title, width }) {
       className="h-[30px] rounded-md border border-border bg-card text-[12px] text-text px-1.5 cursor-pointer hover:border-border-hover focus:outline-none transition-colors"
       style={{ width: width || 'auto' }}
     >
-      {options.map(opt => (
-        <option key={opt.value ?? opt.label} value={opt.value ?? opt.label} className="bg-card text-text">
+      {options.map((opt) => (
+        <option
+          key={opt.value ?? opt.label}
+          value={opt.value ?? opt.label}
+          className="bg-card text-text"
+        >
           {opt.label}
         </option>
       ))}
