@@ -121,27 +121,26 @@ export default function HtmlEditor() {
   }, []);
 
   // 更新空状态与字数统计（提前定义，供 handleRestoreConfirm 引用）
-  const debouncedCountWords = useDebouncedCallback(() => {
-    if (!editorRef.current) return;
-    const text = editorRef.current.innerText || '';
+  const debouncedCountWords = useDebouncedCallback((editorInstance = editor) => {
+    if (!editorInstance) return;
+    const text = editorInstance.getText();
     setWordCount(countWords(text));
   }, 300);
 
-  const updateEmptyState = useCallback(() => {
-    if (!editorRef.current) return;
-    const content = editorRef.current.innerHTML;
-    setIsEmpty(!content || content === '<br>' || content === '<div><br></div>');
-    debouncedCountWords();
-  }, [debouncedCountWords]);
+  const updateEmptyState = useCallback((editorInstance = editor) => {
+    if (!editorInstance) return;
+    setIsEmpty(editorInstance.isEmpty);
+    debouncedCountWords(editorInstance);
+  }, [debouncedCountWords, editor]);
 
   const handleRestoreConfirm = useCallback(() => {
-    if (editorRef.current && savedContentRef.current) {
-      editorRef.current.innerHTML = cleanHtml(savedContentRef.current);
-      updateEmptyState();
+    if (editor && savedContentRef.current) {
+      editor.commands.setContent(cleanHtml(savedContentRef.current));
+      updateEmptyState(editor);
     }
     setShowRestoreModal(false);
     savedContentRef.current = null;
-  }, [updateEmptyState]);
+  }, [editor, updateEmptyState]);
 
   const handleRestoreDismiss = useCallback(() => {
     safeRemoveItem('html-editor-content');
@@ -185,8 +184,8 @@ export default function HtmlEditor() {
       clearTimeout(autoSaveTimerRef.current);
     }
     autoSaveTimerRef.current = setTimeout(() => {
-      if (editorRef.current && !isEmpty) {
-        const content = editorRef.current.innerHTML;
+      if (editor && !isEmpty) {
+        const content = editor.getHTML();
         const result = safeSetItemWithRetry('html-editor-content', content);
         if (result.ok) {
           setLastSavedTime(new Date());
@@ -289,9 +288,9 @@ ${html}
   }, [showCode, htmlCode]);
 
   const handleClear = useCallback(() => {
-    if (editorRef.current) {
-      editorRef.current.innerHTML = '';
-      editorRef.current.focus();
+    if (editor) {
+      editor.commands.clearContent();
+      editor.commands.focus();
       setIsEmpty(true);
       setHtmlCode('');
       setFormatState({
@@ -314,7 +313,7 @@ ${html}
       setFontFamily('');
       localStorage.removeItem('html-editor-content');
     }
-  }, []);
+  }, [editor]);
 
   const handleOptimizeHtml = useCallback(() => {
     if (showCode) {
@@ -323,9 +322,9 @@ ${html}
       const formatted = formatHtml(htmlCode);
       setHtmlCode(formatted);
       setIsOptimized(true);
-    } else if (editorRef.current) {
+    } else if (editor) {
       // 预览模式下先清理再格式化
-      const rawHtml = editorRef.current.innerHTML;
+      const rawHtml = editor.getHTML();
       setOriginalHtml(rawHtml);
       const cleaned = cleanHtml(rawHtml);
       const formatted = formatHtml(cleaned);
@@ -333,19 +332,19 @@ ${html}
       setShowCode(true);
       setIsOptimized(true);
     }
-  }, [showCode, htmlCode]);
+  }, [showCode, htmlCode, editor]);
 
   const handleRestoreHtml = useCallback(() => {
     if (originalHtml) {
       setHtmlCode(originalHtml);
-      if (editorRef.current) {
-        editorRef.current.innerHTML = originalHtml;
-        updateEmptyState();
+      if (editor) {
+        editor.commands.setContent(originalHtml);
+        updateEmptyState(editor);
       }
       setShowCode(false);
       setIsOptimized(false);
     }
-  }, [originalHtml, updateEmptyState]);
+  }, [originalHtml, editor, updateEmptyState]);
 
   const handleFontSize = useCallback((size) => {
     setFontSize(size);
