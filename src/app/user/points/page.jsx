@@ -120,8 +120,7 @@ export default function UserPointsPage() {
     <div className="space-y-6">
       <div>
         <h2 className="text-lg font-bold text-text">积分与签到记录</h2>
-        <p className="mt-1 text-sm text-text-secondary">查看积分变化和签到状态，签到操作仍通过顶部火焰按钮完成。</p>
-      </div>
+        </div>
 
       {error && (
         <div className="flex items-center justify-between gap-3 rounded-xl border border-rose-500/20 bg-rose-500/10 px-4 py-3 text-xs text-rose-500">
