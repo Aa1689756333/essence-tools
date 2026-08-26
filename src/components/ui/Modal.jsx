@@ -71,10 +71,10 @@ export default function Modal({
         {showCloseButton && (
           <button
             onClick={onClose}
-            className="absolute top-4 right-4 w-8 h-8 rounded-full flex items-center justify-center text-text-secondary hover:text-text hover:bg-bg-primary transition-colors cursor-pointer"
+            className="absolute top-4 right-4 sm:top-5 sm:right-5 z-50 flex items-center justify-center w-8 h-8 rounded-full text-text-tertiary bg-bg-primary/30 ring-1 ring-inset ring-border/30 hover:bg-bg-primary hover:text-text hover:ring-border/60 hover:shadow-sm transition-all duration-200 active:scale-90 group"
             aria-label="关闭弹窗"
           >
-            <X className="w-4 h-4" />
+            <X className="w-4 h-4 transition-transform duration-300 group-hover:rotate-90" strokeWidth={2.5} />
           </button>
         )}
 
