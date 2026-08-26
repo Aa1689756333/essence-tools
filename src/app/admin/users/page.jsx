@@ -163,7 +163,7 @@ export default function AdminUsersPage() {
               {loading ? (
                 <tr>
                   <td colSpan={7} className="py-12 text-center text-text-tertiary">
-                    <Loader2 className="w-5 h-5 animate-spin mx-auto mb-2 text-purple-500" />
+                    <Loader2 className="w-5 h-5 animate-spin mx-auto mb-2 text-primary" />
                     加载用户数据中...
                   </td>
                 </tr>
@@ -194,7 +194,7 @@ export default function AdminUsersPage() {
                       <span
                         className={`px-2 py-0.5 rounded text-[11px] font-bold ${
                           u.role === 'ADMIN'
-                            ? 'bg-purple-500/10 text-purple-600 dark:text-purple-400 border border-purple-500/20'
+                            ? 'bg-primary/10 text-primary dark:text-primary-light border border-primary/20'
                             : 'bg-bg-primary text-text-secondary border border-border'
                         }`}
                       >
@@ -243,7 +243,7 @@ export default function AdminUsersPage() {
                                 role: u.role === 'ADMIN' ? 'USER' : 'ADMIN',
                               })
                             }
-                            className="px-2 py-1 rounded bg-purple-500/10 text-purple-600 dark:text-purple-400 hover:bg-purple-500/20 font-medium cursor-pointer transition-colors flex items-center gap-1"
+                            className="px-2 py-1 rounded bg-primary/10 text-primary dark:text-primary-light hover:bg-primary/20 font-medium cursor-pointer transition-colors flex items-center gap-1"
                             title={u.role === 'ADMIN' ? '降级为 USER' : '提升为 ADMIN'}
                           >
                             <Shield className="w-3 h-3" />
@@ -364,7 +364,7 @@ export default function AdminUsersPage() {
                 <button
                   type="submit"
                   disabled={submittingPoints}
-                  className="px-4 py-1.5 rounded-xl bg-purple-600 text-white text-xs font-medium cursor-pointer hover:bg-purple-700 transition-colors disabled:opacity-50"
+                  className="px-4 py-1.5 rounded-xl bg-primary text-white text-xs font-medium cursor-pointer hover:bg-primary-hover transition-colors disabled:opacity-50"
                 >
                   {submittingPoints ? '处理中...' : '确认调账'}
                 </button>

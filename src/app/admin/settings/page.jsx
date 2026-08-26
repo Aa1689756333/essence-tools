@@ -1,7 +1,19 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import { Globe, ShieldCheck, Mail, Flame, Save, Send, Loader2, CheckCircle2, XCircle, Plus, Trash2 } from 'lucide-react';
+import {
+  Globe,
+  ShieldCheck,
+  Mail,
+  Flame,
+  Save,
+  Send,
+  Loader2,
+  CheckCircle2,
+  XCircle,
+  Plus,
+  Trash2,
+} from 'lucide-react';
 
 const MILESTONE_PRESET = [
   { day: 7, bonus: 3 },
@@ -10,7 +22,9 @@ const MILESTONE_PRESET = [
   { day: 30, bonus: 20 },
 ];
 
-const DAILY_PRESET = [1, 1, 1, 1, 1, 1, 5, 2, 2, 2, 2, 2, 2, 9, 3, 3, 3, 3, 3, 3, 14, 4, 4, 4, 4, 4, 4, 4, 4, 24];
+const DAILY_PRESET = [
+  1, 1, 1, 1, 1, 1, 5, 2, 2, 2, 2, 2, 2, 9, 3, 3, 3, 3, 3, 3, 14, 4, 4, 4, 4, 4, 4, 4, 4, 24,
+];
 
 function getDefaultCheckinConfig() {
   return {
@@ -110,17 +124,25 @@ export default function AdminSettingsPage() {
         const s = data.settings || {};
 
         let smtpObj = {};
-        try { smtpObj = JSON.parse(s.smtp_config || '{}'); } catch {}
+        try {
+          smtpObj = JSON.parse(s.smtp_config || '{}');
+        } catch {}
 
         let checkinObj = {};
-        try { checkinObj = JSON.parse(s.checkin_config || '{}'); } catch {}
+        try {
+          checkinObj = JSON.parse(s.checkin_config || '{}');
+        } catch {}
         checkinObj = normalizeCheckinConfig(checkinObj);
 
         let whiteArr = [];
-        try { whiteArr = JSON.parse(s.email_whitelist || '[]'); } catch {}
+        try {
+          whiteArr = JSON.parse(s.email_whitelist || '[]');
+        } catch {}
 
         let blackArr = [];
-        try { blackArr = JSON.parse(s.email_blacklist || '[]'); } catch {}
+        try {
+          blackArr = JSON.parse(s.email_blacklist || '[]');
+        } catch {}
 
         setForm({
           site_title: s.site_title || '',
@@ -221,7 +243,7 @@ export default function AdminSettingsPage() {
   if (loading) {
     return (
       <div className="flex items-center justify-center py-20 text-text-secondary">
-        <Loader2 className="w-6 h-6 animate-spin mr-2 text-purple-500" />
+        <Loader2 className="w-6 h-6 animate-spin mr-2 text-primary" />
         <span className="text-sm">加载配置数据中...</span>
       </div>
     );
@@ -245,7 +267,11 @@ export default function AdminSettingsPage() {
               : 'bg-emerald-500/10 border border-emerald-500/20 text-emerald-500'
           }`}
         >
-          {msg.type === 'error' ? <XCircle className="w-4 h-4 shrink-0" /> : <CheckCircle2 className="w-4 h-4 shrink-0" />}
+          {msg.type === 'error' ? (
+            <XCircle className="w-4 h-4 shrink-0" />
+          ) : (
+            <CheckCircle2 className="w-4 h-4 shrink-0" />
+          )}
           <span>{msg.text}</span>
         </div>
       )}
@@ -261,7 +287,7 @@ export default function AdminSettingsPage() {
               onClick={() => setActiveTab(t.id)}
               className={`flex items-center gap-2 px-4 py-2 rounded-xl text-xs font-semibold cursor-pointer transition-all ${
                 active
-                  ? 'bg-purple-500/10 text-purple-600 dark:text-purple-400 border border-purple-500/20'
+                  ? 'bg-primary/10 text-primary dark:text-primary-light border border-primary/20'
                   : 'text-text-secondary hover:text-text hover:bg-bg-primary'
               }`}
             >
@@ -273,7 +299,10 @@ export default function AdminSettingsPage() {
       </div>
 
       {/* 页签内容 */}
-      <form onSubmit={handleSave} className="bg-card border border-border rounded-2xl p-6 shadow-xs space-y-6">
+      <form
+        onSubmit={handleSave}
+        className="bg-card border border-border rounded-2xl p-6 shadow-xs space-y-6"
+      >
         {/* 1. SEO 设置 */}
         {activeTab === 'seo' && (
           <div className="space-y-4">
@@ -286,11 +315,15 @@ export default function AdminSettingsPage() {
                 placeholder="ToolBox · 在线工具箱"
                 className="w-full px-3 py-2 bg-bg border border-border rounded-xl text-xs text-text focus:outline-none focus:border-border-light"
               />
-              <p className="text-[11px] text-text-tertiary mt-1">显示在浏览器标签页与搜索引擎搜索结果首行。</p>
+              <p className="text-[11px] text-text-tertiary mt-1">
+                显示在浏览器标签页与搜索引擎搜索结果首行。
+              </p>
             </div>
 
             <div>
-              <label className="block text-xs font-semibold text-text mb-1">Meta Description (描述)</label>
+              <label className="block text-xs font-semibold text-text mb-1">
+                Meta Description (描述)
+              </label>
               <textarea
                 rows={3}
                 value={form.site_description}
@@ -301,7 +334,9 @@ export default function AdminSettingsPage() {
             </div>
 
             <div>
-              <label className="block text-xs font-semibold text-text mb-1">Meta Keywords (关键词)</label>
+              <label className="block text-xs font-semibold text-text mb-1">
+                Meta Keywords (关键词)
+              </label>
               <input
                 type="text"
                 value={form.site_keywords}
@@ -320,32 +355,40 @@ export default function AdminSettingsPage() {
             <div className="flex items-center justify-between p-4 bg-bg-primary border border-border rounded-xl">
               <div>
                 <div className="font-bold text-xs text-text">开放新用户注册</div>
-                <div className="text-[11px] text-text-tertiary">关闭后，前台将不允许新用户注册账号。</div>
+                <div className="text-[11px] text-text-tertiary">
+                  关闭后，前台将不允许新用户注册账号。
+                </div>
               </div>
               <label className="relative inline-flex items-center cursor-pointer">
                 <input
                   type="checkbox"
                   checked={form.allow_registration === 'true'}
-                  onChange={(e) => setForm({ ...form, allow_registration: e.target.checked ? 'true' : 'false' })}
+                  onChange={(e) =>
+                    setForm({ ...form, allow_registration: e.target.checked ? 'true' : 'false' })
+                  }
                   className="sr-only peer"
                 />
-                <div className="w-11 h-6 bg-border peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-purple-600"></div>
+                <div className="w-11 h-6 bg-border peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-primary"></div>
               </label>
             </div>
 
             <div className="flex items-center justify-between p-4 bg-bg-primary border border-border rounded-xl">
               <div>
                 <div className="font-bold text-xs text-text">注册需邮箱验证码</div>
-                <div className="text-[11px] text-text-tertiary">开启后，新用户注册时需通过邮箱验证码验证身份。若 SMTP 未配置则自动降级跳过。</div>
+                <div className="text-[11px] text-text-tertiary">
+                  开启后，新用户注册时需通过邮箱验证码验证身份。若 SMTP 未配置则自动降级跳过。
+                </div>
               </div>
               <label className="relative inline-flex items-center cursor-pointer">
                 <input
                   type="checkbox"
                   checked={form.email_verification === 'true'}
-                  onChange={(e) => setForm({ ...form, email_verification: e.target.checked ? 'true' : 'false' })}
+                  onChange={(e) =>
+                    setForm({ ...form, email_verification: e.target.checked ? 'true' : 'false' })
+                  }
                   className="sr-only peer"
                 />
-                <div className="w-11 h-6 bg-border peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-purple-600"></div>
+                <div className="w-11 h-6 bg-border peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-primary"></div>
               </label>
             </div>
 
@@ -363,12 +406,14 @@ export default function AdminSettingsPage() {
                     onClick={() => setForm({ ...form, email_mode: mode.id })}
                     className={`p-3 rounded-xl border text-left cursor-pointer transition-all ${
                       form.email_mode === mode.id
-                        ? 'border-purple-500 bg-purple-500/10 text-purple-600 dark:text-purple-400 font-bold'
+                        ? 'border-primary bg-primary/10 text-primary dark:text-primary-light font-bold'
                         : 'border-border bg-bg text-text-secondary hover:border-border-light'
                     }`}
                   >
                     <div className="text-xs">{mode.title}</div>
-                    <div className="text-[10px] text-text-tertiary font-normal mt-0.5">{mode.desc}</div>
+                    <div className="text-[10px] text-text-tertiary font-normal mt-0.5">
+                      {mode.desc}
+                    </div>
                   </button>
                 ))}
               </div>
@@ -390,11 +435,14 @@ export default function AdminSettingsPage() {
                     type="button"
                     onClick={() => {
                       if (newWhiteRule.trim()) {
-                        setForm({ ...form, email_whitelist: [...form.email_whitelist, newWhiteRule.trim()] });
+                        setForm({
+                          ...form,
+                          email_whitelist: [...form.email_whitelist, newWhiteRule.trim()],
+                        });
                         setNewWhiteRule('');
                       }
                     }}
-                    className="px-3 py-1.5 bg-purple-600 text-white rounded-xl text-xs font-medium flex items-center gap-1 cursor-pointer"
+                    className="px-3 py-1.5 bg-primary text-white rounded-xl text-xs font-medium flex items-center gap-1 cursor-pointer"
                   >
                     <Plus className="w-3.5 h-3.5" /> 添加规则
                   </button>
@@ -441,11 +489,14 @@ export default function AdminSettingsPage() {
                     type="button"
                     onClick={() => {
                       if (newBlackRule.trim()) {
-                        setForm({ ...form, email_blacklist: [...form.email_blacklist, newBlackRule.trim()] });
+                        setForm({
+                          ...form,
+                          email_blacklist: [...form.email_blacklist, newBlackRule.trim()],
+                        });
                         setNewBlackRule('');
                       }
                     }}
-                    className="px-3 py-1.5 bg-purple-600 text-white rounded-xl text-xs font-medium flex items-center gap-1 cursor-pointer"
+                    className="px-3 py-1.5 bg-primary text-white rounded-xl text-xs font-medium flex items-center gap-1 cursor-pointer"
                   >
                     <Plus className="w-3.5 h-3.5" /> 添加黑名单
                   </button>
@@ -483,7 +534,9 @@ export default function AdminSettingsPage() {
           <div className="space-y-4">
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
               <div>
-                <label className="block text-xs font-semibold text-text mb-1">SMTP 服务器 Host</label>
+                <label className="block text-xs font-semibold text-text mb-1">
+                  SMTP 服务器 Host
+                </label>
                 <input
                   type="text"
                   value={form.smtp_config.host}
@@ -517,7 +570,9 @@ export default function AdminSettingsPage() {
 
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
               <div>
-                <label className="block text-xs font-semibold text-text mb-1">账号 User / 邮箱</label>
+                <label className="block text-xs font-semibold text-text mb-1">
+                  账号 User / 邮箱
+                </label>
                 <input
                   type="text"
                   value={form.smtp_config.user}
@@ -567,7 +622,9 @@ export default function AdminSettingsPage() {
               </div>
 
               <div>
-                <label className="block text-xs font-semibold text-text mb-1">发件人邮箱 Address</label>
+                <label className="block text-xs font-semibold text-text mb-1">
+                  发件人邮箱 Address
+                </label>
                 <input
                   type="email"
                   value={form.smtp_config.fromEmail}
@@ -598,9 +655,13 @@ export default function AdminSettingsPage() {
                   type="button"
                   onClick={handleTestSmtp}
                   disabled={testingSmtp}
-                  className="px-4 py-2 bg-purple-600 text-white rounded-xl text-xs font-medium flex items-center gap-1.5 cursor-pointer disabled:opacity-50"
+                  className="px-4 py-2 bg-primary text-white rounded-xl text-xs font-medium flex items-center gap-1.5 cursor-pointer disabled:opacity-50"
                 >
-                  {testingSmtp ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <Send className="w-3.5 h-3.5" />}
+                  {testingSmtp ? (
+                    <Loader2 className="w-3.5 h-3.5 animate-spin" />
+                  ) : (
+                    <Send className="w-3.5 h-3.5" />
+                  )}
                   <span>{testingSmtp ? '发送中...' : '发送测试邮件'}</span>
                 </button>
               </div>
@@ -609,68 +670,381 @@ export default function AdminSettingsPage() {
         )}
 
         {/* 4. 签到积分规则 */}
-        {activeTab === 'checkin' && (() => {
-          const cfg = form.checkin_config;
-          const updateConfig = (patch) => setForm({ ...form, checkin_config: { ...cfg, ...patch } });
-          const updatePanel = (panel, patch) => updateConfig({ [panel]: { ...cfg[panel], ...patch } });
-          const updateListItem = (panel, key, index, patch) => updatePanel(panel, {
-            [key]: cfg[panel][key].map((item, i) => i === index ? { ...item, ...patch } : item),
-          });
-          const addListItem = (panel, key, item) => updatePanel(panel, { [key]: [...cfg[panel][key], item] });
-          const removeListItem = (panel, key, index) => updatePanel(panel, {
-            [key]: cfg[panel][key].filter((_, i) => i !== index),
-          });
-          const fillPreset = (mode) => {
-            const defaults = getDefaultCheckinConfig();
-            updateConfig({ [mode === 'A' ? 'capped' : mode === 'B' ? 'tiered' : 'daily']: defaults[mode === 'A' ? 'capped' : mode === 'B' ? 'tiered' : 'daily'] });
-          };
-          const fieldClass = 'px-2 py-1.5 bg-bg border border-border rounded-lg text-xs text-text focus:outline-none focus:border-purple-500';
-          const renderMilestones = (panel) => (
-            <div className="space-y-2">
-              <div className="flex items-center justify-between"><span className="text-xs font-semibold text-text">里程碑奖励</span><button type="button" onClick={() => addListItem(panel, 'milestones', { day: 7, bonus: 1 })} className="text-xs text-purple-600 flex items-center gap-1"><Plus className="w-3 h-3" />添加</button></div>
-              {cfg[panel].milestones.map((item, index) => (
-                <div key={`${panel}-milestone-${index}`} className="flex gap-2 items-center">
-                  <input type="number" min="1" className={`${fieldClass} w-24`} value={item.day} onChange={(e) => updateListItem(panel, 'milestones', index, { day: Number(e.target.value) })} placeholder="天数" />
-                  <input type="number" min="0" className={`${fieldClass} w-24`} value={item.bonus} onChange={(e) => updateListItem(panel, 'milestones', index, { bonus: Number(e.target.value) })} placeholder="奖励" />
-                  <button type="button" onClick={() => removeListItem(panel, 'milestones', index)} className="text-text-tertiary hover:text-rose-500"><Trash2 className="w-3.5 h-3.5" /></button>
+        {activeTab === 'checkin' &&
+          (() => {
+            const cfg = form.checkin_config;
+            const updateConfig = (patch) =>
+              setForm({ ...form, checkin_config: { ...cfg, ...patch } });
+            const updatePanel = (panel, patch) =>
+              updateConfig({ [panel]: { ...cfg[panel], ...patch } });
+            const updateListItem = (panel, key, index, patch) =>
+              updatePanel(panel, {
+                [key]: cfg[panel][key].map((item, i) =>
+                  i === index ? { ...item, ...patch } : item
+                ),
+              });
+            const addListItem = (panel, key, item) =>
+              updatePanel(panel, { [key]: [...cfg[panel][key], item] });
+            const removeListItem = (panel, key, index) =>
+              updatePanel(panel, {
+                [key]: cfg[panel][key].filter((_, i) => i !== index),
+              });
+            const fillPreset = (mode) => {
+              const defaults = getDefaultCheckinConfig();
+              updateConfig({
+                [mode === 'A' ? 'capped' : mode === 'B' ? 'tiered' : 'daily']:
+                  defaults[mode === 'A' ? 'capped' : mode === 'B' ? 'tiered' : 'daily'],
+              });
+            };
+            const fieldClass =
+              'px-2 py-1.5 bg-bg border border-border rounded-lg text-xs text-text focus:outline-none focus:border-primary';
+            const renderMilestones = (panel) => (
+              <div className="space-y-2">
+                <div className="flex items-center justify-between">
+                  <span className="text-xs font-semibold text-text">里程碑奖励</span>
+                  <button
+                    type="button"
+                    onClick={() => addListItem(panel, 'milestones', { day: 7, bonus: 1 })}
+                    className="text-xs text-primary flex items-center gap-1"
+                  >
+                    <Plus className="w-3 h-3" />
+                    添加
+                  </button>
                 </div>
-              ))}
-            </div>
-          );
-
-          return (
-            <div className="space-y-5">
-              <div className="p-3 bg-amber-500/10 border border-amber-500/20 text-amber-600 dark:text-amber-400 text-xs rounded-xl">积分模式越靠后越强调连签激励。A 模式约 233 分/月，B/C 模式约 120 分/月。</div>
-              <div className="grid grid-cols-3 gap-2">
-                {[['A', '固定封顶'], ['B', '阶梯模式'], ['C', '逐日自定义']].map(([mode, label]) => (
-                  <button key={mode} type="button" onClick={() => updateConfig({ mode })} className={`p-3 rounded-xl border text-xs font-semibold ${cfg.mode === mode ? 'border-purple-500 bg-purple-500/10 text-purple-600' : 'border-border text-text-secondary'}`}>{mode} · {label}</button>
+                {cfg[panel].milestones.map((item, index) => (
+                  <div key={`${panel}-milestone-${index}`} className="flex gap-2 items-center">
+                    <input
+                      type="number"
+                      min="1"
+                      className={`${fieldClass} w-24`}
+                      value={item.day}
+                      onChange={(e) =>
+                        updateListItem(panel, 'milestones', index, { day: Number(e.target.value) })
+                      }
+                      placeholder="天数"
+                    />
+                    <input
+                      type="number"
+                      min="0"
+                      className={`${fieldClass} w-24`}
+                      value={item.bonus}
+                      onChange={(e) =>
+                        updateListItem(panel, 'milestones', index, {
+                          bonus: Number(e.target.value),
+                        })
+                      }
+                      placeholder="奖励"
+                    />
+                    <button
+                      type="button"
+                      onClick={() => removeListItem(panel, 'milestones', index)}
+                      className="text-text-tertiary hover:text-rose-500"
+                    >
+                      <Trash2 className="w-3.5 h-3.5" />
+                    </button>
+                  </div>
                 ))}
               </div>
-              <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 p-4 bg-bg-primary border border-border rounded-xl">
-                <label className="text-xs text-text">周期长度<input type="number" min="1" max="365" className={`${fieldClass} block w-full mt-1`} value={cfg.cycleLength} onChange={(e) => updateConfig({ cycleLength: Number(e.target.value) })} /></label>
-                <label className="text-xs text-text">绝对日上限<input type="number" min="0" className={`${fieldClass} block w-full mt-1`} value={cfg.absoluteDailyCap} onChange={(e) => updateConfig({ absoluteDailyCap: Number(e.target.value) })} /></label>
-                <label className="flex items-center gap-2 text-xs text-text pt-5"><input type="checkbox" checked={cfg.cycleReset} onChange={(e) => updateConfig({ cycleReset: e.target.checked })} />满周期后重置</label>
+            );
+
+            return (
+              <div className="space-y-5">
+                <div className="p-3 bg-amber-500/10 border border-amber-500/20 text-amber-600 dark:text-amber-400 text-xs rounded-xl">
+                  积分模式越靠后越强调连签激励。A 模式约 233 分/月，B/C 模式约 120 分/月。
+                </div>
+                <div className="grid grid-cols-3 gap-2">
+                  {[
+                    ['A', '固定封顶'],
+                    ['B', '阶梯模式'],
+                    ['C', '逐日自定义'],
+                  ].map(([mode, label]) => (
+                    <button
+                      key={mode}
+                      type="button"
+                      onClick={() => updateConfig({ mode })}
+                      className={`p-3 rounded-xl border text-xs font-semibold ${cfg.mode === mode ? 'border-primary bg-primary/10 text-primary' : 'border-border text-text-secondary'}`}
+                    >
+                      {mode} · {label}
+                    </button>
+                  ))}
+                </div>
+                <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 p-4 bg-bg-primary border border-border rounded-xl">
+                  <label className="text-xs text-text">
+                    周期长度
+                    <input
+                      type="number"
+                      min="1"
+                      max="365"
+                      className={`${fieldClass} block w-full mt-1`}
+                      value={cfg.cycleLength}
+                      onChange={(e) => updateConfig({ cycleLength: Number(e.target.value) })}
+                    />
+                  </label>
+                  <label className="text-xs text-text">
+                    绝对日上限
+                    <input
+                      type="number"
+                      min="0"
+                      className={`${fieldClass} block w-full mt-1`}
+                      value={cfg.absoluteDailyCap}
+                      onChange={(e) => updateConfig({ absoluteDailyCap: Number(e.target.value) })}
+                    />
+                  </label>
+                  <label className="flex items-center gap-2 text-xs text-text pt-5">
+                    <input
+                      type="checkbox"
+                      checked={cfg.cycleReset}
+                      onChange={(e) => updateConfig({ cycleReset: e.target.checked })}
+                    />
+                    满周期后重置
+                  </label>
+                </div>
+
+                {cfg.mode === 'A' && (
+                  <div className="space-y-4">
+                    <div className="flex gap-3">
+                      <label className="text-xs text-text">
+                        基础积分
+                        <input
+                          type="number"
+                          min="0"
+                          className={`${fieldClass} block mt-1`}
+                          value={cfg.capped.basePoints}
+                          onChange={(e) =>
+                            updatePanel('capped', { basePoints: Number(e.target.value) })
+                          }
+                        />
+                      </label>
+                      <label className="text-xs text-text">
+                        日常封顶
+                        <input
+                          type="number"
+                          min="0"
+                          className={`${fieldClass} block mt-1`}
+                          value={cfg.capped.dailyCap}
+                          onChange={(e) =>
+                            updatePanel('capped', { dailyCap: Number(e.target.value) })
+                          }
+                        />
+                      </label>
+                      <button
+                        type="button"
+                        onClick={() => fillPreset('A')}
+                        className="self-end px-3 py-1.5 border border-border rounded-lg text-xs"
+                      >
+                        填充推荐预设
+                      </button>
+                    </div>
+                    <div className="space-y-2">
+                      <div className="flex items-center justify-between">
+                        <span className="text-xs font-semibold text-text">连续签到加成规则</span>
+                        <button
+                          type="button"
+                          onClick={() =>
+                            addListItem('capped', 'bonusRules', {
+                              minDays: 1,
+                              maxDays: 1,
+                              extraPoints: 1,
+                            })
+                          }
+                          className="text-xs text-primary flex items-center gap-1"
+                        >
+                          <Plus className="w-3 h-3" />
+                          添加
+                        </button>
+                      </div>
+                      {cfg.capped.bonusRules.map((item, index) => (
+                        <div key={`rule-${index}`} className="flex gap-2 items-center">
+                          <input
+                            type="number"
+                            min="0"
+                            className={`${fieldClass} w-20`}
+                            value={item.minDays}
+                            onChange={(e) =>
+                              updateListItem('capped', 'bonusRules', index, {
+                                minDays: Number(e.target.value),
+                              })
+                            }
+                          />
+                          <input
+                            type="number"
+                            min="0"
+                            className={`${fieldClass} w-20`}
+                            value={item.maxDays ?? ''}
+                            onChange={(e) =>
+                              updateListItem('capped', 'bonusRules', index, {
+                                maxDays: e.target.value === '' ? undefined : Number(e.target.value),
+                              })
+                            }
+                          />
+                          <input
+                            type="number"
+                            min="0"
+                            className={`${fieldClass} w-20`}
+                            value={item.extraPoints}
+                            onChange={(e) =>
+                              updateListItem('capped', 'bonusRules', index, {
+                                extraPoints: Number(e.target.value),
+                              })
+                            }
+                          />
+                          <button
+                            type="button"
+                            onClick={() => removeListItem('capped', 'bonusRules', index)}
+                            className="text-text-tertiary hover:text-rose-500"
+                          >
+                            <Trash2 className="w-3.5 h-3.5" />
+                          </button>
+                        </div>
+                      ))}
+                    </div>
+                    {renderMilestones('capped')}
+                  </div>
+                )}
+
+                {cfg.mode === 'B' && (
+                  <div className="space-y-4">
+                    <div className="flex justify-end">
+                      <button
+                        type="button"
+                        onClick={() => fillPreset('B')}
+                        className="px-3 py-1.5 border border-border rounded-lg text-xs"
+                      >
+                        填充推荐预设
+                      </button>
+                    </div>
+                    <div className="space-y-2">
+                      <div className="flex items-center justify-between">
+                        <span className="text-xs font-semibold text-text">每日积分阶梯</span>
+                        <button
+                          type="button"
+                          onClick={() =>
+                            addListItem('tiered', 'dailyTiers', {
+                              minDays: 1,
+                              maxDays: 1,
+                              dailyPoints: 1,
+                            })
+                          }
+                          className="text-xs text-primary flex items-center gap-1"
+                        >
+                          <Plus className="w-3 h-3" />
+                          添加
+                        </button>
+                      </div>
+                      {cfg.tiered.dailyTiers.map((item, index) => (
+                        <div key={`tier-${index}`} className="flex gap-2 items-center">
+                          <input
+                            type="number"
+                            min="1"
+                            className={`${fieldClass} w-20`}
+                            value={item.minDays}
+                            onChange={(e) =>
+                              updateListItem('tiered', 'dailyTiers', index, {
+                                minDays: Number(e.target.value),
+                              })
+                            }
+                          />
+                          <input
+                            type="number"
+                            min="1"
+                            className={`${fieldClass} w-20`}
+                            value={item.maxDays}
+                            onChange={(e) =>
+                              updateListItem('tiered', 'dailyTiers', index, {
+                                maxDays: Number(e.target.value),
+                              })
+                            }
+                          />
+                          <input
+                            type="number"
+                            min="0"
+                            className={`${fieldClass} w-20`}
+                            value={item.dailyPoints}
+                            onChange={(e) =>
+                              updateListItem('tiered', 'dailyTiers', index, {
+                                dailyPoints: Number(e.target.value),
+                              })
+                            }
+                          />
+                          <button
+                            type="button"
+                            onClick={() => removeListItem('tiered', 'dailyTiers', index)}
+                            className="text-text-tertiary hover:text-rose-500"
+                          >
+                            <Trash2 className="w-3.5 h-3.5" />
+                          </button>
+                        </div>
+                      ))}
+                    </div>
+                    {renderMilestones('tiered')}
+                  </div>
+                )}
+
+                {cfg.mode === 'C' && (
+                  <div className="space-y-4">
+                    <div className="flex items-center justify-between">
+                      <span className="text-xs font-semibold text-text">
+                        逐日积分（{cfg.cycleLength} 天）
+                      </span>
+                      <div className="flex gap-2">
+                        <button
+                          type="button"
+                          onClick={() =>
+                            updatePanel('daily', {
+                              days: [...DAILY_PRESET]
+                                .slice(0, cfg.cycleLength)
+                                .concat(
+                                  Array(Math.max(0, cfg.cycleLength - DAILY_PRESET.length)).fill(0)
+                                ),
+                            })
+                          }
+                          className="px-3 py-1.5 border border-border rounded-lg text-xs"
+                        >
+                          用 B 预设填充
+                        </button>
+                        <button
+                          type="button"
+                          onClick={() =>
+                            updatePanel('daily', { days: Array(cfg.cycleLength).fill(0) })
+                          }
+                          className="px-3 py-1.5 border border-border rounded-lg text-xs"
+                        >
+                          整体清零
+                        </button>
+                      </div>
+                    </div>
+                    <div className="grid grid-cols-5 sm:grid-cols-10 gap-2">
+                      {Array.from({ length: cfg.cycleLength }, (_, index) => (
+                        <label key={`day-${index}`} className="text-[10px] text-text-secondary">
+                          {index + 1}
+                          <input
+                            type="number"
+                            min="0"
+                            className={`${fieldClass} w-full mt-1`}
+                            value={cfg.daily.days[index] ?? 0}
+                            onChange={(e) =>
+                              updatePanel('daily', {
+                                days: cfg.daily.days.map((value, i) =>
+                                  i === index ? Number(e.target.value) : value
+                                ),
+                              })
+                            }
+                          />
+                        </label>
+                      ))}
+                    </div>
+                  </div>
+                )}
               </div>
-
-              {cfg.mode === 'A' && <div className="space-y-4">
-                <div className="flex gap-3"><label className="text-xs text-text">基础积分<input type="number" min="0" className={`${fieldClass} block mt-1`} value={cfg.capped.basePoints} onChange={(e) => updatePanel('capped', { basePoints: Number(e.target.value) })} /></label><label className="text-xs text-text">日常封顶<input type="number" min="0" className={`${fieldClass} block mt-1`} value={cfg.capped.dailyCap} onChange={(e) => updatePanel('capped', { dailyCap: Number(e.target.value) })} /></label><button type="button" onClick={() => fillPreset('A')} className="self-end px-3 py-1.5 border border-border rounded-lg text-xs">填充推荐预设</button></div>
-                <div className="space-y-2"><div className="flex items-center justify-between"><span className="text-xs font-semibold text-text">连续签到加成规则</span><button type="button" onClick={() => addListItem('capped', 'bonusRules', { minDays: 1, maxDays: 1, extraPoints: 1 })} className="text-xs text-purple-600 flex items-center gap-1"><Plus className="w-3 h-3" />添加</button></div>{cfg.capped.bonusRules.map((item, index) => <div key={`rule-${index}`} className="flex gap-2 items-center"><input type="number" min="0" className={`${fieldClass} w-20`} value={item.minDays} onChange={(e) => updateListItem('capped', 'bonusRules', index, { minDays: Number(e.target.value) })} /><input type="number" min="0" className={`${fieldClass} w-20`} value={item.maxDays ?? ''} onChange={(e) => updateListItem('capped', 'bonusRules', index, { maxDays: e.target.value === '' ? undefined : Number(e.target.value) })} /><input type="number" min="0" className={`${fieldClass} w-20`} value={item.extraPoints} onChange={(e) => updateListItem('capped', 'bonusRules', index, { extraPoints: Number(e.target.value) })} /><button type="button" onClick={() => removeListItem('capped', 'bonusRules', index)} className="text-text-tertiary hover:text-rose-500"><Trash2 className="w-3.5 h-3.5" /></button></div>)}</div>
-                {renderMilestones('capped')}
-              </div>}
-
-              {cfg.mode === 'B' && <div className="space-y-4"><div className="flex justify-end"><button type="button" onClick={() => fillPreset('B')} className="px-3 py-1.5 border border-border rounded-lg text-xs">填充推荐预设</button></div><div className="space-y-2"><div className="flex items-center justify-between"><span className="text-xs font-semibold text-text">每日积分阶梯</span><button type="button" onClick={() => addListItem('tiered', 'dailyTiers', { minDays: 1, maxDays: 1, dailyPoints: 1 })} className="text-xs text-purple-600 flex items-center gap-1"><Plus className="w-3 h-3" />添加</button></div>{cfg.tiered.dailyTiers.map((item, index) => <div key={`tier-${index}`} className="flex gap-2 items-center"><input type="number" min="1" className={`${fieldClass} w-20`} value={item.minDays} onChange={(e) => updateListItem('tiered', 'dailyTiers', index, { minDays: Number(e.target.value) })} /><input type="number" min="1" className={`${fieldClass} w-20`} value={item.maxDays} onChange={(e) => updateListItem('tiered', 'dailyTiers', index, { maxDays: Number(e.target.value) })} /><input type="number" min="0" className={`${fieldClass} w-20`} value={item.dailyPoints} onChange={(e) => updateListItem('tiered', 'dailyTiers', index, { dailyPoints: Number(e.target.value) })} /><button type="button" onClick={() => removeListItem('tiered', 'dailyTiers', index)} className="text-text-tertiary hover:text-rose-500"><Trash2 className="w-3.5 h-3.5" /></button></div>)}</div>{renderMilestones('tiered')}</div>}
-
-              {cfg.mode === 'C' && <div className="space-y-4"><div className="flex items-center justify-between"><span className="text-xs font-semibold text-text">逐日积分（{cfg.cycleLength} 天）</span><div className="flex gap-2"><button type="button" onClick={() => updatePanel('daily', { days: [...DAILY_PRESET].slice(0, cfg.cycleLength).concat(Array(Math.max(0, cfg.cycleLength - DAILY_PRESET.length)).fill(0)) })} className="px-3 py-1.5 border border-border rounded-lg text-xs">用 B 预设填充</button><button type="button" onClick={() => updatePanel('daily', { days: Array(cfg.cycleLength).fill(0) })} className="px-3 py-1.5 border border-border rounded-lg text-xs">整体清零</button></div></div><div className="grid grid-cols-5 sm:grid-cols-10 gap-2">{Array.from({ length: cfg.cycleLength }, (_, index) => <label key={`day-${index}`} className="text-[10px] text-text-secondary">{index + 1}<input type="number" min="0" className={`${fieldClass} w-full mt-1`} value={cfg.daily.days[index] ?? 0} onChange={(e) => updatePanel('daily', { days: cfg.daily.days.map((value, i) => i === index ? Number(e.target.value) : value) })} /></label>)}</div></div>}
-            </div>
-          );
-        })()}
+            );
+          })()}
 
         {/* 保存按钮 */}
         <div className="pt-4 border-t border-border flex justify-end">
           <button
             type="submit"
             disabled={saving}
-            className="px-6 py-2.5 rounded-xl bg-purple-600 text-white font-semibold text-xs flex items-center gap-2 cursor-pointer shadow-md hover:bg-purple-700 transition-colors disabled:opacity-50"
+            className="px-6 py-2.5 rounded-xl bg-primary text-white font-semibold text-xs flex items-center gap-2 cursor-pointer shadow-md hover:bg-primary-hover transition-colors disabled:opacity-50"
           >
             {saving ? <Loader2 className="w-4 h-4 animate-spin" /> : <Save className="w-4 h-4" />}
             <span>{saving ? '正在保存...' : '保存系统设置'}</span>

@@ -1,17 +1,18 @@
-@import "tailwindcss";
+@import 'tailwindcss';
 
 @variant dark (&:where(.dark, .dark *));
 
 @theme {
-  --font-sans: var(--font-inter), "PingFang SC", "Noto Sans SC", "Microsoft YaHei", system-ui, sans-serif;
+  --font-sans:
+    var(--font-inter), 'PingFang SC', 'Noto Sans SC', 'Microsoft YaHei', system-ui, sans-serif;
 
-  /* 背景层 */
+  /* 背景�?*/
   --color-bg: var(--bg-primary);
   --color-bg-sidebar: var(--bg-sidebar);
   --color-card: var(--bg-card);
   --color-card-bg: var(--bg-card);
 
-  /* 文字层 */
+  /* 文字�?*/
   --color-text: var(--text-primary);
   --color-text-secondary: var(--text-secondary);
   --color-text-tertiary: var(--text-tertiary);
@@ -19,6 +20,12 @@
   /* 边框 */
   --color-border: var(--border-primary);
   --color-border-light: var(--border-secondary);
+
+  /* ����ɫ */
+  --color-primary: var(--theme-accent);
+  --color-primary-hover: var(--theme-hover);
+  --color-primary-subtle: var(--theme-subtle);
+  --color-primary-light: var(--theme-light);
 }
 
 :root {
@@ -52,7 +59,7 @@ body {
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
   letter-spacing: -0.01em;
-  font-feature-settings: "cv02", "cv03", "cv04", "cv11";
+  font-feature-settings: 'cv02', 'cv03', 'cv04', 'cv11';
 }
 
 :focus-visible {
@@ -63,27 +70,49 @@ body {
 /* ===== 动画 ===== */
 
 @keyframes fade-up {
-  from { opacity: 0; transform: translateY(10px); }
-  to { opacity: 1; transform: translateY(0); }
+  from {
+    opacity: 0;
+    transform: translateY(10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
 }
 
 @keyframes pulse-dot {
-  0%, 100% { box-shadow: 0 0 0 0 rgba(var(--theme-shadow, 52,211,153), 0.4); }
-  50% { box-shadow: 0 0 0 8px rgba(var(--theme-shadow, 52,211,153), 0); }
+  0%,
+  100% {
+    box-shadow: 0 0 0 0 rgba(var(--theme-shadow, 52, 211, 153), 0.4);
+  }
+  50% {
+    box-shadow: 0 0 0 8px rgba(var(--theme-shadow, 52, 211, 153), 0);
+  }
 }
 
 @keyframes spin {
-  to { transform: rotate(360deg); }
+  to {
+    transform: rotate(360deg);
+  }
 }
 
 @keyframes shimmer {
-  0% { background-position: -200% 0; }
-  100% { background-position: 200% 0; }
+  0% {
+    background-position: -200% 0;
+  }
+  100% {
+    background-position: 200% 0;
+  }
 }
 
 @keyframes gentle-float {
-  0%, 100% { transform: translateY(0); }
-  50% { transform: translateY(-3px); }
+  0%,
+  100% {
+    transform: translateY(0);
+  }
+  50% {
+    transform: translateY(-3px);
+  }
 }
 
 .animate-fade-up {
@@ -99,7 +128,12 @@ body {
 }
 
 .animate-shimmer {
-  background: linear-gradient(90deg, var(--theme-accent, #34d399) 0%, var(--theme-light, #6ee7b7) 50%, var(--theme-accent, #34d399) 100%);
+  background: linear-gradient(
+    90deg,
+    var(--theme-accent, #34d399) 0%,
+    var(--theme-light, #6ee7b7) 50%,
+    var(--theme-accent, #34d399) 100%
+  );
   background-size: 200% 100%;
   animation: shimmer 2s ease-in-out infinite;
 }
@@ -109,19 +143,38 @@ body {
 }
 
 @media (prefers-reduced-motion: reduce) {
-  .animate-fade-up { animation: none; }
-  .animate-pulse-dot { animation: none; }
-  .animate-spin-slow { animation-duration: 3s; }
-  .animate-shimmer { animation: none; }
-  .animate-float { animation: none; }
+  .animate-fade-up {
+    animation: none;
+  }
+  .animate-pulse-dot {
+    animation: none;
+  }
+  .animate-spin-slow {
+    animation-duration: 3s;
+  }
+  .animate-shimmer {
+    animation: none;
+  }
+  .animate-float {
+    animation: none;
+  }
 }
 
-/* ===== 滚动条 ===== */
+/* ===== 滚动�?===== */
 
-.custom-scrollbar::-webkit-scrollbar { width: 5px; }
-.custom-scrollbar::-webkit-scrollbar-track { background: transparent; }
-.custom-scrollbar::-webkit-scrollbar-thumb { background: #d1d5db; border-radius: 3px; }
-.custom-scrollbar::-webkit-scrollbar-thumb:hover { background: #9ca3af; }
+.custom-scrollbar::-webkit-scrollbar {
+  width: 5px;
+}
+.custom-scrollbar::-webkit-scrollbar-track {
+  background: transparent;
+}
+.custom-scrollbar::-webkit-scrollbar-thumb {
+  background: #d1d5db;
+  border-radius: 3px;
+}
+.custom-scrollbar::-webkit-scrollbar-thumb:hover {
+  background: #9ca3af;
+}
 
 /* ===== 隐藏滚动条但保留滚动功能 ===== */
 

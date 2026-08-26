@@ -210,7 +210,7 @@ export default function Topbar() {
                   <div className="font-semibold text-xs text-text truncate">{user.nickname}</div>
                   <div className="text-[11px] text-text-tertiary truncate">{user.email}</div>
                   {user.role === 'ADMIN' && (
-                    <span className="inline-block mt-1 px-1.5 py-0.2 rounded text-[10px] font-bold bg-purple-500/10 text-purple-600 dark:text-purple-400 border border-purple-500/20">
+                    <span className="inline-block mt-1 px-1.5 py-0.2 rounded text-[10px] font-bold bg-primary/10 text-primary dark:text-primary-light border border-primary/20">
                       管理员
                     </span>
                   )}
@@ -247,7 +247,7 @@ export default function Topbar() {
                   <Link
                     href="/admin"
                     onClick={() => setShowUserMenu(false)}
-                    className="w-full text-left px-2.5 py-1.5 rounded-lg text-xs font-semibold text-purple-600 dark:text-purple-400 hover:bg-purple-500/10 flex items-center gap-2 cursor-pointer transition-colors"
+                    className="w-full text-left px-2.5 py-1.5 rounded-lg text-xs font-semibold text-primary dark:text-primary-light hover:bg-primary/10 flex items-center gap-2 cursor-pointer transition-colors"
                   >
                     <Shield className="w-3.5 h-3.5" />
                     <span>管理后台 Dashboard</span>

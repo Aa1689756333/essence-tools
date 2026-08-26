@@ -43,7 +43,7 @@ export default function AdminDashboardPage() {
   if (loading) {
     return (
       <div className="flex items-center justify-center py-20 text-text-secondary">
-        <Loader2 className="w-6 h-6 animate-spin mr-2 text-purple-500" />
+        <Loader2 className="w-6 h-6 animate-spin mr-2 text-primary" />
         <span className="text-sm">正在加载仪表盘数据...</span>
       </div>
     );
@@ -86,7 +86,7 @@ export default function AdminDashboardPage() {
       value: stats.totalPointsIssued,
       desc: '签到与奖励积分发放',
       icon: Coins,
-      color: 'bg-purple-500/10 text-purple-500',
+      color: 'bg-primary/10 text-primary',
     },
   ];
 
@@ -137,7 +137,7 @@ export default function AdminDashboardPage() {
           </p>
           <Link
             href="/admin/settings"
-            className="text-xs font-semibold text-purple-600 dark:text-purple-400 hover:underline"
+            className="text-xs font-semibold text-primary dark:text-primary-light hover:underline"
           >
             去配置 SMTP →
           </Link>
@@ -164,7 +164,7 @@ export default function AdminDashboardPage() {
           </p>
           <Link
             href="/admin/settings"
-            className="text-xs font-semibold text-purple-600 dark:text-purple-400 hover:underline"
+            className="text-xs font-semibold text-primary dark:text-primary-light hover:underline"
           >
             修改注册策略 →
           </Link>
@@ -176,7 +176,7 @@ export default function AdminDashboardPage() {
             <ShieldCheck className="w-4 h-4 text-text-tertiary" />
           </div>
           <div className="flex items-center gap-2 mb-2">
-            <span className="text-xs font-bold text-purple-500 uppercase">
+            <span className="text-xs font-bold text-primary uppercase">
               {stats.emailMode === 'none' ? '未限制' : `${stats.emailMode} 模式`}
             </span>
           </div>
@@ -185,7 +185,7 @@ export default function AdminDashboardPage() {
           </p>
           <Link
             href="/admin/settings"
-            className="text-xs font-semibold text-purple-600 dark:text-purple-400 hover:underline"
+            className="text-xs font-semibold text-primary dark:text-primary-light hover:underline"
           >
             配置黑白名单 →
           </Link>
@@ -196,10 +196,7 @@ export default function AdminDashboardPage() {
       <div className="p-5 bg-card border border-border rounded-2xl">
         <div className="flex items-center justify-between mb-4 pb-3 border-b border-border">
           <h3 className="text-sm font-bold text-text">最新注册用户</h3>
-          <Link
-            href="/admin/users"
-            className="text-xs font-semibold text-purple-500 hover:underline"
-          >
+          <Link href="/admin/users" className="text-xs font-semibold text-primary hover:underline">
             查看全部用户 →
           </Link>
         </div>
@@ -231,7 +228,7 @@ export default function AdminDashboardPage() {
                     <span
                       className={`px-1.5 py-0.5 rounded text-[10px] font-bold ${
                         u.role === 'ADMIN'
-                          ? 'bg-purple-500/10 text-purple-600 dark:text-purple-400 border border-purple-500/20'
+                          ? 'bg-primary/10 text-primary dark:text-primary-light border border-primary/20'
                           : 'bg-bg-primary text-text-secondary border border-border'
                       }`}
                     >

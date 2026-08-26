@@ -52,7 +52,7 @@ export default function AdminLayout({ children }) {
       <div className="mb-6 flex flex-col md:flex-row md:items-center justify-between gap-4 pb-4 border-b border-border">
         <div>
           <div className="flex items-center gap-2">
-            <span className="p-1.5 rounded-lg bg-purple-500/10 text-purple-600 dark:text-purple-400">
+            <span className="p-1.5 rounded-lg bg-primary/10 text-primary dark:text-primary-light">
               <Shield className="w-5 h-5" />
             </span>
             <h1 className="text-xl font-bold text-text tracking-tight">管理后台控制中心</h1>
@@ -77,7 +77,7 @@ export default function AdminLayout({ children }) {
                     : 'text-text-secondary hover:text-text'
                 }`}
               >
-                <Icon className={`w-3.5 h-3.5 ${isActive ? 'text-purple-500' : ''}`} />
+                <Icon className={`w-3.5 h-3.5 ${isActive ? 'text-primary' : ''}`} />
                 <span>{tab.name}</span>
               </Link>
             );
