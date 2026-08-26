@@ -1,5 +1,17 @@
 export const tools = [
   {
+    id: 'avatar-generator',
+    name: '头像生成器',
+    desc: '一键生成高颜值 3D、像素风专属头像',
+    icon: 'User',
+    emoji: '🎲',
+    color: 'violet',
+    path: '/avatar-generator',
+    category: '设计',
+    tags: ['头像', '生图'],
+    clientOnly: true,
+  },
+  {
     id: 'novel-formatter',
     name: '小说排版器',
     desc: '一键规范化标点、间距、段落，29 条排版规则',
@@ -37,7 +49,7 @@ export const tools = [
   },
 ];
 
-export const categories = ['全部', ...new Set(tools.map(t => t.category))];
+export const categories = ['全部', ...new Set(tools.map((t) => t.category))];
 
 export function getToolsByCategory() {
   const map = {};

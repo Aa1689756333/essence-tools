@@ -1,23 +1,5 @@
 import { Avatar, Style } from '@dicebear/core';
-import clayJson from '@dicebear/styles/clay.json' with { type: 'json' };
-import crittersJson from '@dicebear/styles/critters.json' with { type: 'json' };
-import funEmojiJson from '@dicebear/styles/fun-emoji.json' with { type: 'json' };
-import voxelArtJson from '@dicebear/styles/voxel-art.json' with { type: 'json' };
-import voxelBotJson from '@dicebear/styles/voxel-bot.json' with { type: 'json' };
-import glyphsJson from '@dicebear/styles/glyphs.json' with { type: 'json' };
-import identiconJson from '@dicebear/styles/identicon.json' with { type: 'json' };
-import initialFaceJson from '@dicebear/styles/initial-face.json' with { type: 'json' };
-
-const styleMap = {
-  clay: { style: clayJson, options: {} },
-  critters: { style: crittersJson, options: {} },
-  'fun-emoji': { style: funEmojiJson, options: {} },
-  'voxel-art': { style: voxelArtJson, options: {} },
-  'voxel-bot': { style: voxelBotJson, options: {} },
-  glyphs: { style: glyphsJson, options: {} },
-  identicon: { style: identiconJson, options: {} },
-  'initial-face': { style: initialFaceJson, options: {} },
-};
+import { ALL_AVATAR_STYLES } from '@/lib/all-avatar-styles';
 
 export async function GET(request, { params }) {
   let { style, seed } = await params;
@@ -27,20 +9,32 @@ export async function GET(request, { params }) {
   }
 
   // 默认回退
-  const selectedStyle = styleMap[style] || styleMap['fun-emoji'];
+  const selectedStyleJson = ALL_AVATAR_STYLES[style] || ALL_AVATAR_STYLES['fun-emoji'];
 
   // 如果传进来的是带后缀的，比如 seed.svg，去掉后缀
   if (seed.endsWith('.svg')) {
     seed = seed.replace('.svg', '');
   }
 
-  // 生成头像
-  const dicebearStyle = new Style(selectedStyle.style);
-  const avatar = new Avatar(dicebearStyle, {
+  const url = new URL(request.url);
+  const bg = url.searchParams.get('bg');
+
+  const options = {
     seed: seed,
-    size: 128, // 输出尺寸
-    ...selectedStyle.options, // 附加当前风格的特定参数
-  });
+    size: 256, // 提高输出尺寸，保证生成器清晰度
+  };
+
+  // 如果有特定的样式选项，可以在这里扩展，但默认 v10 靠参数
+  if (bg && bg !== 'transparent') {
+    options.backgroundColor = [bg.replace('#', '')];
+  } else {
+    // 强制透明背景，覆盖某些样式默认会随机生成背景色的行为
+    options.backgroundColor = [];
+  }
+
+  // 生成头像
+  const dicebearStyle = new Style(selectedStyleJson);
+  const avatar = new Avatar(dicebearStyle, options);
 
   const svg = avatar.toString();
 
