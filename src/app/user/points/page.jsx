@@ -1,7 +1,7 @@
 'use client';
 
 import { useCallback, useEffect, useState } from 'react';
-import { Award, CalendarDays, ChevronLeft, ChevronRight, ChevronDown, Check, Coins, Flame, Loader2, RefreshCw } from 'lucide-react';
+import { Award, CalendarDays, ChevronLeft, ChevronRight, ChevronDown, Check, Coins, Loader2, RefreshCw } from 'lucide-react';
 import { useAuth } from '@/context/AuthContext';
 
 const typeOptions = [
@@ -72,7 +72,6 @@ function CustomSelect({ options, value, onChange }) {
 
 export default function UserPointsPage() {
   const { user, openCheckIn } = useAuth();
-  const [checkInInfo, setCheckInInfo] = useState(null);
   const [pointsData, setPointsData] = useState(null);
   const [type, setType] = useState('');
   const [page, setPage] = useState(1);
@@ -117,7 +116,7 @@ export default function UserPointsPage() {
   return (
     <div className="space-y-6">
       <div>
-        <h2 className="text-lg font-bold text-text">积分与签到记录</h2>
+        <h2 className="text-lg font-bold text-text">积分记录</h2>
         </div>
 
       {error && (
@@ -127,12 +126,11 @@ export default function UserPointsPage() {
         </div>
       )}
 
-      <section className="grid grid-cols-2 gap-3 md:grid-cols-4">
+      <section className="grid grid-cols-1 gap-3 sm:grid-cols-3">
         {[
           { label: '当前余额', value: pointsData?.summary?.balance ?? user?.points ?? 0, icon: Coins, color: 'text-amber-500' },
           { label: '本月获得', value: pointsData?.summary?.monthEarned ?? 0, icon: CalendarDays, color: 'text-sky-500' },
           { label: '累计获得', value: pointsData?.summary?.totalEarned ?? 0, icon: Award, color: 'text-emerald-500' },
-          { label: '连续签到', value: `${checkInInfo?.continuousCheckIn ?? user?.continuousCheckIn ?? 0} 天`, icon: Flame, color: 'text-orange-500' },
         ].map((stat) => {
           const Icon = stat.icon;
           return <div key={stat.label} className="rounded-2xl border border-border bg-card p-4"><div className="flex items-center justify-between gap-2"><span className="text-xs text-text-secondary">{stat.label}</span><Icon className={`h-4 w-4 ${stat.color}`} aria-hidden="true" /></div><p className="mt-3 text-xl font-bold text-text">{stat.value}</p></div>;
