@@ -1,4 +1,7 @@
 .editor-content {
+  cursor: text;
+  display: flex;
+  flex-direction: column;
   min-height: 300px;
   max-height: 70vh;
   overflow-y: auto;
@@ -23,12 +26,18 @@
 
 @media (min-width: 640px) {
   .editor-content {
+    cursor: text;
+    display: flex;
+    flex-direction: column;
     padding: 24px 32px;
   }
 }
 
 @media (min-width: 1024px) {
   .editor-content {
+    cursor: text;
+    display: flex;
+    flex-direction: column;
     padding: 32px 40px;
   }
 }
@@ -143,3 +152,8 @@
   tab-size: 2;
 }
 
+.editor-content .ProseMirror {
+  flex: 1;
+  outline: none;
+  min-height: 100%;
+}
