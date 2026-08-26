@@ -14,7 +14,6 @@ import {
   Coins,
   ChevronDown,
   Shield,
-  ShieldCheck,
   LogOut,
   UserRound,
 } from 'lucide-react';
@@ -223,24 +222,6 @@ export default function Topbar() {
                 >
                   <UserRound className="w-3.5 h-3.5 text-blue-500" />
                   <span>个人中心</span>
-                </Link>
-
-                <Link
-                  href="/user/points"
-                  onClick={() => setShowUserMenu(false)}
-                  className="w-full text-left px-2.5 py-1.5 rounded-lg text-xs font-medium text-text-secondary hover:text-text hover:bg-bg-primary flex items-center gap-2 cursor-pointer transition-colors"
-                >
-                  <Coins className="w-3.5 h-3.5 text-amber-500" />
-                  <span>我的积分</span>
-                </Link>
-
-                <Link
-                  href="/user/security"
-                  onClick={() => setShowUserMenu(false)}
-                  className="w-full text-left px-2.5 py-1.5 rounded-lg text-xs font-medium text-text-secondary hover:text-text hover:bg-bg-primary flex items-center gap-2 cursor-pointer transition-colors"
-                >
-                  <ShieldCheck className="w-3.5 h-3.5 text-emerald-500" />
-                  <span>账号安全</span>
                 </Link>
 
                 {user.role === 'ADMIN' && (
