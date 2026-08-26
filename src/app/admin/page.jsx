@@ -1,9 +1,19 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import { Users, UserPlus, Flame, Coins, Mail, ShieldCheck, CheckCircle2, XCircle, Loader2 } from 'lucide-react';
+import {
+  Users,
+  UserPlus,
+  Flame,
+  Coins,
+  Mail,
+  ShieldCheck,
+  CheckCircle2,
+  XCircle,
+  Loader2,
+} from 'lucide-react';
 import Link from 'next/link';
-
+import { getUserAvatarUrl } from '@/lib/avatar';
 export default function AdminDashboardPage() {
   const [loading, setLoading] = useState(true);
   const [data, setData] = useState(null);
@@ -87,7 +97,10 @@ export default function AdminDashboardPage() {
         {statCards.map((card, idx) => {
           const Icon = card.icon;
           return (
-            <div key={idx} className="p-5 bg-card border border-border rounded-2xl shadow-xs relative overflow-hidden">
+            <div
+              key={idx}
+              className="p-5 bg-card border border-border rounded-2xl shadow-xs relative overflow-hidden"
+            >
               <div className="flex items-center justify-between mb-3">
                 <span className="text-xs font-semibold text-text-secondary">{card.title}</span>
                 <div className={`p-2 rounded-xl ${card.color}`}>
@@ -183,7 +196,10 @@ export default function AdminDashboardPage() {
       <div className="p-5 bg-card border border-border rounded-2xl">
         <div className="flex items-center justify-between mb-4 pb-3 border-b border-border">
           <h3 className="text-sm font-bold text-text">最新注册用户</h3>
-          <Link href="/admin/users" className="text-xs font-semibold text-purple-500 hover:underline">
+          <Link
+            href="/admin/users"
+            className="text-xs font-semibold text-purple-500 hover:underline"
+          >
             查看全部用户 →
           </Link>
         </div>
@@ -203,7 +219,11 @@ export default function AdminDashboardPage() {
               {recentUsers.map((u) => (
                 <tr key={u.id} className="hover:bg-bg-primary/50 transition-colors">
                   <td className="py-2.5 font-semibold text-text flex items-center gap-2">
-                    <img src={`/api/avatar/${u.id}`} alt="Avatar" className="w-6 h-6 rounded-md object-cover bg-bg-primary ring-1 ring-border/50" />
+                    <img
+                      src={getUserAvatarUrl(u)}
+                      alt="Avatar"
+                      className="w-6 h-6 rounded-md object-cover bg-bg-primary ring-1 ring-border/50"
+                    />
                     <span>{u.nickname}</span>
                   </td>
                   <td className="py-2.5 text-text-secondary">{u.email}</td>
@@ -219,7 +239,9 @@ export default function AdminDashboardPage() {
                     </span>
                   </td>
                   <td className="py-2.5 font-bold text-amber-500">{u.points}</td>
-                  <td className="py-2.5 text-text-tertiary">{new Date(u.createdAt).toLocaleDateString()}</td>
+                  <td className="py-2.5 text-text-tertiary">
+                    {new Date(u.createdAt).toLocaleDateString()}
+                  </td>
                 </tr>
               ))}
             </tbody>

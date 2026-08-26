@@ -1,6 +1,6 @@
 import { NextResponse } from 'next/server';
 import { getRequestUser } from '@/lib/request-user';
-import {  } from '@/lib/auth';
+import {} from '@/lib/auth';
 import db from '@/lib/db';
 import { z } from 'zod';
 
@@ -23,10 +23,18 @@ const deleteAccountSchema = z.object({
   password: z.string().min(1, '请输入密码以确认注销'),
 });
 
+// 更新头像 schema
+const updateAvatarSchema = z.object({
+  action: z.literal('update_avatar'),
+  avatarStyle: z.string().min(1),
+  avatarSeed: z.string().min(1),
+});
+
 const profileSchema = z.discriminatedUnion('action', [
   updateNicknameSchema,
   updatePasswordSchema,
   deleteAccountSchema,
+  updateAvatarSchema,
 ]);
 
 // GET: 获取当前用户信息
@@ -53,18 +61,15 @@ export async function PATCH(request) {
     }
 
     const body = await request.json();
-    
+
     // 验证请求体
     const validation = profileSchema.safeParse(body);
     if (!validation.success) {
-      const errors = validation.error.errors.map(e => ({
+      const errors = validation.error.errors.map((e) => ({
         field: e.path.join('.'),
         message: e.message,
       }));
-      return NextResponse.json(
-        { error: '请求参数错误', details: errors },
-        { status: 400 }
-      );
+      return NextResponse.json({ error: '请求参数错误', details: errors }, { status: 400 });
     }
 
     const data = validation.data;
@@ -80,10 +85,7 @@ export async function PATCH(request) {
       });
 
       if (existingUser) {
-        return NextResponse.json(
-          { error: '该昵称已被使用' },
-          { status: 409 }
-        );
+        return NextResponse.json({ error: '该昵称已被使用' }, { status: 409 });
       }
 
       const updatedUser = await db.user.update({
@@ -94,6 +96,8 @@ export async function PATCH(request) {
           email: true,
           nickname: true,
           avatar: true,
+          avatarStyle: true,
+          avatarSeed: true,
           role: true,
           status: true,
           points: true,
@@ -109,15 +113,42 @@ export async function PATCH(request) {
       });
     }
 
+    // 更新头像
+    if (data.action === 'update_avatar') {
+      const updatedUser = await db.user.update({
+        where: { id: user.id },
+        data: {
+          avatarStyle: data.avatarStyle,
+          avatarSeed: data.avatarSeed,
+        },
+        select: {
+          id: true,
+          email: true,
+          nickname: true,
+          avatar: true,
+          avatarStyle: true,
+          avatarSeed: true,
+          role: true,
+          status: true,
+          points: true,
+          continuousCheckIn: true,
+          lastCheckInDate: true,
+          createdAt: true,
+        },
+      });
+
+      return NextResponse.json({
+        message: '头像更新成功',
+        user: updatedUser,
+      });
+    }
+
     // 更新密码
     if (data.action === 'update_password') {
       // 验证当前密码
       const isValid = await verifyPassword(data.currentPassword, user.passwordHash);
       if (!isValid) {
-        return NextResponse.json(
-          { error: '当前密码错误' },
-          { status: 401 }
-        );
+        return NextResponse.json({ error: '当前密码错误' }, { status: 401 });
       }
 
       // 哈希新密码
@@ -138,10 +169,7 @@ export async function PATCH(request) {
       // 验证密码
       const isValid = await verifyPassword(data.password, user.passwordHash);
       if (!isValid) {
-        return NextResponse.json(
-          { error: '密码错误' },
-          { status: 401 }
-        );
+        return NextResponse.json({ error: '密码错误' }, { status: 401 });
       }
 
       // 检查是否是唯一管理员
@@ -150,10 +178,7 @@ export async function PATCH(request) {
           where: { role: 'ADMIN' },
         });
         if (adminCount === 1) {
-          return NextResponse.json(
-            { error: '不能注销系统唯一管理员的账号' },
-            { status: 403 }
-          );
+          return NextResponse.json({ error: '不能注销系统唯一管理员的账号' }, { status: 403 });
         }
       }
 
@@ -177,10 +202,7 @@ export async function PATCH(request) {
       return response;
     }
 
-    return NextResponse.json(
-      { error: '不支持的操作' },
-      { status: 400 }
-    );
+    return NextResponse.json({ error: '不支持的操作' }, { status: 400 });
   } catch (error) {
     console.error('PATCH /api/user/profile error:', error);
     return NextResponse.json({ error: '更新用户资料失败' }, { status: 500 });

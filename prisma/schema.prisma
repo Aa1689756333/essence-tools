@@ -18,6 +18,8 @@ model User {
   passwordHash       String
   nickname           String
   avatar             String?
+  avatarStyle        String?
+  avatarSeed         String?
   role               String             @default("USER")
   status             String             @default("ACTIVE")
   points             Int                @default(0)

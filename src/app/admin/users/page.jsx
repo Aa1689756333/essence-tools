@@ -1,9 +1,19 @@
 'use client';
 
 import { useState, useEffect, useCallback } from 'react';
-import { Search, Shield, Ban, CheckCircle, Coins, ChevronLeft, ChevronRight, Loader2, X } from 'lucide-react';
+import {
+  Search,
+  Shield,
+  Ban,
+  CheckCircle,
+  Coins,
+  ChevronLeft,
+  ChevronRight,
+  Loader2,
+  X,
+} from 'lucide-react';
 import { useAuth } from '@/context/AuthContext';
-
+import { getUserAvatarUrl } from '@/lib/avatar';
 export default function AdminUsersPage() {
   const { user: currentUser } = useAuth();
   const [users, setUsers] = useState([]);
@@ -20,28 +30,31 @@ export default function AdminUsersPage() {
   const [adjustReason, setAdjustReason] = useState('');
   const [submittingPoints, setSubmittingPoints] = useState(false);
 
-  const fetchUsers = useCallback(async (p = 1) => {
-    try {
-      setLoading(true);
-      const params = new URLSearchParams({
-        page: String(p),
-        limit: '10',
-        q: query,
-        role: roleFilter,
-        status: statusFilter,
-      });
+  const fetchUsers = useCallback(
+    async (p = 1) => {
+      try {
+        setLoading(true);
+        const params = new URLSearchParams({
+          page: String(p),
+          limit: '10',
+          q: query,
+          role: roleFilter,
+          status: statusFilter,
+        });
 
-      const res = await fetch(`/api/admin/users?${params.toString()}`);
-      if (!res.ok) throw new Error('获取用户列表失败');
-      const data = await res.json();
-      setUsers(data.users || []);
-      setPagination(data.pagination || { page: 1, limit: 10, total: 0, totalPages: 1 });
-    } catch (err) {
-      setMsg({ type: 'error', text: err.message });
-    } finally {
-      setLoading(false);
-    }
-  }, [query, roleFilter, statusFilter]);
+        const res = await fetch(`/api/admin/users?${params.toString()}`);
+        if (!res.ok) throw new Error('获取用户列表失败');
+        const data = await res.json();
+        setUsers(data.users || []);
+        setPagination(data.pagination || { page: 1, limit: 10, total: 0, totalPages: 1 });
+      } catch (err) {
+        setMsg({ type: 'error', text: err.message });
+      } finally {
+        setLoading(false);
+      }
+    },
+    [query, roleFilter, statusFilter]
+  );
 
   useEffect(() => {
     fetchUsers(1);
@@ -165,7 +178,11 @@ export default function AdminUsersPage() {
                   <tr key={u.id} className="hover:bg-bg-primary/40 transition-colors">
                     <td className="py-3 px-4">
                       <div className="flex items-center gap-2.5">
-                        <img src={`/api/avatar/${u.id}`} alt="Avatar" className="w-8 h-8 rounded-lg object-cover bg-bg-primary ring-1 ring-border/50" />
+                        <img
+                          src={getUserAvatarUrl(u)}
+                          alt="Avatar"
+                          className="w-8 h-8 rounded-lg object-cover bg-bg-primary ring-1 ring-border/50"
+                        />
                         <div>
                           <div className="font-bold text-text">{u.nickname}</div>
                           <div className="text-[11px] text-text-tertiary">{u.email}</div>
@@ -207,7 +224,11 @@ export default function AdminUsersPage() {
                       <div className="flex items-center justify-end gap-1.5">
                         {/* 调整积分 */}
                         <button
-                          onClick={() => { setPointsModalUser(u); setPointsDelta('5'); setAdjustReason(''); }}
+                          onClick={() => {
+                            setPointsModalUser(u);
+                            setPointsDelta('5');
+                            setAdjustReason('');
+                          }}
                           className="px-2 py-1 rounded bg-amber-500/10 text-amber-600 dark:text-amber-400 hover:bg-amber-500/20 font-medium cursor-pointer transition-colors flex items-center gap-1"
                           title="手动调整积分"
                         >
@@ -217,7 +238,11 @@ export default function AdminUsersPage() {
                         {/* 角色设为/降级 - 当前用户不能降级自己 */}
                         {!(u.id === currentUser?.id && u.role === 'ADMIN') && (
                           <button
-                            onClick={() => handleAction(u.id, 'update_role', { role: u.role === 'ADMIN' ? 'USER' : 'ADMIN' })}
+                            onClick={() =>
+                              handleAction(u.id, 'update_role', {
+                                role: u.role === 'ADMIN' ? 'USER' : 'ADMIN',
+                              })
+                            }
                             className="px-2 py-1 rounded bg-purple-500/10 text-purple-600 dark:text-purple-400 hover:bg-purple-500/20 font-medium cursor-pointer transition-colors flex items-center gap-1"
                             title={u.role === 'ADMIN' ? '降级为 USER' : '提升为 ADMIN'}
                           >
@@ -229,14 +254,22 @@ export default function AdminUsersPage() {
                         {/* 冻结 / 解封 - 当前用户不能冻结自己 */}
                         {!(u.id === currentUser?.id && u.status === 'ACTIVE') && (
                           <button
-                            onClick={() => handleAction(u.id, 'update_status', { status: u.status === 'ACTIVE' ? 'BANNED' : 'ACTIVE' })}
+                            onClick={() =>
+                              handleAction(u.id, 'update_status', {
+                                status: u.status === 'ACTIVE' ? 'BANNED' : 'ACTIVE',
+                              })
+                            }
                             className={`px-2 py-1 rounded font-medium cursor-pointer transition-colors flex items-center gap-1 ${
                               u.status === 'ACTIVE'
                                 ? 'bg-rose-500/10 text-rose-600 dark:text-rose-400 hover:bg-rose-500/20'
                                 : 'bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 hover:bg-emerald-500/20'
                             }`}
                           >
-                            {u.status === 'ACTIVE' ? <Ban className="w-3 h-3" /> : <CheckCircle className="w-3 h-3" />}
+                            {u.status === 'ACTIVE' ? (
+                              <Ban className="w-3 h-3" />
+                            ) : (
+                              <CheckCircle className="w-3 h-3" />
+                            )}
                             {u.status === 'ACTIVE' ? '冻结' : '解封'}
                           </button>
                         )}
@@ -252,7 +285,8 @@ export default function AdminUsersPage() {
         {/* 分页导航 */}
         <div className="p-4 border-t border-border flex items-center justify-between text-xs text-text-secondary">
           <div>
-            共 <span className="font-bold text-text">{pagination.total}</span> 条记录，页码 {pagination.page} / {pagination.totalPages}
+            共 <span className="font-bold text-text">{pagination.total}</span> 条记录，页码{' '}
+            {pagination.page} / {pagination.totalPages}
           </div>
 
           <div className="flex items-center gap-1">
@@ -287,7 +321,8 @@ export default function AdminUsersPage() {
 
             <h3 className="text-base font-bold text-text mb-1">手动调整用户积分</h3>
             <p className="text-xs text-text-secondary mb-4">
-              目标用户：<span className="font-semibold text-text">{pointsModalUser.nickname}</span> ({pointsModalUser.email})
+              目标用户：<span className="font-semibold text-text">{pointsModalUser.nickname}</span>{' '}
+              ({pointsModalUser.email})
             </p>
 
             <form onSubmit={handleAdjustPointsSubmit} className="space-y-4">
@@ -306,7 +341,9 @@ export default function AdminUsersPage() {
               </div>
 
               <div>
-                <label className="block text-xs font-medium text-text-secondary mb-1">变动原因 / 备注</label>
+                <label className="block text-xs font-medium text-text-secondary mb-1">
+                  变动原因 / 备注
+                </label>
                 <input
                   type="text"
                   value={adjustReason}

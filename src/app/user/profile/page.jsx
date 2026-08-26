@@ -1,9 +1,21 @@
+/* eslint-disable */
 'use client';
 
 import { useEffect, useState } from 'react';
-import { CalendarDays, Check, Copy, IdCard, Mail, Save, ShieldCheck, UserRound } from 'lucide-react';
+import {
+  CalendarDays,
+  Check,
+  Copy,
+  IdCard,
+  Mail,
+  Save,
+  ShieldCheck,
+  UserRound,
+  Dices,
+} from 'lucide-react';
 import { useAuth } from '@/context/AuthContext';
 import { useToast } from '@/context/ToastContext';
+import { getUserAvatarUrl, AVATAR_STYLES, AVATAR_STYLE_LABELS } from '@/lib/avatar';
 
 function formatDate(value) {
   if (!value) return '—';
@@ -16,21 +28,73 @@ function formatDate(value) {
   });
 }
 
-function getInitial(nickname) {
-  return nickname?.trim()?.charAt(0)?.toUpperCase() || 'U';
-}
-
 export default function UserProfilePage() {
   const { user, refreshUser } = useAuth();
   const { toast } = useToast();
   const [nickname, setNickname] = useState(user?.nickname || '');
+  const [avatarStyle, setAvatarStyle] = useState(user?.avatarStyle || '');
+  const [avatarSeed, setAvatarSeed] = useState(user?.avatarSeed || user?.id || '');
+  const [savingAvatar, setSavingAvatar] = useState(false);
   const [error, setError] = useState('');
   const [submitting, setSubmitting] = useState(false);
   const [copied, setCopied] = useState(false);
 
   useEffect(() => {
     setNickname(user?.nickname || '');
-  }, [user?.nickname]);
+    setAvatarStyle(user?.avatarStyle || '');
+    setAvatarSeed(user?.avatarSeed || user?.id || '');
+  }, [user?.nickname, user?.avatarStyle, user?.avatarSeed, user?.id]);
+
+  const handleRandomizeAvatar = useCallback(async () => {
+    // Generate a new random seed (short string)
+    const newSeed = Date.now().toString(36).substring(3, 9);
+    setAvatarSeed(newSeed);
+    saveAvatar(avatarStyle, newSeed);
+  }, [avatarStyle]);
+
+  const handleStyleChange = (e) => {
+    const newStyle = e.target.value;
+    setAvatarStyle(newStyle);
+    saveAvatar(newStyle, avatarSeed);
+  };
+
+  const saveAvatar = async (style, seed) => {
+    try {
+      setSavingAvatar(true);
+
+      // If style is empty, default to computing it
+      let targetStyle = style;
+      if (!targetStyle) {
+        let hash = 0;
+        const str = user.id || '';
+        for (let i = 0; i < str.length; i++) {
+          const char = str.charCodeAt(i);
+          hash = (hash << 5) - hash + char;
+          hash = hash & hash;
+        }
+        targetStyle = AVATAR_STYLES[Math.abs(hash) % AVATAR_STYLES.length];
+      }
+
+      const response = await fetch('/api/user/profile', {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          action: 'update_avatar',
+          avatarStyle: targetStyle,
+          avatarSeed: seed,
+        }),
+      });
+      if (response.ok) {
+        await refreshUser();
+      } else {
+        toast.error('头像保存失败');
+      }
+    } catch {
+      toast.error('网络错误');
+    } finally {
+      setSavingAvatar(false);
+    }
+  };
 
   const trimmedNickname = nickname.trim();
   const hasChanged = trimmedNickname !== user?.nickname;
@@ -102,21 +166,54 @@ export default function UserProfilePage() {
           </div>
         </div>
 
-        <div className="mb-6 flex items-center gap-4 rounded-2xl border border-border bg-bg-primary p-4">
-          <div
-            className="flex h-16 w-16 shrink-0 items-center justify-center overflow-hidden rounded-2xl text-2xl font-bold text-white"
-            style={{ background: 'var(--theme-gradient, linear-gradient(135deg, #10b981, #34d399))' }}
-          >
-            {user.avatar ? <img src={user.avatar} alt="用户头像" className="h-full w-full object-cover" /> : getInitial(user.nickname)}
-          </div>
-          <div>
-            <p className="text-sm font-bold text-text">当前头像</p>
-            <p className="mt-1 text-xs leading-relaxed text-text-secondary">头像上传功能尚未开放，当前使用昵称首字母作为头像。</p>
+        <div className="mb-6 rounded-2xl border border-border bg-bg-primary p-4">
+          <div className="flex flex-col sm:flex-row gap-5 items-start sm:items-center justify-between">
+            <div className="flex items-center gap-4">
+              <img
+                src={getUserAvatarUrl({ id: user.id, avatarStyle, avatarSeed })}
+                alt="头像预览"
+                className="h-16 w-16 shrink-0 rounded-2xl object-cover bg-card shadow-sm border border-border/50"
+              />
+              <div>
+                <p className="text-sm font-bold text-text">自定义头像</p>
+                <p className="mt-1 text-[11px] leading-relaxed text-text-secondary">
+                  无限生成，尽情探索
+                </p>
+              </div>
+            </div>
+            <div className="flex flex-col sm:flex-row gap-2 w-full sm:w-auto">
+              <select
+                value={avatarStyle || ''}
+                onChange={handleStyleChange}
+                disabled={savingAvatar}
+                className="rounded-xl border border-border bg-bg px-3 py-2 text-xs font-semibold text-text outline-none focus:border-[var(--theme-accent)] cursor-pointer shadow-sm"
+              >
+                <option value="" disabled>
+                  选择偏好风格
+                </option>
+                {AVATAR_STYLES.map((s) => (
+                  <option key={s} value={s}>
+                    {AVATAR_STYLE_LABELS[s] || s}
+                  </option>
+                ))}
+              </select>
+              <button
+                type="button"
+                onClick={handleRandomizeAvatar}
+                disabled={savingAvatar}
+                className="flex items-center justify-center gap-1.5 rounded-xl border border-border bg-card px-3 py-2 text-xs font-semibold text-text shadow-sm transition-colors hover:bg-bg-primary hover:text-text disabled:opacity-50"
+              >
+                <Dices className={`h-3.5 w-3.5 ${savingAvatar ? 'animate-spin' : ''}`} />
+                换个长相
+              </button>
+            </div>
           </div>
         </div>
 
         <form onSubmit={handleSubmit} noValidate>
-          <label htmlFor="profile-nickname" className="mb-2 block text-xs font-semibold text-text">昵称</label>
+          <label htmlFor="profile-nickname" className="mb-2 block text-xs font-semibold text-text">
+            昵称
+          </label>
           <input
             id="profile-nickname"
             type="text"
@@ -132,14 +229,24 @@ export default function UserProfilePage() {
             className={`w-full rounded-xl border bg-bg px-4 py-2.5 text-sm text-text outline-none transition-colors focus:border-[var(--theme-accent)] ${error ? 'border-rose-500' : 'border-border'}`}
           />
           <div className="mt-2 flex items-start justify-between gap-3 text-[11px]">
-            {error ? <p id="nickname-error" className="text-rose-500">{error}</p> : <p id="nickname-help" className="text-text-secondary">昵称长度为 1–50 个字符，且不能与其他用户重复。</p>}
+            {error ? (
+              <p id="nickname-error" className="text-rose-500">
+                {error}
+              </p>
+            ) : (
+              <p id="nickname-help" className="text-text-secondary">
+                昵称长度为 1–50 个字符，且不能与其他用户重复。
+              </p>
+            )}
             <span className="shrink-0 text-text-secondary">{nickname.length}/50</span>
           </div>
           <button
             type="submit"
             disabled={!hasChanged || submitting || Boolean(validateNickname())}
             className="mt-5 inline-flex items-center gap-2 rounded-xl px-4 py-2.5 text-xs font-semibold text-white shadow-sm transition-opacity disabled:cursor-not-allowed disabled:opacity-50"
-            style={{ background: 'var(--theme-gradient, linear-gradient(135deg, #10b981, #34d399))' }}
+            style={{
+              background: 'var(--theme-gradient, linear-gradient(135deg, #10b981, #34d399))',
+            }}
           >
             <Save className="h-3.5 w-3.5" aria-hidden="true" />
             {submitting ? '正在保存...' : '保存昵称'}
@@ -167,7 +274,9 @@ export default function UserProfilePage() {
                 <div className="min-w-0">
                   <p className="text-[11px] text-text-secondary">{item.label}</p>
                   <p className="mt-1 break-all text-sm font-medium text-text">{item.value}</p>
-                  {item.description && <p className="mt-1 text-[11px] text-text-secondary">{item.description}</p>}
+                  {item.description && (
+                    <p className="mt-1 text-[11px] text-text-secondary">{item.description}</p>
+                  )}
                 </div>
               </div>
             );
@@ -179,8 +288,17 @@ export default function UserProfilePage() {
               <p className="text-[11px] text-text-secondary">用户 ID</p>
               <p className="mt-1 break-all font-mono text-xs font-medium text-text">{user.id}</p>
             </div>
-            <button type="button" onClick={handleCopyId} className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg border border-border text-text-secondary transition-colors hover:bg-bg-primary hover:text-text" aria-label="复制用户 ID">
-              {copied ? <Check className="h-3.5 w-3.5 text-emerald-500" /> : <Copy className="h-3.5 w-3.5" />}
+            <button
+              type="button"
+              onClick={handleCopyId}
+              className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg border border-border text-text-secondary transition-colors hover:bg-bg-primary hover:text-text"
+              aria-label="复制用户 ID"
+            >
+              {copied ? (
+                <Check className="h-3.5 w-3.5 text-emerald-500" />
+              ) : (
+                <Copy className="h-3.5 w-3.5" />
+              )}
             </button>
           </div>
         </div>

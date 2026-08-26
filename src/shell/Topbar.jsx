@@ -3,14 +3,28 @@
 import { useState, useRef, useEffect, useCallback } from 'react';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
-import { Search, Palette, Check, Menu, Sun, Moon, Flame, Coins, ChevronDown, Shield, ShieldCheck, LogOut, UserRound } from 'lucide-react';
+import {
+  Search,
+  Palette,
+  Check,
+  Menu,
+  Sun,
+  Moon,
+  Flame,
+  Coins,
+  ChevronDown,
+  Shield,
+  ShieldCheck,
+  LogOut,
+  UserRound,
+} from 'lucide-react';
 import { tools } from '@/tools/registry';
 import { useTheme } from './ThemeProvider';
 import { useSidebar } from './useSidebar';
 import { useAuth } from '@/context/AuthContext';
 import SearchModal from '@/components/SearchModal';
 import { useClickOutside } from '@/hooks/useClickOutside';
-
+import { getUserAvatarUrl } from '@/lib/avatar';
 export default function Topbar() {
   const pathname = usePathname();
   const { theme, themes, setTheme, isDark, setIsDark } = useTheme();
@@ -24,22 +38,29 @@ export default function Topbar() {
   const pickerButtonRef = useRef(null);
   const userMenuRef = useRef(null);
 
-  const currentTool = tools.find(t => t.path === pathname);
+  const currentTool = tools.find((t) => t.path === pathname);
   const currentPageName = currentTool ? currentTool.name : '工具总览';
 
   const today = new Date();
   const todayStr = `${today.getFullYear()}-${String(today.getMonth() + 1).padStart(2, '0')}-${String(today.getDate()).padStart(2, '0')}`;
 
-  useClickOutside(userMenuRef, useCallback(() => setShowUserMenu(false), []));
+  useClickOutside(
+    userMenuRef,
+    useCallback(() => setShowUserMenu(false), [])
+  );
 
-  useClickOutside(pickerRef, useCallback(() => setShowPicker(false), []), showPicker);
+  useClickOutside(
+    pickerRef,
+    useCallback(() => setShowPicker(false), []),
+    showPicker
+  );
 
   useEffect(() => {
     if (showPicker && pickerButtonRef.current) {
       const rect = pickerButtonRef.current.getBoundingClientRect();
       const viewportWidth = window.innerWidth;
       const pickerWidth = 180;
-      
+
       if (rect.right + pickerWidth > viewportWidth) {
         setPickerDirection('left');
       } else {
@@ -63,7 +84,11 @@ export default function Topbar() {
 
   return (
     <header className="h-[52px] px-4 sm:px-5 md:px-6 lg:px-8 flex items-center justify-between border-b border-border bg-bg-sidebar shrink-0">
-      <div className="flex items-center gap-2 text-[13px]" role="navigation" aria-label="面包屑导航">
+      <div
+        className="flex items-center gap-2 text-[13px]"
+        role="navigation"
+        aria-label="面包屑导航"
+      >
         {isMobile && (
           <button
             onClick={toggle}
@@ -95,7 +120,9 @@ export default function Topbar() {
             className="h-[34px] px-3 rounded-lg border border-border bg-card flex items-center gap-1.5 text-xs font-semibold text-text hover:bg-bg-primary transition-all duration-150 cursor-pointer shadow-xs"
             aria-label="每日签到打卡"
           >
-            <Flame className={`w-3.5 h-3.5 ${user.lastCheckInDate === todayStr ? 'text-text-tertiary' : 'text-emerald-500 animate-pulse'}`} />
+            <Flame
+              className={`w-3.5 h-3.5 ${user.lastCheckInDate === todayStr ? 'text-text-tertiary' : 'text-emerald-500 animate-pulse'}`}
+            />
             <span className="hidden sm:inline">
               {user.lastCheckInDate === todayStr ? '已签到' : '每日签到'}
             </span>
@@ -110,7 +137,7 @@ export default function Topbar() {
         <button
           onClick={() => setIsDark(!isDark)}
           className="w-[34px] h-[34px] rounded-lg border border-border bg-card flex items-center justify-center text-text-secondary hover:bg-bg-primary transition-all duration-150 cursor-pointer"
-          aria-label={isDark ? "切换为亮色模式" : "切换为暗黑模式"}
+          aria-label={isDark ? '切换为亮色模式' : '切换为暗黑模式'}
         >
           {isDark ? <Sun className="w-4 h-4 text-amber-500" /> : <Moon className="w-4 h-4" />}
         </button>
@@ -129,13 +156,22 @@ export default function Topbar() {
           </button>
 
           {showPicker && (
-            <div className={`absolute top-[42px] w-[180px] bg-card border border-border rounded-xl shadow-[0_4px_16px_rgba(0,0,0,0.08)] p-3 z-50 ${pickerDirection === 'left' ? 'left-0' : 'right-0'}`} role="dialog" aria-label="主题色面板">
-              <div className="text-[11px] font-semibold text-text-secondary tracking-wide mb-2.5 px-0.5">主题色</div>
+            <div
+              className={`absolute top-[42px] w-[180px] bg-card border border-border rounded-xl shadow-[0_4px_16px_rgba(0,0,0,0.08)] p-3 z-50 ${pickerDirection === 'left' ? 'left-0' : 'right-0'}`}
+              role="dialog"
+              aria-label="主题色面板"
+            >
+              <div className="text-[11px] font-semibold text-text-secondary tracking-wide mb-2.5 px-0.5">
+                主题色
+              </div>
               <div className="flex flex-wrap gap-2">
-                {themes.map(t => (
+                {themes.map((t) => (
                   <button
                     key={t.id}
-                    onClick={() => { setTheme(t); setShowPicker(false); }}
+                    onClick={() => {
+                      setTheme(t);
+                      setShowPicker(false);
+                    }}
                     className="relative w-8 h-8 rounded-full flex items-center justify-center transition-transform duration-150 hover:scale-110 cursor-pointer"
                     style={{ backgroundColor: t.accent }}
                     title={t.name}
@@ -159,7 +195,11 @@ export default function Topbar() {
               className="h-[34px] pl-1.5 pr-2 rounded-lg border border-border bg-card flex items-center gap-2 text-xs font-semibold text-text hover:bg-bg-primary transition-all cursor-pointer"
               aria-label="用户菜单"
             >
-              <img src={`/api/avatar/${user.id}`} alt="Avatar" className="w-6 h-6 rounded-md object-cover bg-bg-primary ring-1 ring-border/50" />
+              <img
+                src={getUserAvatarUrl(user)}
+                alt="Avatar"
+                className="w-6 h-6 rounded-md object-cover bg-bg-primary ring-1 ring-border/50"
+              />
               <span className="max-w-[80px] truncate hidden sm:inline">{user.nickname}</span>
               <ChevronDown className="w-3.5 h-3.5 text-text-secondary" />
             </button>
@@ -215,7 +255,10 @@ export default function Topbar() {
                 )}
 
                 <button
-                  onClick={() => { setShowUserMenu(false); logout(); }}
+                  onClick={() => {
+                    setShowUserMenu(false);
+                    logout();
+                  }}
                   className="w-full text-left px-2.5 py-1.5 rounded-lg text-xs font-medium text-rose-500 hover:bg-rose-500/10 flex items-center gap-2 cursor-pointer transition-colors mt-1 border-t border-border/50 pt-2"
                 >
                   <LogOut className="w-3.5 h-3.5" />
@@ -235,19 +278,18 @@ export default function Topbar() {
             <button
               onClick={() => openAuth('register')}
               className="h-[34px] px-3 rounded-lg text-xs font-medium text-white transition-all cursor-pointer shadow-xs hover:shadow-md hidden sm:block"
-              style={{ background: 'var(--theme-gradient, linear-gradient(135deg, #10b981, #34d399))' }}
+              style={{
+                background: 'var(--theme-gradient, linear-gradient(135deg, #10b981, #34d399))',
+              }}
             >
               注册
             </button>
           </div>
         )}
       </div>
-      
+
       {/* 搜索模态框 */}
-      <SearchModal
-        isOpen={showSearch}
-        onClose={() => setShowSearch(false)}
-      />
+      <SearchModal isOpen={showSearch} onClose={() => setShowSearch(false)} />
     </header>
   );
 }
