@@ -74,8 +74,8 @@ export default function UserOverviewPage() {
       href: '/user/points',
     },
     {
-      label: '连续签到',
-      value: `${checkInInfo?.continuousCheckIn ?? user?.continuousCheckIn ?? 0} 天`,
+      label: '本月签到',
+      value: `${checkInInfo?.monthCheckinCount ?? 0} 天`,
       detail: checkInInfo?.todayChecked ? '今日已签到' : '今日待签到',
       icon: Flame,
       color: 'text-emerald-500',
