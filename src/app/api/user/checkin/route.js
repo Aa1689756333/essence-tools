@@ -20,9 +20,7 @@ function getYesterdayDateStr() {
 function getNextMilestone(config, mode, cycleDay) {
   if (mode === 'C') return null;
 
-  const milestones = mode === 'A'
-    ? config.capped.milestones
-    : config.tiered.milestones;
+  const milestones = mode === 'A' ? config.capped.milestones : config.tiered.milestones;
   const next = (milestones || [])
     .filter((milestone) => milestone.day > cycleDay)
     .sort((a, b) => a.day - b.day)[0];
@@ -43,7 +41,9 @@ function getCurrentTierDescription(config, mode, cycleDay) {
     const tier = (config.tiered.dailyTiers || []).find(
       ({ minDays, maxDays }) => cycleDay >= minDays && cycleDay <= maxDays
     );
-    return tier ? `第 ${tier.minDays}-${tier.maxDays} 天，每日基准 ${tier.dailyPoints} 分` : '当前无匹配积分档位';
+    return tier
+      ? `第 ${tier.minDays}-${tier.maxDays} 天，每日基准 ${tier.dailyPoints} 分`
+      : '当前无匹配积分档位';
   }
 
   const dailyEarned = config.daily.days?.[cycleDay - 1] || 0;
@@ -59,9 +59,10 @@ export async function GET() {
   const today = getLocalDateStr();
   const yesterday = getYesterdayDateStr();
   const todayChecked = user.lastCheckInDate === today;
-  const continuousCheckIn = user.lastCheckInDate === today || user.lastCheckInDate === yesterday
-    ? user.continuousCheckIn
-    : 0;
+  const continuousCheckIn =
+    user.lastCheckInDate === today || user.lastCheckInDate === yesterday
+      ? user.continuousCheckIn
+      : 0;
 
   const now = new Date();
   const daysInMonth = new Date(now.getFullYear(), now.getMonth() + 1, 0).getDate();
@@ -82,13 +83,14 @@ export async function GET() {
       },
       select: { createdAt: true },
     }),
-    getSystemSettings()
+    getSystemSettings(),
   ]);
   const checkedDays = [...new Set(monthCheckins.map((tx) => tx.createdAt.getDate()))];
   const config = normalizeCheckinConfig(settings.checkin_config);
-  const cycleDay = continuousCheckIn > 0
-    ? getCycleDay(continuousCheckIn, config.cycleLength, config.cycleReset)
-    : 1;
+  const cycleDay =
+    continuousCheckIn > 0
+      ? getCycleDay(continuousCheckIn, config.cycleLength, config.cycleReset)
+      : 1;
   const expected = computeEarned(config.mode, config, cycleDay);
 
   return NextResponse.json({
@@ -127,14 +129,18 @@ export async function POST() {
         where: { id: user.id },
         select: { lastCheckInDate: true, continuousCheckIn: true, points: true },
       });
-      const newContinuous = currentUser.lastCheckInDate === yesterday
-        ? currentUser.continuousCheckIn + 1
-        : 1;
+      const newContinuous =
+        currentUser.lastCheckInDate === yesterday ? currentUser.continuousCheckIn + 1 : 1;
       const cycleDay = getCycleDay(newContinuous, config.cycleLength, config.cycleReset);
       const earned = computeEarned(config.mode, config, cycleDay);
 
       const affected = await tx.user.updateMany({
-        where: { id: user.id, NOT: { lastCheckInDate: today } },
+        // 用 OR 显式覆盖 NULL：SQL 中 `lastCheckInDate != today` 对 NULL 求值为 NULL
+        // 而非 true，会导致首次签到（该字段为 NULL）匹配不到任何行而被误判为重复签到
+        where: {
+          id: user.id,
+          OR: [{ lastCheckInDate: null }, { lastCheckInDate: { not: today } }],
+        },
         data: {
           points: { increment: earned.totalEarned },
           continuousCheckIn: newContinuous,
@@ -146,26 +152,30 @@ export async function POST() {
       const dailyBalance = currentUser.points + earned.dailyEarned;
       const transactions = [];
       if (earned.dailyEarned > 0) {
-        transactions.push(await tx.pointTransaction.create({
-          data: {
-            userId: user.id,
-            amount: earned.dailyEarned,
-            balance: dailyBalance,
-            type: 'CHECKIN',
-            description: `签到成功 (+${earned.dailyEarned} 积分，已连续 ${newContinuous} 天)`,
-          },
-        }));
+        transactions.push(
+          await tx.pointTransaction.create({
+            data: {
+              userId: user.id,
+              amount: earned.dailyEarned,
+              balance: dailyBalance,
+              type: 'CHECKIN',
+              description: `签到成功 (+${earned.dailyEarned} 积分，已连续 ${newContinuous} 天)`,
+            },
+          })
+        );
       }
       if (earned.milestoneBonus > 0) {
-        transactions.push(await tx.pointTransaction.create({
-          data: {
-            userId: user.id,
-            amount: earned.milestoneBonus,
-            balance: currentUser.points + earned.totalEarned,
-            type: 'MILESTONE_BONUS',
-            description: `连签第 ${cycleDay} 天里程碑奖励 (+${earned.milestoneBonus} 积分)`,
-          },
-        }));
+        transactions.push(
+          await tx.pointTransaction.create({
+            data: {
+              userId: user.id,
+              amount: earned.milestoneBonus,
+              balance: currentUser.points + earned.totalEarned,
+              type: 'MILESTONE_BONUS',
+              description: `连签第 ${cycleDay} 天里程碑奖励 (+${earned.milestoneBonus} 积分)`,
+            },
+          })
+        );
       }
 
       const checkInLog = await tx.checkInLog.create({

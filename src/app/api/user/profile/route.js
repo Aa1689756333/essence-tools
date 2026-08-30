@@ -2,6 +2,7 @@ import { NextResponse } from 'next/server';
 import { getRequestUser } from '@/lib/request-user';
 import {} from '@/lib/auth';
 import db from '@/lib/db';
+import { getIssues } from '@/lib/validate';
 import { z } from 'zod';
 
 // 更新昵称 schema
@@ -65,7 +66,7 @@ export async function PATCH(request) {
     // 验证请求体
     const validation = profileSchema.safeParse(body);
     if (!validation.success) {
-      const errors = validation.error.errors.map((e) => ({
+      const errors = getIssues(validation.error).map((e) => ({
         field: e.path.join('.'),
         message: e.message,
       }));

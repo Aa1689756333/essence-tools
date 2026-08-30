@@ -1,6 +1,7 @@
 import { NextResponse } from 'next/server';
 import db from '@/lib/db';
 import { hashPassword } from '@/lib/auth';
+import { getIssues } from '@/lib/validate';
 import { z } from 'zod';
 
 const resetPasswordSchema = z.object({
@@ -21,14 +22,11 @@ export async function POST(request) {
 
     const validation = resetPasswordSchema.safeParse(body);
     if (!validation.success) {
-      const errors = validation.error.errors.map(e => ({
+      const errors = getIssues(validation.error).map((e) => ({
         field: e.path.join('.'),
         message: e.message,
       }));
-      return NextResponse.json(
-        { error: '输入数据格式错误', details: errors },
-        { status: 400 }
-      );
+      return NextResponse.json({ error: '输入数据格式错误', details: errors }, { status: 400 });
     }
 
     const { email, code, newPassword } = validation.data;
@@ -45,10 +43,7 @@ export async function POST(request) {
     });
 
     if (!verification) {
-      return NextResponse.json(
-        { error: '验证码不存在或已过期' },
-        { status: 400 }
-      );
+      return NextResponse.json({ error: '验证码不存在或已过期' }, { status: 400 });
     }
 
     // 检查验证码是否过期
@@ -56,10 +51,7 @@ export async function POST(request) {
       await db.emailVerification.delete({
         where: { id: verification.id },
       });
-      return NextResponse.json(
-        { error: '验证码已过期' },
-        { status: 400 }
-      );
+      return NextResponse.json({ error: '验证码已过期' }, { status: 400 });
     }
 
     // 检查验证码是否正确
@@ -79,16 +71,10 @@ export async function POST(request) {
         await db.emailVerification.delete({
           where: { id: verification.id },
         });
-        return NextResponse.json(
-          { error: '验证码错误次数过多，请重新获取' },
-          { status: 400 }
-        );
+        return NextResponse.json({ error: '验证码错误次数过多，请重新获取' }, { status: 400 });
       }
 
-      return NextResponse.json(
-        { error: '验证码不正确' },
-        { status: 400 }
-      );
+      return NextResponse.json({ error: '验证码不正确' }, { status: 400 });
     }
 
     // 查找用户
@@ -97,10 +83,7 @@ export async function POST(request) {
     });
 
     if (!user) {
-      return NextResponse.json(
-        { error: '用户不存在' },
-        { status: 404 }
-      );
+      return NextResponse.json({ error: '用户不存在' }, { status: 404 });
     }
 
     // 更新密码
@@ -121,9 +104,6 @@ export async function POST(request) {
     });
   } catch (error) {
     console.error('重置密码 API 错误:', error);
-    return NextResponse.json(
-      { error: '服务器错误，请稍后重试' },
-      { status: 500 }
-    );
+    return NextResponse.json({ error: '服务器错误，请稍后重试' }, { status: 500 });
   }
 }
