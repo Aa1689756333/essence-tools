@@ -107,9 +107,9 @@ describe('validateEmailRule', () => {
     });
   });
 
-  // 风险记录：白名单 JSON 被写坏时 catch 吞掉异常、退化成空表，
-  // 后果是"谁都注册不了"且没有任何报错提示。此测试锁住现状，
-  // 将来若改成"解析失败则放行并告警"，这里会主动提醒你更新它。
+  // 第二道防线：adminSettingsSchema 现在已在保存时挡住坏 JSON，但库里可能仍留有历史坏值；
+  // 那种情况下读取侧的 catch 会吞掉异常、退化成空表，
+  // 后果是"谁都注册不了"且没有任何报错提示。此测试锁住这个兜底行为。
   it('白名单 JSON 损坏时静默拒绝所有注册', async () => {
     const validateEmailRule = await loadValidateEmailRule({
       email_mode: 'whitelist',

@@ -145,6 +145,29 @@ export const checkinConfigSchema = z
     }
   });
 
+/**
+ * 邮箱白/黑名单以 JSON 文本形式存进 systemSetting。
+ * 若不校验就入库，settings.js 读取时 JSON.parse 失败会被 catch 静默吞掉、退化成空表，
+ * 白名单模式下的后果是"任何人都注册不了"且界面上没有任何异常提示。这里把坏配置挡在保存时。
+ * @param {string} label - 提示里用的字段中文名
+ */
+const domainListJson = (label) =>
+  z
+    .string()
+    .optional()
+    .refine(
+      (value) => {
+        if (value === undefined) return true;
+        try {
+          const parsed = JSON.parse(value);
+          return Array.isArray(parsed) && parsed.every((item) => typeof item === 'string');
+        } catch {
+          return false;
+        }
+      },
+      { error: `${label}必须是指定模式的字符串数组 JSON 文本，例如 ["@qq.com"]` }
+    );
+
 export const adminSettingsSchema = z.object({
   site_title: z.string().max(100, '站点标题长度不能超过 100 个字符').optional(),
   site_description: z.string().max(500, '站点描述长度不能超过 500 个字符').optional(),
@@ -164,8 +187,8 @@ export const adminSettingsSchema = z.object({
       error: 'email_mode 必须是 none、whitelist 或 blacklist',
     })
     .optional(),
-  email_whitelist: z.string().optional(),
-  email_blacklist: z.string().optional(),
+  email_whitelist: domainListJson('邮箱白名单'),
+  email_blacklist: domainListJson('邮箱黑名单'),
   smtp_config: z.string().optional(),
   checkin_config: z.string().optional(),
 });

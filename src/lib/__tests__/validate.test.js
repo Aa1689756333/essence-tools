@@ -92,6 +92,27 @@ describe('adminSettingsSchema', () => {
       }).success
     ).toBe(true);
   });
+
+  // 隐患封堵：坏 JSON 的白名单一旦入库，读取侧 settings.js 会把解析异常 catch 掉、
+  // 退化成空白名单，白名单模式下等于"谁都注册不了"且没有任何提示。
+  // 所以必须在保存这一关就挡住。
+  it('白名单必须解析为字符串数组', () => {
+    expect(
+      adminSettingsSchema.safeParse({ email_whitelist: '["@qq.com", "@163.com"]' }).success
+    ).toBe(true);
+    expect(adminSettingsSchema.safeParse({ email_whitelist: '[]' }).success).toBe(true);
+  });
+
+  it('白名单是坏 JSON、对象、非字符串元素或裸文本时一律拒绝', () => {
+    for (const bad of ['[ 坏掉的 json', '{"a":1}', '[1,2]', '@qq.com', 'null']) {
+      const r = adminSettingsSchema.safeParse({ email_whitelist: bad });
+      expect(r.success, bad).toBe(false);
+    }
+  });
+
+  it('未提交白名单字段时视为可选、不报错', () => {
+    expect(adminSettingsSchema.safeParse({ site_title: '极粹工具' }).success).toBe(true);
+  });
 });
 
 describe('checkinConfigSchema', () => {
