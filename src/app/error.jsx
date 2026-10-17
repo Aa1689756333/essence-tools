@@ -1,6 +1,7 @@
 'use client';
 
 import { useEffect } from 'react';
+import Link from 'next/link';
 import { Home, AlertCircle, RefreshCw } from 'lucide-react';
 
 export default function Error({ error, reset }) {
@@ -18,12 +19,8 @@ export default function Error({ error, reset }) {
         </div>
 
         {/* 标题 */}
-        <h1 className="text-2xl font-bold text-text mb-3">
-          出错了
-        </h1>
-        <h2 className="text-lg font-semibold text-text mb-4">
-          应用遇到了一些问题
-        </h2>
+        <h1 className="text-2xl font-bold text-text mb-3">出错了</h1>
+        <h2 className="text-lg font-semibold text-text mb-4">应用遇到了一些问题</h2>
 
         {/* 错误信息 */}
         <div className="mb-6 p-4 bg-red-500/5 border border-red-500/10 rounded-xl">
@@ -34,7 +31,8 @@ export default function Error({ error, reset }) {
 
         {/* 描述 */}
         <p className="text-text-secondary mb-8 leading-relaxed">
-          抱歉，应用遇到了意外错误。<br />
+          抱歉，应用遇到了意外错误。
+          <br />
           您可以尝试重新加载，或返回首页。
         </p>
 
@@ -47,7 +45,7 @@ export default function Error({ error, reset }) {
             <RefreshCw className="w-4 h-4" />
             重新加载
           </button>
-          <a
+          <Link
             href="/"
             className="inline-flex items-center justify-center gap-2 px-6 py-3 rounded-xl text-white font-medium transition-all hover:shadow-lg hover:-translate-y-0.5"
             style={{
@@ -56,7 +54,7 @@ export default function Error({ error, reset }) {
           >
             <Home className="w-4 h-4" />
             返回首页
-          </a>
+          </Link>
         </div>
       </div>
     </div>
