@@ -77,16 +77,16 @@ export const loginSchema = z.object({
 export const adminUserPatchSchema = z.object({
   userId: z.string().uuid('用户 ID 格式不正确'),
   action: z.enum(['update_role', 'update_status', 'adjust_points'], {
-    errorMap: () => ({ message: '操作类型必须是 update_role、update_status 或 adjust_points' }),
+    error: '操作类型必须是 update_role、update_status 或 adjust_points',
   }),
   role: z
     .enum(['USER', 'ADMIN'], {
-      errorMap: () => ({ message: '角色必须是 USER 或 ADMIN' }),
+      error: '角色必须是 USER 或 ADMIN',
     })
     .optional(),
   status: z
     .enum(['ACTIVE', 'BANNED'], {
-      errorMap: () => ({ message: '状态必须是 ACTIVE 或 BANNED' }),
+      error: '状态必须是 ACTIVE 或 BANNED',
     })
     .optional(),
   pointsDelta: z.number().int('积分变动必须是整数').optional(),
@@ -95,7 +95,7 @@ export const adminUserPatchSchema = z.object({
 
 export const checkinConfigSchema = z
   .object({
-    mode: z.enum(['A', 'B', 'C'], { errorMap: () => ({ message: 'mode 必须是 A、B 或 C' }) }),
+    mode: z.enum(['A', 'B', 'C'], { error: 'mode 必须是 A、B 或 C' }),
     capped: z.object({
       basePoints: z.number().int('basePoints 必须是整数').nonnegative('basePoints 不能为负数'),
       bonusRules: z.array(
@@ -151,17 +151,17 @@ export const adminSettingsSchema = z.object({
   site_keywords: z.string().max(500, '站点关键词长度不能超过 500 个字符').optional(),
   allow_registration: z
     .enum(['true', 'false'], {
-      errorMap: () => ({ message: 'allow_registration 必须是 "true" 或 "false"' }),
+      error: 'allow_registration 必须是 "true" 或 "false"',
     })
     .optional(),
   email_verification: z
     .enum(['true', 'false'], {
-      errorMap: () => ({ message: 'email_verification 必须是 "true" 或 "false"' }),
+      error: 'email_verification 必须是 "true" 或 "false"',
     })
     .optional(),
   email_mode: z
     .enum(['none', 'whitelist', 'blacklist'], {
-      errorMap: () => ({ message: 'email_mode 必须是 none、whitelist 或 blacklist' }),
+      error: 'email_mode 必须是 none、whitelist 或 blacklist',
     })
     .optional(),
   email_whitelist: z.string().optional(),
