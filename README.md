@@ -1,7 +1,6 @@
 # 📦 极粹工具 (Essence Tools)
 
-[![GitHub Repo](https://img.shields.io/badge/github-cori--168%2Fessence--tools-blue?logo=github&style=flat-square)](https://github.com/cori-168/essence-tools)
-
+[![GitHub Repo](https://img.shields.io/badge/github-Aa1689756333%2Fessence--tools-blue?logo=github&style=flat-square)](https://github.com/Aa1689756333/essence-tools)
 
 基于 **Next.js 15 (App Router)** + **React 19** 构建的全栈在线工具平台。
 前台内置多款强大、纯前端运行的实用工具（数据不离开浏览器，充分保障隐私），后台提供了一套完整的 **用户账户体系、积分签到系统与管理后台**。
