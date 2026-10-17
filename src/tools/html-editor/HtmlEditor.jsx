@@ -626,7 +626,9 @@ ${html}
 
     document.addEventListener('keydown', handleKeyDown);
     return () => document.removeEventListener('keydown', handleKeyDown);
-  }, [showFindReplace, isFullscreen, closeFindReplace]);
+    // setShowFindReplace 来自 useState、findInputRef 来自 useRef，引用恒定，补齐仅为满足
+    // exhaustive-deps，不会改变 effect 的重跑频率。
+  }, [showFindReplace, setShowFindReplace, isFullscreen, closeFindReplace, findInputRef]);
 
   return (
     <div className="w-full">
