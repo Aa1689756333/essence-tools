@@ -2,7 +2,15 @@
 
 import { useTheme } from '@/shell/ThemeProvider';
 
-export default function ActionBar({ onFormat, onSample, onClear, onCopy, canCopy, copyLabel, disabled }) {
+export default function ActionBar({
+  onFormat,
+  onSample,
+  onClear,
+  onCopy,
+  canCopy,
+  copyLabel,
+  disabled,
+}) {
   const { theme } = useTheme();
 
   return (

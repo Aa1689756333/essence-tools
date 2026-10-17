@@ -10,8 +10,8 @@ export function ToastProvider({ children }) {
   const addToast = useCallback((message, type = 'info', duration = 3000) => {
     const id = Date.now() + Math.random();
     const toast = { id, message, type, duration };
-    
-    setToasts(prev => {
+
+    setToasts((prev) => {
       // 最多同时显示 3 个
       const newToasts = [...prev, toast];
       return newToasts.slice(-3);
@@ -19,14 +19,14 @@ export function ToastProvider({ children }) {
 
     // 自动消失
     setTimeout(() => {
-      setToasts(prev => prev.filter(t => t.id !== id));
+      setToasts((prev) => prev.filter((t) => t.id !== id));
     }, duration);
 
     return id;
   }, []);
 
   const removeToast = useCallback((id) => {
-    setToasts(prev => prev.filter(t => t.id !== id));
+    setToasts((prev) => prev.filter((t) => t.id !== id));
   }, []);
 
   const toast = {
@@ -36,9 +36,7 @@ export function ToastProvider({ children }) {
   };
 
   return (
-    <ToastContext.Provider value={{ toast, toasts, removeToast }}>
-      {children}
-    </ToastContext.Provider>
+    <ToastContext.Provider value={{ toast, toasts, removeToast }}>{children}</ToastContext.Provider>
   );
 }
 

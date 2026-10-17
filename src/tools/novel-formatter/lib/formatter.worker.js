@@ -1,16 +1,16 @@
 import { format as formatNovel } from './formatter';
 import { normalizeForMatch } from './charUtils';
 
-self.onmessage = function(e) {
+self.onmessage = function (e) {
   const { type, payload, id } = e.data;
-  
+
   if (type === 'format') {
     const formatted = formatNovel(payload.text);
     self.postMessage({ type: 'format_result', id, formatted });
   } else if (type === 'compute_paragraphs') {
     const { inputText, formattedText } = payload;
     const inputLines = inputText.split('\n');
-    const inputNorms = inputLines.map(l => normalizeForMatch(l));
+    const inputNorms = inputLines.map((l) => normalizeForMatch(l));
     const outputLines = formattedText.split('\n');
     const paragraphs = [];
     let lastMatch = -1;

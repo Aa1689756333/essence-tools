@@ -12,12 +12,25 @@ const phaseLabels = [
 const spinner = (
   <svg className="w-4 h-4 animate-spin" viewBox="0 0 24 24" fill="none" aria-hidden="true">
     <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="3" />
-    <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z" />
+    <path
+      className="opacity-75"
+      fill="currentColor"
+      d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z"
+    />
   </svg>
 );
 
 const check = (
-  <svg className="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+  <svg
+    className="w-4 h-4"
+    viewBox="0 0 24 24"
+    fill="none"
+    stroke="currentColor"
+    strokeWidth="3"
+    strokeLinecap="round"
+    strokeLinejoin="round"
+    aria-hidden="true"
+  >
     <polyline points="20 6 9 17 4 12" />
   </svg>
 );
@@ -26,7 +39,14 @@ export default function ProgressPanel({ activePhase }) {
   const { theme } = useTheme();
 
   return (
-    <div className="mt-4 px-3 sm:px-5 py-4 bg-bg border border-border rounded-md" role="progressbar" aria-valuenow={((activePhase + 1) / 4) * 100} aria-valuemin="0" aria-valuemax="100" aria-label="排版进度">
+    <div
+      className="mt-4 px-3 sm:px-5 py-4 bg-bg border border-border rounded-md"
+      role="progressbar"
+      aria-valuenow={((activePhase + 1) / 4) * 100}
+      aria-valuemin="0"
+      aria-valuemax="100"
+      aria-label="排版进度"
+    >
       <div className="flex items-center gap-2 mb-3">
         <span style={{ color: theme.accent }}>{spinner}</span>
         <span className="text-[13px] font-semibold text-text-secondary">排版处理中...</span>
@@ -47,7 +67,14 @@ export default function ProgressPanel({ activePhase }) {
           } else {
             icon = (
               <span className="text-text-tertiary">
-                <svg className="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" aria-hidden="true">
+                <svg
+                  className="w-4 h-4"
+                  viewBox="0 0 24 24"
+                  fill="none"
+                  stroke="currentColor"
+                  strokeWidth="2"
+                  aria-hidden="true"
+                >
                   <circle cx="12" cy="12" r="9" />
                 </svg>
               </span>
@@ -60,8 +87,12 @@ export default function ProgressPanel({ activePhase }) {
             <div key={i} className="flex items-start gap-2">
               <span className="mt-0.5 shrink-0">{icon}</span>
               <div className="min-w-0">
-                <div className="text-[13px] leading-tight" style={nameStyle}>{phase.name}</div>
-                <div className="text-[11px] leading-tight mt-0.5" style={descStyle}>{phase.desc}</div>
+                <div className="text-[13px] leading-tight" style={nameStyle}>
+                  {phase.name}
+                </div>
+                <div className="text-[11px] leading-tight mt-0.5" style={descStyle}>
+                  {phase.desc}
+                </div>
               </div>
             </div>
           );

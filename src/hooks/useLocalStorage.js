@@ -38,14 +38,17 @@ export function useLocalStorage(key, initialValue, options = {}) {
     }
   }, [key]);
 
-  const setValue = useCallback((value) => {
-    setStoredValue((prev) => {
-      const next = typeof value === 'function' ? value(prev) : value;
-      const se = serializeRef.current;
-      safeSetItemWithRetry(key, se ? se(next) : String(next));
-      return next;
-    });
-  }, [key]);
+  const setValue = useCallback(
+    (value) => {
+      setStoredValue((prev) => {
+        const next = typeof value === 'function' ? value(prev) : value;
+        const se = serializeRef.current;
+        safeSetItemWithRetry(key, se ? se(next) : String(next));
+        return next;
+      });
+    },
+    [key]
+  );
 
   return [storedValue, setValue];
 }

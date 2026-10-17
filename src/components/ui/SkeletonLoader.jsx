@@ -18,12 +18,23 @@ export default function SkeletonLoader() {
   return (
     <div style={{ padding: '24px', width: '100%' }} aria-busy="true" aria-live="polite">
       {/* 顶部标题占位 */}
-      <div className="animate-pulse" style={{ ...bar, height: '28px', width: '40%', marginBottom: '20px' }} />
+      <div
+        className="animate-pulse"
+        style={{ ...bar, height: '28px', width: '40%', marginBottom: '20px' }}
+      />
 
       {/* 工具栏占位 */}
       <div
         className="animate-pulse"
-        style={{ ...block, height: '48px', marginBottom: '16px', display: 'flex', alignItems: 'center', gap: '10px', padding: '0 14px' }}
+        style={{
+          ...block,
+          height: '48px',
+          marginBottom: '16px',
+          display: 'flex',
+          alignItems: 'center',
+          gap: '10px',
+          padding: '0 14px',
+        }}
       >
         {Array.from({ length: 6 }).map((_, i) => (
           <div key={i} style={{ ...bar, height: '20px', width: '32px' }} />

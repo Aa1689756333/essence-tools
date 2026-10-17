@@ -104,11 +104,14 @@ export default function ThemeProvider({ children }) {
     deserialize: (raw) => raw === 'true',
   });
 
-  const theme = themes.find(t => t.id === themeId) || themes[0];
+  const theme = themes.find((t) => t.id === themeId) || themes[0];
 
-  const setTheme = useCallback((t) => {
-    setThemeId(t.id);
-  }, [setThemeId]);
+  const setTheme = useCallback(
+    (t) => {
+      setThemeId(t.id);
+    },
+    [setThemeId]
+  );
 
   useEffect(() => {
     const root = document.documentElement;
@@ -125,7 +128,10 @@ export default function ThemeProvider({ children }) {
     root.style.setProperty('--theme-shadow', currentColors.shadow);
     root.style.setProperty('--theme-light', currentColors.light);
     root.style.setProperty('--theme-accent-rgb', currentColors.shadow);
-    root.style.setProperty('--theme-gradient', `linear-gradient(135deg, ${currentColors.accent}, ${currentColors.light})`);
+    root.style.setProperty(
+      '--theme-gradient',
+      `linear-gradient(135deg, ${currentColors.accent}, ${currentColors.light})`
+    );
   }, [theme, isDark]);
 
   return (

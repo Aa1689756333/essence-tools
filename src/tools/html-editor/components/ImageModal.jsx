@@ -56,9 +56,7 @@ export default function ImageModal({ isOpen, onConfirm, onCancel, theme }) {
           <button
             onClick={() => setTab('url')}
             className={`flex-1 py-1.5 text-[13px] font-medium rounded-md transition-all ${
-              tab === 'url'
-                ? 'bg-card text-text shadow-sm'
-                : 'text-text-secondary hover:text-text'
+              tab === 'url' ? 'bg-card text-text shadow-sm' : 'text-text-secondary hover:text-text'
             }`}
           >
             网络图片

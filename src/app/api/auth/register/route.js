@@ -12,26 +12,29 @@ export async function POST(req) {
     // 速率限制检查
     const clientIP = getClientIP(req);
     const rateLimitResult = await checkRateLimit(`register:${clientIP}`, RateLimitRules.REGISTER);
-    
+
     if (!rateLimitResult.allowed) {
       return NextResponse.json(
         { error: `请求过于频繁，请在 ${Math.ceil(rateLimitResult.retryAfter / 60)} 分钟后重试` },
-        { 
+        {
           status: 429,
           headers: {
             'Retry-After': String(rateLimitResult.retryAfter),
             'X-RateLimit-Limit': String(RateLimitRules.REGISTER.maxRequests),
             'X-RateLimit-Remaining': String(rateLimitResult.remaining),
-          }
+          },
         }
       );
     }
 
     const validation = await validateBody(req, registerSchema);
     if (!validation.success) {
-      return NextResponse.json({ error: validation.error, details: validation.details }, { status: validation.status });
+      return NextResponse.json(
+        { error: validation.error, details: validation.details },
+        { status: validation.status }
+      );
     }
-    
+
     const { email, password, nickname, code } = validation.data;
 
     const settings = await getSystemSettings();

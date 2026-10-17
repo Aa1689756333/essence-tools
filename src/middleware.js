@@ -14,7 +14,9 @@ function getJwtSecret() {
     // Middleware 中不能 throw（会导致所有请求 500），
     // 使用随机密钥确保旧 token 不可用，但服务仍可运行
     _jwtSecretKey = crypto.getRandomValues(new Uint8Array(32));
-    console.error('CRITICAL: JWT_SECRET not configured in production! All sessions will be invalid.');
+    console.error(
+      'CRITICAL: JWT_SECRET not configured in production! All sessions will be invalid.'
+    );
   } else {
     _jwtSecretKey = new TextEncoder().encode('toolbox-dev-secret-key');
   }
@@ -29,30 +31,21 @@ export async function middleware(request) {
   // 管理接口鉴权：/api/admin/*
   if (pathname.startsWith('/api/admin')) {
     const token = request.cookies.get(COOKIE_NAME)?.value;
-    
+
     if (!token) {
-      return NextResponse.json(
-        { error: '未登录，请先登录' },
-        { status: 401 }
-      );
+      return NextResponse.json({ error: '未登录，请先登录' }, { status: 401 });
     }
 
     try {
       const { payload } = await jwtVerify(token, getJwtSecret());
-      
+
       if (!payload || !payload.id) {
-        return NextResponse.json(
-          { error: '无效的会话' },
-          { status: 401 }
-        );
+        return NextResponse.json({ error: '无效的会话' }, { status: 401 });
       }
 
       // 检查是否为管理员
       if (payload.role !== 'ADMIN') {
-        return NextResponse.json(
-          { error: '权限不足，仅管理员可访问' },
-          { status: 403 }
-        );
+        return NextResponse.json({ error: '权限不足，仅管理员可访问' }, { status: 403 });
       }
 
       // 验证通过，继续处理请求并注入用户信息
@@ -67,32 +60,23 @@ export async function middleware(request) {
         },
       });
     } catch (error) {
-      return NextResponse.json(
-        { error: '会话无效或已过期' },
-        { status: 401 }
-      );
+      return NextResponse.json({ error: '会话无效或已过期' }, { status: 401 });
     }
   }
 
   // 用户接口鉴权：/api/user/*
   if (pathname.startsWith('/api/user')) {
     const token = request.cookies.get(COOKIE_NAME)?.value;
-    
+
     if (!token) {
-      return NextResponse.json(
-        { error: '未登录，请先登录' },
-        { status: 401 }
-      );
+      return NextResponse.json({ error: '未登录，请先登录' }, { status: 401 });
     }
 
     try {
       const { payload } = await jwtVerify(token, getJwtSecret());
-      
+
       if (!payload || !payload.id) {
-        return NextResponse.json(
-          { error: '无效的会话' },
-          { status: 401 }
-        );
+        return NextResponse.json({ error: '无效的会话' }, { status: 401 });
       }
 
       // 验证通过，继续处理请求并注入用户信息
@@ -107,10 +91,7 @@ export async function middleware(request) {
         },
       });
     } catch (error) {
-      return NextResponse.json(
-        { error: '会话无效或已过期' },
-        { status: 401 }
-      );
+      return NextResponse.json({ error: '会话无效或已过期' }, { status: 401 });
     }
   }
 
@@ -146,10 +127,5 @@ export async function middleware(request) {
 }
 
 export const config = {
-  matcher: [
-    '/api/admin/:path*',
-    '/api/user/:path*',
-    '/user',
-    '/user/:path*',
-  ],
+  matcher: ['/api/admin/:path*', '/api/user/:path*', '/user', '/user/:path*'],
 };

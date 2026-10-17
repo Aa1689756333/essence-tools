@@ -13,24 +13,24 @@ import { X } from 'lucide-react';
  * @param {string} maxWidth - 最大宽度,默认 'max-w-md'
  * @param {boolean} showCloseButton - 是否显示关闭按钮,默认 true
  */
-export default function Modal({ 
-  isOpen, 
-  onClose, 
-  title, 
-  children, 
+export default function Modal({
+  isOpen,
+  onClose,
+  title,
+  children,
   maxWidth = 'max-w-md',
-  showCloseButton = true 
+  showCloseButton = true,
 }) {
   // ESC 键关闭
   useEffect(() => {
     if (!isOpen) return;
-    
+
     const handleEsc = (e) => {
       if (e.key === 'Escape') {
         onClose();
       }
     };
-    
+
     window.addEventListener('keydown', handleEsc);
     return () => window.removeEventListener('keydown', handleEsc);
   }, [isOpen, onClose]);
@@ -42,7 +42,7 @@ export default function Modal({
     } else {
       document.body.style.overflow = '';
     }
-    
+
     return () => {
       document.body.style.overflow = '';
     };
@@ -51,7 +51,7 @@ export default function Modal({
   if (!isOpen) return null;
 
   const modalContent = (
-    <div 
+    <div
       className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50 backdrop-blur-xs animate-fade-up"
       onClick={onClose}
     >
@@ -74,16 +74,17 @@ export default function Modal({
             className="absolute top-4 right-4 sm:top-5 sm:right-5 z-50 flex items-center justify-center w-8 h-8 rounded-full text-text-tertiary bg-bg-primary/30 ring-1 ring-inset ring-border/30 hover:bg-bg-primary hover:text-text hover:ring-border/60 hover:shadow-sm transition-all duration-200 active:scale-90 group"
             aria-label="关闭弹窗"
           >
-            <X className="w-4 h-4 transition-transform duration-300 group-hover:rotate-90" strokeWidth={2.5} />
+            <X
+              className="w-4 h-4 transition-transform duration-300 group-hover:rotate-90"
+              strokeWidth={2.5}
+            />
           </button>
         )}
 
         {/* 标题 */}
         {title && (
           <div className="mb-6 text-center">
-            <h2 className="text-xl font-bold text-text tracking-tight">
-              {title}
-            </h2>
+            <h2 className="text-xl font-bold text-text tracking-tight">{title}</h2>
           </div>
         )}
 

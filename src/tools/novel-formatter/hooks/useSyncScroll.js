@@ -87,7 +87,9 @@ export function useSyncScroll(textareaRef, overlayRef, outputRef) {
       if (!scrollOutputToInputLine(inputLine)) {
         ratioMap(textarea, output);
       }
-      requestAnimationFrame(() => { isSyncing.current = false; });
+      requestAnimationFrame(() => {
+        isSyncing.current = false;
+      });
     }
 
     function syncFromOutput() {
@@ -100,7 +102,9 @@ export function useSyncScroll(textareaRef, overlayRef, outputRef) {
         ratioMap(output, textarea);
         overlay.scrollTop = textarea.scrollTop;
       }
-      requestAnimationFrame(() => { isSyncing.current = false; });
+      requestAnimationFrame(() => {
+        isSyncing.current = false;
+      });
     }
 
     const handleInputScroll = () => syncFromTextarea();

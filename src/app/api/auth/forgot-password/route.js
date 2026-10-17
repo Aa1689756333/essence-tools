@@ -13,18 +13,21 @@ export async function POST(request) {
   try {
     // 速率限制检查
     const clientIP = getClientIP(request);
-    const rateLimitResult = await checkRateLimit(`forgot-password:${clientIP}`, RateLimitRules.FORGOT_PASSWORD);
-    
+    const rateLimitResult = await checkRateLimit(
+      `forgot-password:${clientIP}`,
+      RateLimitRules.FORGOT_PASSWORD
+    );
+
     if (!rateLimitResult.allowed) {
       return NextResponse.json(
         { error: `请求过于频繁，请在 ${Math.ceil(rateLimitResult.retryAfter / 60)} 分钟后重试` },
-        { 
+        {
           status: 429,
           headers: {
             'Retry-After': String(rateLimitResult.retryAfter),
             'X-RateLimit-Limit': String(RateLimitRules.FORGOT_PASSWORD.maxRequests),
             'X-RateLimit-Remaining': String(rateLimitResult.remaining),
-          }
+          },
         }
       );
     }
@@ -39,10 +42,7 @@ export async function POST(request) {
 
     const validation = forgotPasswordSchema.safeParse(body);
     if (!validation.success) {
-      return NextResponse.json(
-        { error: '邮箱格式不正确' },
-        { status: 400 }
-      );
+      return NextResponse.json({ error: '邮箱格式不正确' }, { status: 400 });
     }
 
     const { email } = validation.data;
@@ -100,9 +100,6 @@ export async function POST(request) {
     });
   } catch (error) {
     console.error('忘记密码 API 错误:', error);
-    return NextResponse.json(
-      { error: '服务器错误，请稍后重试' },
-      { status: 500 }
-    );
+    return NextResponse.json({ error: '服务器错误，请稍后重试' }, { status: 500 });
   }
 }

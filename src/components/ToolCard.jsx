@@ -3,11 +3,36 @@ import Link from 'next/link';
 import { ArrowRight } from 'lucide-react';
 
 const colorMap = {
-  mint:   { bg: 'rgba(16, 185, 129, 0.1)', tagBg: 'rgba(16, 185, 129, 0.15)', tagColor: 'var(--theme-accent, #10b981)', line: 'linear-gradient(90deg, var(--theme-accent), var(--theme-light))' },
-  pink:   { bg: 'rgba(251, 113, 133, 0.1)', tagBg: 'rgba(251, 113, 133, 0.15)', tagColor: '#fb7185', line: 'linear-gradient(90deg, #f43f5e, #fb7185)' },
-  lemon:  { bg: 'rgba(251, 191, 36, 0.1)', tagBg: 'rgba(251, 191, 36, 0.15)', tagColor: '#fbbf24', line: 'linear-gradient(90deg, #f59e0b, #fbbf24)' },
-  sky:    { bg: 'rgba(56, 189, 248, 0.1)', tagBg: 'rgba(56, 189, 248, 0.15)', tagColor: '#38bdf8', line: 'linear-gradient(90deg, #0ea5e9, #38bdf8)' },
-  lilac:  { bg: 'rgba(196, 181, 253, 0.1)', tagBg: 'rgba(196, 181, 253, 0.15)', tagColor: '#a78bfa', line: 'linear-gradient(90deg, #7c3aed, #a78bfa)' },
+  mint: {
+    bg: 'rgba(16, 185, 129, 0.1)',
+    tagBg: 'rgba(16, 185, 129, 0.15)',
+    tagColor: 'var(--theme-accent, #10b981)',
+    line: 'linear-gradient(90deg, var(--theme-accent), var(--theme-light))',
+  },
+  pink: {
+    bg: 'rgba(251, 113, 133, 0.1)',
+    tagBg: 'rgba(251, 113, 133, 0.15)',
+    tagColor: '#fb7185',
+    line: 'linear-gradient(90deg, #f43f5e, #fb7185)',
+  },
+  lemon: {
+    bg: 'rgba(251, 191, 36, 0.1)',
+    tagBg: 'rgba(251, 191, 36, 0.15)',
+    tagColor: '#fbbf24',
+    line: 'linear-gradient(90deg, #f59e0b, #fbbf24)',
+  },
+  sky: {
+    bg: 'rgba(56, 189, 248, 0.1)',
+    tagBg: 'rgba(56, 189, 248, 0.15)',
+    tagColor: '#38bdf8',
+    line: 'linear-gradient(90deg, #0ea5e9, #38bdf8)',
+  },
+  lilac: {
+    bg: 'rgba(196, 181, 253, 0.1)',
+    tagBg: 'rgba(196, 181, 253, 0.15)',
+    tagColor: '#a78bfa',
+    line: 'linear-gradient(90deg, #7c3aed, #a78bfa)',
+  },
 };
 
 function ToolCard({ tool, index }) {
@@ -34,9 +59,7 @@ function ToolCard({ tool, index }) {
       </div>
 
       {/* 标题 */}
-      <h2 className="text-[15px] font-semibold text-text mb-1.5 tracking-tight">
-        {tool.name}
-      </h2>
+      <h2 className="text-[15px] font-semibold text-text mb-1.5 tracking-tight">{tool.name}</h2>
 
       {/* 描述 */}
       <p className="text-[13px] text-text-secondary leading-[1.65] mb-4 line-clamp-2">
@@ -46,7 +69,7 @@ function ToolCard({ tool, index }) {
       {/* 标签和箭头 */}
       <div className="flex items-center justify-between">
         <div className="flex items-center gap-1.5 flex-wrap">
-          {tool.tags.map(tag => (
+          {tool.tags.map((tag) => (
             <span
               key={tag}
               className="text-[11px] px-2.5 py-[3px] rounded-[6px] font-medium tracking-tight"

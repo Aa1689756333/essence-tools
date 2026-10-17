@@ -11,16 +11,13 @@ export default function NotFound() {
         </div>
 
         {/* 标题 */}
-        <h1 className="text-4xl font-bold text-text mb-3">
-          404
-        </h1>
-        <h2 className="text-xl font-semibold text-text mb-4">
-          页面未找到
-        </h2>
+        <h1 className="text-4xl font-bold text-text mb-3">404</h1>
+        <h2 className="text-xl font-semibold text-text mb-4">页面未找到</h2>
 
         {/* 描述 */}
         <p className="text-text-secondary mb-8 leading-relaxed">
-          抱歉，您访问的页面不存在或已被移除。<br />
+          抱歉，您访问的页面不存在或已被移除。
+          <br />
           请检查网址是否正确，或返回首页浏览。
         </p>
 

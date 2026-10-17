@@ -42,9 +42,7 @@ export default function Toast() {
             style={{ minWidth: '280px', maxWidth: '400px' }}
           >
             <Icon className={`w-5 h-5 shrink-0 ${style.text}`} />
-            <span className={`flex-1 text-sm font-medium ${style.text}`}>
-              {toast.message}
-            </span>
+            <span className={`flex-1 text-sm font-medium ${style.text}`}>{toast.message}</span>
             <button
               onClick={() => removeToast(toast.id)}
               className="shrink-0 p-1 rounded-lg hover:bg-black/5 transition-colors cursor-pointer"

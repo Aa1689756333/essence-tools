@@ -16,7 +16,7 @@ export function countWords(text: string): { words: number; chars: number } {
   // 计算字数：中文单字算作一个字，连续英文/数字算作一个词
   // 1. 匹配中文字符、韩文、日文等
   const cjkMatches = text.match(/[\u4e00-\u9fa5\uac00-\ud7a3\u0800-\u4e00]/g) || [];
-  
+
   // 2. 匹配英文单词、数字序列
   const wordMatches = text.match(/[a-zA-Z0-9_]+/g) || [];
 
@@ -66,17 +66,17 @@ export function throttle(fn, delay) {
  */
 export function formatDate(date, format = 'YYYY-MM-DD') {
   if (!date) return '';
-  
+
   const d = new Date(date);
   if (isNaN(d.getTime())) return '';
-  
+
   const year = d.getFullYear();
   const month = String(d.getMonth() + 1).padStart(2, '0');
   const day = String(d.getDate()).padStart(2, '0');
   const hours = String(d.getHours()).padStart(2, '0');
   const minutes = String(d.getMinutes()).padStart(2, '0');
   const seconds = String(d.getSeconds()).padStart(2, '0');
-  
+
   return format
     .replace('YYYY', String(year))
     .replace('MM', month)

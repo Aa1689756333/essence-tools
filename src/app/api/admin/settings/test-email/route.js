@@ -1,6 +1,6 @@
 import { NextResponse } from 'next/server';
 import { getRequestUser } from '@/lib/request-user';
-import {  } from '@/lib/auth';
+import {} from '@/lib/auth';
 import { testSmtpConnection } from '@/lib/mailer';
 
 export async function POST(req) {

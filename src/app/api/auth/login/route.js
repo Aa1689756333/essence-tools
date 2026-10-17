@@ -9,17 +9,17 @@ export async function POST(req) {
     // 速率限制检查
     const clientIP = getClientIP(req);
     const rateLimitResult = await checkRateLimit(`login:${clientIP}`, RateLimitRules.LOGIN);
-    
+
     if (!rateLimitResult.allowed) {
       return NextResponse.json(
         { error: `请求过于频繁，请在 ${rateLimitResult.retryAfter} 秒后重试` },
-        { 
+        {
           status: 429,
           headers: {
             'Retry-After': String(rateLimitResult.retryAfter),
             'X-RateLimit-Limit': String(RateLimitRules.LOGIN.maxRequests),
             'X-RateLimit-Remaining': String(rateLimitResult.remaining),
-          }
+          },
         }
       );
     }

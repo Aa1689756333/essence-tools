@@ -8,14 +8,17 @@ import { Redis } from '@upstash/redis';
 
 // 内存限流回退方案
 const store = new Map();
-setInterval(() => {
-  const now = Date.now();
-  for (const [key, data] of store.entries()) {
-    if (now > data.resetTime) {
-      store.delete(key);
+setInterval(
+  () => {
+    const now = Date.now();
+    for (const [key, data] of store.entries()) {
+      if (now > data.resetTime) {
+        store.delete(key);
+      }
     }
-  }
-}, 5 * 60 * 1000);
+  },
+  5 * 60 * 1000
+);
 
 function checkRateLimitMemory(key, { maxRequests, windowMs }) {
   const now = Date.now();
@@ -57,7 +60,7 @@ export async function checkRateLimit(key, { maxRequests, windowMs }) {
     redis,
     limiter: Ratelimit.slidingWindow(maxRequests, `${windowMs} ms`),
   });
-  
+
   const result = await ratelimit.limit(key);
   return {
     allowed: result.success,

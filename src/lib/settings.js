@@ -49,7 +49,9 @@ export const DEFAULT_SETTINGS = {
       ],
     },
     daily: {
-      days: [1, 1, 1, 1, 1, 1, 5, 2, 2, 2, 2, 2, 2, 9, 3, 3, 3, 3, 3, 3, 14, 4, 4, 4, 4, 4, 4, 4, 4, 24],
+      days: [
+        1, 1, 1, 1, 1, 1, 5, 2, 2, 2, 2, 2, 2, 9, 3, 3, 3, 3, 3, 3, 14, 4, 4, 4, 4, 4, 4, 4, 4, 24,
+      ],
     },
     cycleLength: 30,
     cycleReset: true,
@@ -169,11 +171,15 @@ export async function validateEmailRule(email) {
 
   let whitelist = [];
   let blacklist = [];
-  try { whitelist = JSON.parse(settings.email_whitelist || '[]'); } catch {}
-  try { blacklist = JSON.parse(settings.email_blacklist || '[]'); } catch {}
+  try {
+    whitelist = JSON.parse(settings.email_whitelist || '[]');
+  } catch {}
+  try {
+    blacklist = JSON.parse(settings.email_blacklist || '[]');
+  } catch {}
 
   if (mode === 'whitelist') {
-    const isMatched = whitelist.some(rule => matchRule(email, rule));
+    const isMatched = whitelist.some((rule) => matchRule(email, rule));
     if (!isMatched) {
       return { allowed: false, reason: '该邮箱域名不在允许注册的白名单中' };
     }
@@ -181,7 +187,7 @@ export async function validateEmailRule(email) {
   }
 
   if (mode === 'blacklist') {
-    const isMatched = blacklist.some(rule => matchRule(email, rule));
+    const isMatched = blacklist.some((rule) => matchRule(email, rule));
     if (isMatched) {
       return { allowed: false, reason: '该邮箱域名已被系统列入禁用黑名单' };
     }

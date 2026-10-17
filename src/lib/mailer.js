@@ -47,7 +47,11 @@ export async function sendMail({ to, subject, html, text, customConfig = null })
   const settings = customConfig ? {} : await getSystemSettings();
   let smtpObj = customConfig;
   if (!smtpObj) {
-    try { smtpObj = JSON.parse(settings.smtp_config || '{}'); } catch { smtpObj = {}; }
+    try {
+      smtpObj = JSON.parse(settings.smtp_config || '{}');
+    } catch {
+      smtpObj = {};
+    }
   }
 
   const fromName = smtpObj.fromName || 'ToolBox';
@@ -96,13 +100,9 @@ export async function testSmtpConnection(customConfig, targetEmail) {
  * @param {string} type - 验证码类型：'REGISTER' | 'RESET_PASSWORD'
  */
 export async function sendVerificationEmail(email, code, type = 'REGISTER') {
-  const subject = type === 'RESET_PASSWORD'
-    ? '【ToolBox】密码重置验证码'
-    : '【ToolBox】注册验证码';
+  const subject = type === 'RESET_PASSWORD' ? '【ToolBox】密码重置验证码' : '【ToolBox】注册验证码';
 
-  const title = type === 'RESET_PASSWORD'
-    ? '密码重置验证码'
-    : '注册验证码';
+  const title = type === 'RESET_PASSWORD' ? '密码重置验证码' : '注册验证码';
 
   const html = `
     <div style="font-family: sans-serif; padding: 24px; color: #333; max-width: 480px; margin: 0 auto;">

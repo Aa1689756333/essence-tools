@@ -9,50 +9,56 @@ export default function useFindReplace({ editor, updateEmptyState }) {
   const [caseSensitive, setCaseSensitive] = useState(false);
   const findInputRef = useRef(null);
 
-  const highlightMatch = useCallback((match) => {
-    if (!editor || !editor.view.dom) return;
-    const editorDom = editor.view.dom;
-    const text = editorDom.innerText || '';
-    const beforeText = text.substring(0, match.index);
-    const lines = beforeText.split('\n');
-    const lineIndex = lines.length - 1;
-    const charIndex = lines[lineIndex].length;
-    void charIndex;
+  const highlightMatch = useCallback(
+    (match) => {
+      if (!editor || !editor.view.dom) return;
+      const editorDom = editor.view.dom;
+      const text = editorDom.innerText || '';
+      const beforeText = text.substring(0, match.index);
+      const lines = beforeText.split('\n');
+      const lineIndex = lines.length - 1;
+      const charIndex = lines[lineIndex].length;
+      void charIndex;
 
-    const range = document.createRange();
-    const walker = document.createTreeWalker(editorDom, NodeFilter.SHOW_TEXT);
-    let currentOffset = 0;
-    let targetNode = null;
-    let targetOffset = 0;
+      const range = document.createRange();
+      const walker = document.createTreeWalker(editorDom, NodeFilter.SHOW_TEXT);
+      let currentOffset = 0;
+      let targetNode = null;
+      let targetOffset = 0;
 
-    while (walker.nextNode()) {
-      const node = walker.currentNode;
-      const nodeLength = node.textContent.length;
-      if (currentOffset + nodeLength > match.index) {
-        targetNode = node;
-        targetOffset = match.index - currentOffset;
-        break;
-      }
-      currentOffset += nodeLength;
-    }
-
-    if (targetNode) {
-      try {
-        range.setStart(targetNode, targetOffset);
-        range.setEnd(targetNode, targetOffset + match.length);
-        const selection = window.getSelection();
-        selection.removeAllRanges();
-        selection.addRange(range);
-        const rect = range.getBoundingClientRect();
-        const editorRect = editorDom.getBoundingClientRect();
-        if (rect.top < editorRect.top || rect.bottom > editorRect.bottom) {
-          range.startContainer.parentElement?.scrollIntoView({ behavior: 'smooth', block: 'center' });
+      while (walker.nextNode()) {
+        const node = walker.currentNode;
+        const nodeLength = node.textContent.length;
+        if (currentOffset + nodeLength > match.index) {
+          targetNode = node;
+          targetOffset = match.index - currentOffset;
+          break;
         }
-      } catch (error) {
-        console.error('Highlight error:', error);
+        currentOffset += nodeLength;
       }
-    }
-  }, [editor]);
+
+      if (targetNode) {
+        try {
+          range.setStart(targetNode, targetOffset);
+          range.setEnd(targetNode, targetOffset + match.length);
+          const selection = window.getSelection();
+          selection.removeAllRanges();
+          selection.addRange(range);
+          const rect = range.getBoundingClientRect();
+          const editorRect = editorDom.getBoundingClientRect();
+          if (rect.top < editorRect.top || rect.bottom > editorRect.bottom) {
+            range.startContainer.parentElement?.scrollIntoView({
+              behavior: 'smooth',
+              block: 'center',
+            });
+          }
+        } catch (error) {
+          console.error('Highlight error:', error);
+        }
+      }
+    },
+    [editor]
+  );
 
   const performFind = useCallback(() => {
     if (!findText || !editor || !editor.view.dom) {
@@ -115,7 +121,7 @@ export default function useFindReplace({ editor, updateEmptyState }) {
     const walker = document.createTreeWalker(editor.view.dom, NodeFilter.SHOW_TEXT);
     const textNodes = [];
     while (walker.nextNode()) textNodes.push(walker.currentNode);
-    textNodes.forEach(node => {
+    textNodes.forEach((node) => {
       const original = node.textContent;
       node.textContent = original.replace(regex, replaceText);
     });

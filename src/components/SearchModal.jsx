@@ -13,12 +13,12 @@ export default function SearchModal({ isOpen, onClose }) {
 
   // 过滤工具列表
   const filteredTools = query.trim()
-    ? tools.filter(tool => {
+    ? tools.filter((tool) => {
         const searchStr = query.toLowerCase();
         return (
           tool.name.toLowerCase().includes(searchStr) ||
           tool.desc.toLowerCase().includes(searchStr) ||
-          tool.tags.some(tag => tag.toLowerCase().includes(searchStr)) ||
+          tool.tags.some((tag) => tag.toLowerCase().includes(searchStr)) ||
           tool.category.toLowerCase().includes(searchStr)
         );
       })
@@ -44,10 +44,10 @@ export default function SearchModal({ isOpen, onClose }) {
   const handleKeyDown = (e) => {
     if (e.key === 'ArrowDown') {
       e.preventDefault();
-      setSelectedIndex(prev => (prev + 1) % filteredTools.length);
+      setSelectedIndex((prev) => (prev + 1) % filteredTools.length);
     } else if (e.key === 'ArrowUp') {
       e.preventDefault();
-      setSelectedIndex(prev => (prev - 1 + filteredTools.length) % filteredTools.length);
+      setSelectedIndex((prev) => (prev - 1 + filteredTools.length) % filteredTools.length);
     } else if (e.key === 'Enter' && filteredTools[selectedIndex]) {
       e.preventDefault();
       navigateToTool(filteredTools[selectedIndex].path);
@@ -105,9 +105,7 @@ export default function SearchModal({ isOpen, onClose }) {
               输入关键词搜索工具
             </div>
           ) : filteredTools.length === 0 ? (
-            <div className="px-5 py-8 text-center text-text-tertiary text-sm">
-              未找到匹配的工具
-            </div>
+            <div className="px-5 py-8 text-center text-text-tertiary text-sm">未找到匹配的工具</div>
           ) : (
             <ul className="py-2">
               {filteredTools.map((tool, index) => (
@@ -116,9 +114,7 @@ export default function SearchModal({ isOpen, onClose }) {
                     onClick={() => navigateToTool(tool.path)}
                     onMouseEnter={() => setSelectedIndex(index)}
                     className={`w-full px-5 py-3 flex items-center gap-4 text-left transition-colors ${
-                      index === selectedIndex
-                        ? 'bg-bg-primary'
-                        : 'hover:bg-bg-primary/50'
+                      index === selectedIndex ? 'bg-bg-primary' : 'hover:bg-bg-primary/50'
                     }`}
                   >
                     <div
@@ -130,12 +126,8 @@ export default function SearchModal({ isOpen, onClose }) {
                       {tool.emoji}
                     </div>
                     <div className="flex-1 min-w-0">
-                      <div className="text-text font-medium truncate">
-                        {tool.name}
-                      </div>
-                      <div className="text-text-secondary text-sm truncate">
-                        {tool.desc}
-                      </div>
+                      <div className="text-text font-medium truncate">{tool.name}</div>
+                      <div className="text-text-secondary text-sm truncate">{tool.desc}</div>
                     </div>
                     <ArrowRight className="w-4 h-4 text-text-tertiary shrink-0" />
                   </button>
@@ -149,16 +141,22 @@ export default function SearchModal({ isOpen, onClose }) {
         <div className="px-5 py-3 border-t border-border bg-bg-primary/30 flex items-center justify-between text-xs text-text-tertiary">
           <div className="flex items-center gap-4">
             <span>
-              <kbd className="px-1.5 py-0.5 rounded bg-card border border-border text-text-secondary">↑↓</kbd>
-              {' '}导航
+              <kbd className="px-1.5 py-0.5 rounded bg-card border border-border text-text-secondary">
+                ↑↓
+              </kbd>{' '}
+              导航
             </span>
             <span>
-              <kbd className="px-1.5 py-0.5 rounded bg-card border border-border text-text-secondary">↵</kbd>
-              {' '}选择
+              <kbd className="px-1.5 py-0.5 rounded bg-card border border-border text-text-secondary">
+                ↵
+              </kbd>{' '}
+              选择
             </span>
             <span>
-              <kbd className="px-1.5 py-0.5 rounded bg-card border border-border text-text-secondary">esc</kbd>
-              {' '}关闭
+              <kbd className="px-1.5 py-0.5 rounded bg-card border border-border text-text-secondary">
+                esc
+              </kbd>{' '}
+              关闭
             </span>
           </div>
           <span>共 {filteredTools.length} 个结果</span>

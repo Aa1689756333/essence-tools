@@ -5,18 +5,43 @@ import { useState, useRef, useCallback, useEffect } from 'react';
 import { createPortal } from 'react-dom';
 import { useTheme } from '@/shell/ThemeProvider';
 import {
-  Bold, Italic, Underline, Strikethrough,
-  AlignLeft, AlignCenter, AlignRight, AlignJustify,
-  List, ListOrdered,
-  Heading1, Heading2, Heading3,
-  Undo2, Redo2,
-  Code, Download, Eye, EyeOff, Trash2,
-  Indent, Outdent,
+  Bold,
+  Italic,
+  Underline,
+  Strikethrough,
+  AlignLeft,
+  AlignCenter,
+  AlignRight,
+  AlignJustify,
+  List,
+  ListOrdered,
+  Heading1,
+  Heading2,
+  Heading3,
+  Undo2,
+  Redo2,
+  Code,
+  Download,
+  Eye,
+  EyeOff,
+  Trash2,
+  Indent,
+  Outdent,
   Minus,
   Type,
-  Link, Image, Table,
-  X, Sparkles, Quote, Terminal,
-  Maximize, Minimize, Search, Replace, ChevronDown, ChevronUp,
+  Link,
+  Image,
+  Table,
+  X,
+  Sparkles,
+  Quote,
+  Terminal,
+  Maximize,
+  Minimize,
+  Search,
+  Replace,
+  ChevronDown,
+  ChevronUp,
 } from 'lucide-react';
 import { safeGetItem, safeSetItemWithRetry, safeRemoveItem } from '@/lib/storage';
 import { countWords } from '@/lib/utils';
@@ -46,7 +71,7 @@ import EditorArea from './components/EditorArea';
 import useFindReplace from './hooks/useFindReplace';
 import useImageResize from './hooks/useImageResize';
 
-const FONT_SIZES = ['12px','14px','16px','18px','20px','24px','28px','32px','36px','48px'];
+const FONT_SIZES = ['12px', '14px', '16px', '18px', '20px', '24px', '28px', '32px', '36px', '48px'];
 const FONT_FAMILIES = [
   { label: '默认', value: '' },
   { label: '宋体', value: 'SimSun, serif' },
@@ -60,16 +85,61 @@ const FONT_FAMILIES = [
 ];
 
 const COLORS = [
-  '#000000','#434343','#666666','#999999','#b7b7b7','#cccccc','#d9d9d9','#efefef','#f3f3f3','#ffffff',
-  '#980000','#ff0000','#ff9900','#ffff00','#00ff00','#00ffff','#4a86e8','#0000ff','#9900ff','#ff00ff',
-  '#e6b8af','#f4cccc','#fce5cd','#fff2cc','#d9ead3','#d0e0e3','#c9daf8','#cfe2f3','#d9d2e9','#ead1dc',
-  '#dd7e6b','#ea9999','#f9cb9c','#ffe599','#b6d7a8','#a2c4c9','#a4c2f4','#9fc5e8','#b4a7d6','#d5a6bd',
-  '#cc4125','#e06666','#f6b26b','#ffd966','#93c47d','#76a5af','#6d9eeb','#6fa8dc','#8e7cc3','#c27ba0',
+  '#000000',
+  '#434343',
+  '#666666',
+  '#999999',
+  '#b7b7b7',
+  '#cccccc',
+  '#d9d9d9',
+  '#efefef',
+  '#f3f3f3',
+  '#ffffff',
+  '#980000',
+  '#ff0000',
+  '#ff9900',
+  '#ffff00',
+  '#00ff00',
+  '#00ffff',
+  '#4a86e8',
+  '#0000ff',
+  '#9900ff',
+  '#ff00ff',
+  '#e6b8af',
+  '#f4cccc',
+  '#fce5cd',
+  '#fff2cc',
+  '#d9ead3',
+  '#d0e0e3',
+  '#c9daf8',
+  '#cfe2f3',
+  '#d9d2e9',
+  '#ead1dc',
+  '#dd7e6b',
+  '#ea9999',
+  '#f9cb9c',
+  '#ffe599',
+  '#b6d7a8',
+  '#a2c4c9',
+  '#a4c2f4',
+  '#9fc5e8',
+  '#b4a7d6',
+  '#d5a6bd',
+  '#cc4125',
+  '#e06666',
+  '#f6b26b',
+  '#ffd966',
+  '#93c47d',
+  '#76a5af',
+  '#6d9eeb',
+  '#6fa8dc',
+  '#8e7cc3',
+  '#c27ba0',
 ];
 
 export default function HtmlEditor() {
   const { theme } = useTheme();
-  
+
   const editor = useEditor({
     extensions: [
       StarterKit,
@@ -83,10 +153,10 @@ export default function HtmlEditor() {
       TableExtension.configure({ resizable: true }),
       TableRow,
       TableHeader,
-      TableCell
+      TableCell,
     ],
     content: '',
-    onUpdate: ({ editor }) => handleInput(editor)
+    onUpdate: ({ editor }) => handleInput(editor),
   });
 
   const [showCode, setShowCode] = useState(false);
@@ -95,7 +165,7 @@ export default function HtmlEditor() {
   const [copied, setCopied] = useState(false);
   const [fontSize, setFontSize] = useState('16px');
   const [fontFamily, setFontFamily] = useState('');
-  
+
   const [modalType, setModalType] = useState(null);
   const [linkInitialData, setLinkInitialData] = useState({});
   const [tableMenu, setTableMenu] = useState(null);
@@ -127,11 +197,14 @@ export default function HtmlEditor() {
     setWordCount(countWords(text));
   }, 300);
 
-  const updateEmptyState = useCallback((editorInstance = editor) => {
-    if (!editorInstance) return;
-    setIsEmpty(editorInstance.isEmpty);
-    debouncedCountWords(editorInstance);
-  }, [debouncedCountWords, editor]);
+  const updateEmptyState = useCallback(
+    (editorInstance = editor) => {
+      if (!editorInstance) return;
+      setIsEmpty(editorInstance.isEmpty);
+      debouncedCountWords(editorInstance);
+    },
+    [debouncedCountWords, editor]
+  );
 
   const handleRestoreConfirm = useCallback(() => {
     if (editor && savedContentRef.current) {
@@ -204,16 +277,15 @@ export default function HtmlEditor() {
     };
   }, [isEmpty, wordCount.words, wordCount.chars]); // 监听内容变化（使用原始值避免对象引用问题）
 
-  
-
-  
-
-  const handleInput = useCallback((editorInstance = editor) => {
-    updateEmptyState(editorInstance);
-    if (showCode && editorInstance) {
-      setHtmlCode(editorInstance.getHTML());
-    }
-  }, [showCode, updateEmptyState, editor]);
+  const handleInput = useCallback(
+    (editorInstance = editor) => {
+      updateEmptyState(editorInstance);
+      if (showCode && editorInstance) {
+        setHtmlCode(editorInstance.getHTML());
+      }
+    },
+    [showCode, updateEmptyState, editor]
+  );
 
   const toggleCodeView = useCallback(() => {
     if (!showCode && editor) {
@@ -236,7 +308,7 @@ export default function HtmlEditor() {
 
   const handleExport = useCallback(() => {
     // 在源码模式下使用 htmlCode，在预览模式下使用 editorRef.current.innerHTML
-    const rawHtml = showCode ? htmlCode : (editor?.getHTML() || '');
+    const rawHtml = showCode ? htmlCode : editor?.getHTML() || '';
     const html = cleanHtml(rawHtml); // 清洁 HTML 输出
     const fullHtml = `<!DOCTYPE html>
 <html lang="zh-CN">
@@ -270,21 +342,24 @@ ${html}
 
   const handleCopyHtml = useCallback(() => {
     // 在源码模式下使用 htmlCode，在预览模式下使用 editorRef.current.innerHTML
-    const rawHtml = showCode ? htmlCode : (editor?.getHTML() || '');
+    const rawHtml = showCode ? htmlCode : editor?.getHTML() || '';
     const html = cleanHtml(rawHtml); // 清洁 HTML 输出
-    navigator.clipboard.writeText(html).then(() => {
-      setCopied(true);
-      setTimeout(() => setCopied(false), 1500);
-    }).catch(() => {
-      const ta = document.createElement('textarea');
-      ta.value = html;
-      document.body.appendChild(ta);
-      ta.select();
-      document.execCommand('copy');
-      document.body.removeChild(ta);
-      setCopied(true);
-      setTimeout(() => setCopied(false), 1500);
-    });
+    navigator.clipboard
+      .writeText(html)
+      .then(() => {
+        setCopied(true);
+        setTimeout(() => setCopied(false), 1500);
+      })
+      .catch(() => {
+        const ta = document.createElement('textarea');
+        ta.value = html;
+        document.body.appendChild(ta);
+        ta.select();
+        document.execCommand('copy');
+        document.body.removeChild(ta);
+        setCopied(true);
+        setTimeout(() => setCopied(false), 1500);
+      });
   }, [showCode, htmlCode]);
 
   const handleClear = useCallback(() => {
@@ -352,22 +427,17 @@ ${html}
     // Skipping complex native fontSize implementation for simplicity if unsupported natively, but we can set inline style if needed.
   }, []);
 
-  const handleFontFamily = useCallback((family) => {
-    setFontFamily(family);
-    if (family) {
-      editor?.chain().focus().setFontFamily(family).run();
-    } else {
-      editor?.chain().focus().unsetFontFamily().run();
-    }
-  }, [editor]);
-
-  
-
-  
-
-  
-
-  
+  const handleFontFamily = useCallback(
+    (family) => {
+      setFontFamily(family);
+      if (family) {
+        editor?.chain().focus().setFontFamily(family).run();
+      } else {
+        editor?.chain().focus().unsetFontFamily().run();
+      }
+    },
+    [editor]
+  );
 
   const handleInsertLink = useCallback(() => {
     setLinkInitialData({ url: 'https://', text: '' });
@@ -386,31 +456,40 @@ ${html}
     setModalType('table');
   }, []);
 
-  const handleLinkConfirm = useCallback(({ url, text }) => {
-    if (url && url !== 'https://' && isSafeUrl(url)) {
-       editor?.chain().focus().setLink({ href: url }).run();
-       if (text) {
-         editor?.chain().focus().insertContent(text).run();
-       }
-    }
-    setModalType(null);
-  }, [editor]);
+  const handleLinkConfirm = useCallback(
+    ({ url, text }) => {
+      if (url && url !== 'https://' && isSafeUrl(url)) {
+        editor?.chain().focus().setLink({ href: url }).run();
+        if (text) {
+          editor?.chain().focus().insertContent(text).run();
+        }
+      }
+      setModalType(null);
+    },
+    [editor]
+  );
 
-  const handleImageConfirm = useCallback(({ url, alt }) => {
-    if (url && url !== 'https://' && isSafeUrl(url)) {
-      editor?.chain().focus().setImage({ src: url, alt }).run();
-    }
-    setModalType(null);
-  }, [editor]);
+  const handleImageConfirm = useCallback(
+    ({ url, alt }) => {
+      if (url && url !== 'https://' && isSafeUrl(url)) {
+        editor?.chain().focus().setImage({ src: url, alt }).run();
+      }
+      setModalType(null);
+    },
+    [editor]
+  );
 
-  const handleTableConfirm = useCallback(({ rows, cols }) => {
-    const r = parseInt(rows);
-    const c = parseInt(cols);
-    if (!isNaN(r) && !isNaN(c) && r > 0 && c > 0) {
-      editor?.chain().focus().insertTable({ rows: r, cols: c, withHeaderRow: true }).run();
-    }
-    setModalType(null);
-  }, [editor]);
+  const handleTableConfirm = useCallback(
+    ({ rows, cols }) => {
+      const r = parseInt(rows);
+      const c = parseInt(cols);
+      if (!isNaN(r) && !isNaN(c) && r > 0 && c > 0) {
+        editor?.chain().focus().insertTable({ rows: r, cols: c, withHeaderRow: true }).run();
+      }
+      setModalType(null);
+    },
+    [editor]
+  );
 
   const handleModalCancel = useCallback(() => {
     setModalType(null);
@@ -518,8 +597,8 @@ ${html}
     }
   }, [tableMenu]);
 
-  const fontSizeOptions = FONT_SIZES.map(s => ({ label: s, value: s }));
-  const fontFamilyOptions = FONT_FAMILIES.map(f => ({ label: f.label, value: f.value }));
+  const fontSizeOptions = FONT_SIZES.map((s) => ({ label: s, value: s }));
+  const fontFamilyOptions = FONT_FAMILIES.map((f) => ({ label: f.label, value: f.value }));
 
   // 全屏切换
   const toggleFullscreen = useCallback(() => {
@@ -562,7 +641,9 @@ ${html}
       )}
 
       {/* 编辑器容器 */}
-      <div className={`rounded-xl border border-border bg-card overflow-hidden shadow-[0_1px_3px_rgba(0,0,0,0.04)] ${isFullscreen ? 'fixed inset-0 z-[9999] rounded-none' : ''}`}>
+      <div
+        className={`rounded-xl border border-border bg-card overflow-hidden shadow-[0_1px_3px_rgba(0,0,0,0.04)] ${isFullscreen ? 'fixed inset-0 z-[9999] rounded-none' : ''}`}
+      >
         <EditorToolbar
           theme={theme}
           editor={editor}
@@ -586,24 +667,24 @@ ${html}
         />
 
         {showFindReplace && (
-        <FindReplaceBar
-          theme={theme}
-          findInputRef={findInputRef}
-          findText={findText}
-          setFindText={setFindText}
-          findPrevious={findPrevious}
-          findNext={findNext}
-          findMatches={findMatches}
-          caseSensitive={caseSensitive}
-          setCaseSensitive={setCaseSensitive}
-          currentMatchIndex={currentMatchIndex}
-          replaceText={replaceText}
-          setReplaceText={setReplaceText}
-          replaceCurrent={replaceCurrent}
-          replaceAll={replaceAll}
-          closeFindReplace={closeFindReplace}
-        />
-      )}
+          <FindReplaceBar
+            theme={theme}
+            findInputRef={findInputRef}
+            findText={findText}
+            setFindText={setFindText}
+            findPrevious={findPrevious}
+            findNext={findNext}
+            findMatches={findMatches}
+            caseSensitive={caseSensitive}
+            setCaseSensitive={setCaseSensitive}
+            currentMatchIndex={currentMatchIndex}
+            replaceText={replaceText}
+            setReplaceText={setReplaceText}
+            replaceCurrent={replaceCurrent}
+            replaceAll={replaceAll}
+            closeFindReplace={closeFindReplace}
+          />
+        )}
 
         <EditorArea
           editor={editor}
@@ -625,17 +706,29 @@ ${html}
         />
 
         {/* 底部操作栏 */}
-        <div className={`flex items-center justify-between flex-wrap gap-2 ${isFullscreen ? 'px-4 py-3 border-t border-border bg-bg' : 'mt-4'}`}>
+        <div
+          className={`flex items-center justify-between flex-wrap gap-2 ${isFullscreen ? 'px-4 py-3 border-t border-border bg-bg' : 'mt-4'}`}
+        >
           <div className="text-[12px] text-text-tertiary flex items-center gap-3">
             {isEmpty ? '暂无内容' : `${wordCount.words} 字 / ${wordCount.chars} 字符`}
             {saveError && !isEmpty ? (
-              <span className="text-amber-500" title="localStorage 配额超限或被禁用，内容不会自动保存，请及时导出">
+              <span
+                className="text-amber-500"
+                title="localStorage 配额超限或被禁用，内容不会自动保存，请及时导出"
+              >
                 · 自动保存已暂停（存储空间不足）
               </span>
-            ) : lastSavedTime && !isEmpty && (
-              <span className="text-text-tertiary">
-                · 自动保存于 {lastSavedTime.toLocaleTimeString('zh-CN', { hour: '2-digit', minute: '2-digit' })}
-              </span>
+            ) : (
+              lastSavedTime &&
+              !isEmpty && (
+                <span className="text-text-tertiary">
+                  · 自动保存于{' '}
+                  {lastSavedTime.toLocaleTimeString('zh-CN', {
+                    hour: '2-digit',
+                    minute: '2-digit',
+                  })}
+                </span>
+              )
             )}
           </div>
           <div className="flex gap-2 flex-wrap">
@@ -714,110 +807,113 @@ ${html}
       </div>
 
       {/* 图片浮动工具栏 - 使用 Portal 渲染到 body 避免被裁剪 */}
-      {selectedImage && !showCode && createPortal(
-        (() => {
-          const imgRect = selectedImage.getBoundingClientRect();
-          const toolbarHeight = 36;
-          const margin = 12;
-          const viewportHeight = window.innerHeight;
-          const viewportWidth = window.innerWidth;
+      {selectedImage &&
+        !showCode &&
+        createPortal(
+          (() => {
+            const imgRect = selectedImage.getBoundingClientRect();
+            const toolbarHeight = 36;
+            const margin = 12;
+            const viewportHeight = window.innerHeight;
+            const viewportWidth = window.innerWidth;
 
-          // 判断下方是否有足够空间
-          const spaceBelow = viewportHeight - imgRect.bottom;
-          const showBelow = spaceBelow >= toolbarHeight + margin;
+            // 判断下方是否有足够空间
+            const spaceBelow = viewportHeight - imgRect.bottom;
+            const showBelow = spaceBelow >= toolbarHeight + margin;
 
-          // 计算垂直位置
-          const toolbarTop = showBelow
-            ? imgRect.bottom + margin
-            : imgRect.top - toolbarHeight - margin;
+            // 计算垂直位置
+            const toolbarTop = showBelow
+              ? imgRect.bottom + margin
+              : imgRect.top - toolbarHeight - margin;
 
-          // 计算水平位置，居中对准图片
-          let toolbarLeft = imgRect.left + imgRect.width / 2;
+            // 计算水平位置，居中对准图片
+            let toolbarLeft = imgRect.left + imgRect.width / 2;
 
-          // 使用实际工具栏宽度（如果可用），否则使用估算值
-          const estimatedToolbarWidth = 280;
-          const actualToolbarWidth = imageToolbarRef.current?.offsetWidth || estimatedToolbarWidth;
-          const halfWidth = actualToolbarWidth / 2;
-          const padding = 8;
+            // 使用实际工具栏宽度（如果可用），否则使用估算值
+            const estimatedToolbarWidth = 280;
+            const actualToolbarWidth =
+              imageToolbarRef.current?.offsetWidth || estimatedToolbarWidth;
+            const halfWidth = actualToolbarWidth / 2;
+            const padding = 8;
 
-          // 确保不超出视口边界
-          const toolbarLeftEdge = toolbarLeft - halfWidth;
-          const toolbarRightEdge = toolbarLeft + halfWidth;
+            // 确保不超出视口边界
+            const toolbarLeftEdge = toolbarLeft - halfWidth;
+            const toolbarRightEdge = toolbarLeft + halfWidth;
 
-          if (toolbarLeftEdge < padding) {
-            toolbarLeft = halfWidth + padding;
-          } else if (toolbarRightEdge > viewportWidth - padding) {
-            toolbarLeft = viewportWidth - halfWidth - padding;
-          }
+            if (toolbarLeftEdge < padding) {
+              toolbarLeft = halfWidth + padding;
+            } else if (toolbarRightEdge > viewportWidth - padding) {
+              toolbarLeft = viewportWidth - halfWidth - padding;
+            }
 
-          return (
-            <div
-              ref={imageToolbarRef}
-              className="fixed bg-card border border-border rounded-lg shadow-lg px-2 py-1.5 flex items-center gap-2 z-[9999]"
-              style={{
-                left: `${toolbarLeft}px`,
-                top: `${toolbarTop}px`,
-                transform: 'translateX(-50%)'
-              }}
-              onClick={(e) => e.stopPropagation()}
-            >
-              {/* 尺寸显示 */}
-              <span className="text-xs text-text-secondary px-1">
-                {imageSize.width}×{imageSize.height}
-              </span>
-              {/* 分隔线 */}
-              <div className="w-px h-4 bg-border" />
-              {/* 预设尺寸 */}
-              {[25, 50, 75, 100].map(percent => (
+            return (
+              <div
+                ref={imageToolbarRef}
+                className="fixed bg-card border border-border rounded-lg shadow-lg px-2 py-1.5 flex items-center gap-2 z-[9999]"
+                style={{
+                  left: `${toolbarLeft}px`,
+                  top: `${toolbarTop}px`,
+                  transform: 'translateX(-50%)',
+                }}
+                onClick={(e) => e.stopPropagation()}
+              >
+                {/* 尺寸显示 */}
+                <span className="text-xs text-text-secondary px-1">
+                  {imageSize.width}×{imageSize.height}
+                </span>
+                {/* 分隔线 */}
+                <div className="w-px h-4 bg-border" />
+                {/* 预设尺寸 */}
+                {[25, 50, 75, 100].map((percent) => (
+                  <button
+                    key={percent}
+                    onMouseDown={(e) => {
+                      e.preventDefault();
+                      handleImagePresetSize(percent);
+                    }}
+                    className="px-2 py-1 text-xs text-text bg-bg rounded hover:bg-bg transition-colors"
+                  >
+                    {percent}%
+                  </button>
+                ))}
+                {/* 分隔线 */}
+                <div className="w-px h-4 bg-border" />
+                {/* 对齐按钮 */}
                 <button
-                  key={percent}
                   onMouseDown={(e) => {
                     e.preventDefault();
-                    handleImagePresetSize(percent);
+                    handleImageAlign('left');
                   }}
-                  className="px-2 py-1 text-xs text-text bg-bg rounded hover:bg-bg transition-colors"
+                  className="p-1 text-text-secondary hover:bg-bg rounded transition-colors"
+                  title="左对齐"
                 >
-                  {percent}%
+                  <AlignLeft className="w-4 h-4" />
                 </button>
-              ))}
-              {/* 分隔线 */}
-              <div className="w-px h-4 bg-border" />
-              {/* 对齐按钮 */}
-              <button
-                onMouseDown={(e) => {
-                  e.preventDefault();
-                  handleImageAlign('left');
-                }}
-                className="p-1 text-text-secondary hover:bg-bg rounded transition-colors"
-                title="左对齐"
-              >
-                <AlignLeft className="w-4 h-4" />
-              </button>
-              <button
-                onMouseDown={(e) => {
-                  e.preventDefault();
-                  handleImageAlign('center');
-                }}
-                className="p-1 text-text-secondary hover:bg-bg rounded transition-colors"
-                title="居中"
-              >
-                <AlignCenter className="w-4 h-4" />
-              </button>
-              <button
-                onMouseDown={(e) => {
-                  e.preventDefault();
-                  handleImageAlign('right');
-                }}
-                className="p-1 text-text-secondary hover:bg-bg rounded transition-colors"
-                title="右对齐"
-              >
-                <AlignRight className="w-4 h-4" />
-              </button>
-            </div>
-          );
-        })(),
-        document.body
-      )}
+                <button
+                  onMouseDown={(e) => {
+                    e.preventDefault();
+                    handleImageAlign('center');
+                  }}
+                  className="p-1 text-text-secondary hover:bg-bg rounded transition-colors"
+                  title="居中"
+                >
+                  <AlignCenter className="w-4 h-4" />
+                </button>
+                <button
+                  onMouseDown={(e) => {
+                    e.preventDefault();
+                    handleImageAlign('right');
+                  }}
+                  className="p-1 text-text-secondary hover:bg-bg rounded transition-colors"
+                  title="右对齐"
+                >
+                  <AlignRight className="w-4 h-4" />
+                </button>
+              </div>
+            );
+          })(),
+          document.body
+        )}
 
       {/* 表格右键菜单 */}
       {tableMenu && (
@@ -826,30 +922,48 @@ ${html}
           style={{ left: tableMenu.x, top: tableMenu.y }}
           onClick={(e) => e.stopPropagation()}
         >
-          <button onClick={handleAddRow} className="w-full px-3 py-1.5 text-left text-[13px] text-text hover:bg-bg transition-colors">
+          <button
+            onClick={handleAddRow}
+            className="w-full px-3 py-1.5 text-left text-[13px] text-text hover:bg-bg transition-colors"
+          >
             向下插入行
           </button>
-          <button onClick={handleAddCol} className="w-full px-3 py-1.5 text-left text-[13px] text-text hover:bg-bg transition-colors">
+          <button
+            onClick={handleAddCol}
+            className="w-full px-3 py-1.5 text-left text-[13px] text-text hover:bg-bg transition-colors"
+          >
             向右插入列
           </button>
           <div className="h-px bg-bg my-1" />
-          <button onClick={handleDeleteRow} className="w-full px-3 py-1.5 text-left text-[13px] text-rose-500 hover:bg-rose-500/10 transition-colors">
+          <button
+            onClick={handleDeleteRow}
+            className="w-full px-3 py-1.5 text-left text-[13px] text-rose-500 hover:bg-rose-500/10 transition-colors"
+          >
             删除行
           </button>
-          <button onClick={handleDeleteCol} className="w-full px-3 py-1.5 text-left text-[13px] text-rose-500 hover:bg-rose-500/10 transition-colors">
+          <button
+            onClick={handleDeleteCol}
+            className="w-full px-3 py-1.5 text-left text-[13px] text-rose-500 hover:bg-rose-500/10 transition-colors"
+          >
             删除列
           </button>
           <div className="h-px bg-bg my-1" />
-          <button onClick={handleDeleteTable} className="w-full px-3 py-1.5 text-left text-[13px] text-rose-500 hover:bg-rose-500/10 transition-colors">
+          <button
+            onClick={handleDeleteTable}
+            className="w-full px-3 py-1.5 text-left text-[13px] text-rose-500 hover:bg-rose-500/10 transition-colors"
+          >
             删除表格
           </button>
         </div>
       )}
 
-
-
       {/* 恢复确认模态框 */}
-      <Modal isOpen={showRestoreModal} onClose={handleRestoreDismiss} title="恢复内容" theme={theme}>
+      <Modal
+        isOpen={showRestoreModal}
+        onClose={handleRestoreDismiss}
+        title="恢复内容"
+        theme={theme}
+      >
         <div className="space-y-4">
           <p className="text-sm text-text">检测到未保存的内容，是否恢复？</p>
           <div className="flex gap-2">

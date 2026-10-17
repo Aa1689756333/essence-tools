@@ -1,10 +1,6 @@
 // ========== 排版引擎核心: 29 条格式化规则 ==========
 
-import {
-  CJK_UNIFIED, CJK_EXT_A, CJK_COMPAT,
-  ANS, ANS_EXT,
-  isCJK, isCJKPunct,
-} from './charUtils';
+import { CJK_UNIFIED, CJK_EXT_A, CJK_COMPAT, ANS, ANS_EXT, isCJK, isCJKPunct } from './charUtils';
 
 function isRuleEnabled() {
   return true;
@@ -23,12 +19,12 @@ export function format(text) {
 
   // 1.1 全角数字转半角
   if (isRuleEnabled('fullwidth-number')) {
-    t = t.replace(/[０-９]/g, ch => String.fromCharCode(ch.charCodeAt(0) - 0xFEE0));
+    t = t.replace(/[０-９]/g, (ch) => String.fromCharCode(ch.charCodeAt(0) - 0xfee0));
   }
 
   // 1.2 全角字母转半角
   if (isRuleEnabled('fullwidth-letter')) {
-    t = t.replace(/[Ａ-Ｚａ-ｚ]/g, ch => String.fromCharCode(ch.charCodeAt(0) - 0xFEE0));
+    t = t.replace(/[Ａ-Ｚａ-ｚ]/g, (ch) => String.fromCharCode(ch.charCodeAt(0) - 0xfee0));
   }
 
   // 1.3 间隔号统一
@@ -61,8 +57,10 @@ export function format(text) {
       }
       // 保护URL
       if (ch === ':' && i > 0 && i < arr.length - 1) {
-        if (arr[i - 1] === 's' && arr[i + 1] === '/' && i > 1 && arr[i - 2] === 'p') protected_.add(i);
-        if (arr[i - 1] === 's' && arr[i + 1] === '/' && i > 1 && arr[i - 2] === 's') protected_.add(i);
+        if (arr[i - 1] === 's' && arr[i + 1] === '/' && i > 1 && arr[i - 2] === 'p')
+          protected_.add(i);
+        if (arr[i - 1] === 's' && arr[i + 1] === '/' && i > 1 && arr[i - 2] === 's')
+          protected_.add(i);
       }
       if (ch === '/' && i > 0 && i < arr.length - 1) {
         if (arr[i - 1] === ':' && arr[i + 1] === '/') {
@@ -79,9 +77,8 @@ export function format(text) {
       const prev = i > 0 ? arr[i - 1] : '';
       const next = i < arr.length - 1 ? arr[i + 1] : '';
 
-      const inCJKContext = isCJK(prev) || isCJK(next) ||
-        (prev === '' && isCJK(next)) ||
-        (next === '' && isCJK(prev));
+      const inCJKContext =
+        isCJK(prev) || isCJK(next) || (prev === '' && isCJK(next)) || (next === '' && isCJK(prev));
 
       if (!inCJKContext) continue;
 
@@ -140,8 +137,11 @@ export function format(text) {
         const prev = i > 0 ? arr2[i - 1] : '';
         const next = i < arr2.length - 1 ? arr2[i + 1] : '';
 
-        const inCJKContext = isCJK(prev) || isCJK(next) ||
-          isCJKPunct(prev) || isCJKPunct(next) ||
+        const inCJKContext =
+          isCJK(prev) ||
+          isCJK(next) ||
+          isCJKPunct(prev) ||
+          isCJKPunct(next) ||
           isOpeningPrev(prev) ||
           insideDouble ||
           (prev === '\n' && (isCJK(next) || isCJKPunct(next)));
@@ -162,8 +162,11 @@ export function format(text) {
         const prev = i > 0 ? arr2[i - 1] : '';
         const next = i < arr2.length - 1 ? arr2[i + 1] : '';
 
-        const inCJKContext = isCJK(prev) || isCJK(next) ||
-          isCJKPunct(prev) || isCJKPunct(next) ||
+        const inCJKContext =
+          isCJK(prev) ||
+          isCJK(next) ||
+          isCJKPunct(prev) ||
+          isCJKPunct(next) ||
           isOpeningPrev(prev) ||
           insideSingle ||
           (prev === '\n' && (isCJK(next) || isCJKPunct(next)));
@@ -210,7 +213,10 @@ export function format(text) {
 
   // 2.6.6 竖线统一
   if (isRuleEnabled('vbar-unify')) {
-    t = t.replace(/(?<=[\u4e00-\u9fff\uff00-\uffef])\s*\|\s*(?=[\u4e00-\u9fff\uff00-\uffef])/g, '\uFF5C');
+    t = t.replace(
+      /(?<=[\u4e00-\u9fff\uff00-\uffef])\s*\|\s*(?=[\u4e00-\u9fff\uff00-\uffef])/g,
+      '\uFF5C'
+    );
     t = t.replace(/(?<=[\u4e00-\u9fff\uff00-\uffef])\s*\|\s*(?=[\dA-Za-z])/g, '\uFF5C');
     t = t.replace(/(?<=[\dA-Za-z])\s*\|\s*(?=[\u4e00-\u9fff\uff00-\uffef])/g, '\uFF5C');
   }
@@ -237,11 +243,17 @@ export function format(text) {
   // 3.1 中英文之间加空格
   if (isRuleEnabled('space-cjk')) {
     t = t.replace(
-      new RegExp(`([${CJK_UNIFIED}${CJK_EXT_A}${CJK_COMPAT}\u3100-\u312f\u31a0-\u31bf\u3040-\u309f\u30a0-\u30ff\u31f0-\u31ff])([${ANS}${ANS_EXT}(])`, 'gu'),
+      new RegExp(
+        `([${CJK_UNIFIED}${CJK_EXT_A}${CJK_COMPAT}\u3100-\u312f\u31a0-\u31bf\u3040-\u309f\u30a0-\u30ff\u31f0-\u31ff])([${ANS}${ANS_EXT}(])`,
+        'gu'
+      ),
       '$1 $2'
     );
     t = t.replace(
-      new RegExp(`([${ANS}${ANS_EXT})])([${CJK_UNIFIED}${CJK_EXT_A}${CJK_COMPAT}\u3100-\u312f\u31a0-\u31bf\u3040-\u309f\u30a0-\u30ff\u31f0-\u31ff])`, 'gu'),
+      new RegExp(
+        `([${ANS}${ANS_EXT})])([${CJK_UNIFIED}${CJK_EXT_A}${CJK_COMPAT}\u3100-\u312f\u31a0-\u31bf\u3040-\u309f\u30a0-\u30ff\u31f0-\u31ff])`,
+        'gu'
+      ),
       '$1 $2'
     );
   }
@@ -253,7 +265,10 @@ export function format(text) {
       hexStore.push(m);
       return '\x00H' + (hexStore.length - 1) + '\x00';
     });
-    t = t.replace(/(\d)((?!px\b|ms\b|em\b|vh\b|vw\b|ch\b|ex\b|pt\b|cm\b|mm\b|in\b)[A-Za-z]{2,})/g, '$1 $2');
+    t = t.replace(
+      /(\d)((?!px\b|ms\b|em\b|vh\b|vw\b|ch\b|ex\b|pt\b|cm\b|mm\b|in\b)[A-Za-z]{2,})/g,
+      '$1 $2'
+    );
     t = t.replace(/\x00H\d+\x00/g, function (m) {
       return hexStore[parseInt(m.replace(/[^\d]/g, ''))];
     });
@@ -261,7 +276,10 @@ export function format(text) {
 
   // 3.3 全角标点周围去空格
   if (isRuleEnabled('no-space-fullwidth')) {
-    t = t.replace(/ +([\uff0c\uff0e\uff01\uff1f\uff1a\uff1b\u3001\u3002\u201d\uff09\u300d\u300f\u300b\uff3d\uff5d])/g, '$1');
+    t = t.replace(
+      / +([\uff0c\uff0e\uff01\uff1f\uff1a\uff1b\u3001\u3002\u201d\uff09\u300d\u300f\u300b\uff3d\uff5d])/g,
+      '$1'
+    );
     t = t.replace(/([\uff08\u201c\u300e\u300c\u300a\uff3b\uff5b]) +/g, '$1');
     t = t.replace(/ +\u2026\u2026/g, '\u2026\u2026');
     t = t.replace(/ +\u2014\u2014/g, '\u2014\u2014');
@@ -270,7 +288,10 @@ export function format(text) {
   // 3.4 中文字符之间的空格移除
   if (isRuleEnabled('no-space-cjk')) {
     t = t.replace(
-      new RegExp(`([${CJK_UNIFIED}${CJK_EXT_A}${CJK_COMPAT}]) +(?=[${CJK_UNIFIED}${CJK_EXT_A}${CJK_COMPAT}])`, 'gu'),
+      new RegExp(
+        `([${CJK_UNIFIED}${CJK_EXT_A}${CJK_COMPAT}]) +(?=[${CJK_UNIFIED}${CJK_EXT_A}${CJK_COMPAT}])`,
+        'gu'
+      ),
       '$1'
     );
   }
@@ -283,9 +304,27 @@ export function format(text) {
 
   // 3.6 & 符号间距
   if (isRuleEnabled('space-ampersand')) {
-    t = t.replace(new RegExp(`([${CJK_UNIFIED}${CJK_EXT_A}${CJK_COMPAT}])\\s*&\\s*(?=[${CJK_UNIFIED}${CJK_EXT_A}${CJK_COMPAT}])`, 'gu'), '$1 & ');
-    t = t.replace(new RegExp(`([${CJK_UNIFIED}${CJK_EXT_A}${CJK_COMPAT}])\\s*&(?=[^\\s${CJK_UNIFIED}${CJK_EXT_A}${CJK_COMPAT}])`, 'gu'), '$1 &');
-    t = t.replace(new RegExp(`([^\\s${CJK_UNIFIED}${CJK_EXT_A}${CJK_COMPAT}])&\\s*(?=[${CJK_UNIFIED}${CJK_EXT_A}${CJK_COMPAT}])`, 'gu'), '$1 &');
+    t = t.replace(
+      new RegExp(
+        `([${CJK_UNIFIED}${CJK_EXT_A}${CJK_COMPAT}])\\s*&\\s*(?=[${CJK_UNIFIED}${CJK_EXT_A}${CJK_COMPAT}])`,
+        'gu'
+      ),
+      '$1 & '
+    );
+    t = t.replace(
+      new RegExp(
+        `([${CJK_UNIFIED}${CJK_EXT_A}${CJK_COMPAT}])\\s*&(?=[^\\s${CJK_UNIFIED}${CJK_EXT_A}${CJK_COMPAT}])`,
+        'gu'
+      ),
+      '$1 &'
+    );
+    t = t.replace(
+      new RegExp(
+        `([^\\s${CJK_UNIFIED}${CJK_EXT_A}${CJK_COMPAT}])&\\s*(?=[${CJK_UNIFIED}${CJK_EXT_A}${CJK_COMPAT}])`,
+        'gu'
+      ),
+      '$1 &'
+    );
   }
 
   // 3.7 拆行保护
@@ -347,7 +386,8 @@ export function format(text) {
 
   // 4.5 章节标题识别
   if (isRuleEnabled('chapter-heading')) {
-    const chapPattern = /^(第[一二三四五六七八九十百千零〇０-９\d]+[章节卷部回集篇].*|Chapter\s+\d+.*)$/im;
+    const chapPattern =
+      /^(第[一二三四五六七八九十百千零〇０-９\d]+[章节卷部回集篇].*|Chapter\s+\d+.*)$/im;
     t = t.replace(new RegExp(`(?<!\\n\\n)${chapPattern.source}`, 'gm'), '\n$1');
     t = t.replace(new RegExp(`${chapPattern.source}(?!\\n\\n)`, 'gm'), '$1\n');
     t = t.replace(/^\n+/, '').replace(/\n{3,}/g, '\n\n');
@@ -373,8 +413,12 @@ export function format(text) {
 
   // 4.7 对话格式检测
   if (isRuleEnabled('dialogue-format')) {
-    const speechTags = '(?:说|道|问|答|喊|叫|吼|嚷|笑|叹|哭|骂|怒|吼道|叫道|笑道|叹道|问道|答道|低声说|大声说|小声说|冷冷地说|轻声说)';
-    t = t.replace(new RegExp(`([，。])\\u201D(${speechTags})\\uFF0C\\u201C`, 'g'), '\uFF0C\u201D$2\uFF0C\u201C');
+    const speechTags =
+      '(?:说|道|问|答|喊|叫|吼|嚷|笑|叹|哭|骂|怒|吼道|叫道|笑道|叹道|问道|答道|低声说|大声说|小声说|冷冷地说|轻声说)';
+    t = t.replace(
+      new RegExp(`([，。])\\u201D(${speechTags})\\uFF0C\\u201C`, 'g'),
+      '\uFF0C\u201D$2\uFF0C\u201C'
+    );
     t = t.replace(new RegExp(`([：。])\\u201D(${speechTags})\\u3002`, 'g'), '\uFF0C\u201D$2\u3002');
   }
 

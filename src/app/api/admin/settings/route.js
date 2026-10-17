@@ -50,21 +50,27 @@ export async function POST(req) {
       try {
         checkinConfig = JSON.parse(body.checkin_config);
       } catch {
-        return NextResponse.json({
-          error: '签到配置格式错误',
-          details: [{ field: 'checkin_config', message: '必须是合法 JSON' }],
-        }, { status: 400 });
+        return NextResponse.json(
+          {
+            error: '签到配置格式错误',
+            details: [{ field: 'checkin_config', message: '必须是合法 JSON' }],
+          },
+          { status: 400 }
+        );
       }
 
       const checkinValidation = checkinConfigSchema.safeParse(checkinConfig);
       if (!checkinValidation.success) {
-        return NextResponse.json({
-          error: '签到配置校验失败',
-          details: checkinValidation.error.issues.map((issue) => ({
-            field: ['checkin_config', ...issue.path].join('.'),
-            message: issue.message,
-          })),
-        }, { status: 400 });
+        return NextResponse.json(
+          {
+            error: '签到配置校验失败',
+            details: checkinValidation.error.issues.map((issue) => ({
+              field: ['checkin_config', ...issue.path].join('.'),
+              message: issue.message,
+            })),
+          },
+          { status: 400 }
+        );
       }
 
       body.checkin_config = JSON.stringify(checkinValidation.data);
@@ -74,9 +80,8 @@ export async function POST(req) {
     if (body.smtp_config) {
       let newSmtpConfig;
       try {
-        newSmtpConfig = typeof body.smtp_config === 'string'
-          ? JSON.parse(body.smtp_config)
-          : body.smtp_config;
+        newSmtpConfig =
+          typeof body.smtp_config === 'string' ? JSON.parse(body.smtp_config) : body.smtp_config;
       } catch (e) {
         return NextResponse.json({ error: 'SMTP 配置格式错误' }, { status: 400 });
       }

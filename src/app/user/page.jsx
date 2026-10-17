@@ -18,9 +18,19 @@ import {
 import { useAuth } from '@/context/AuthContext';
 
 const shortcuts = [
-  { href: '/user/profile', title: '个人资料', description: '修改昵称，查看账号信息', icon: UserRound },
+  {
+    href: '/user/profile',
+    title: '个人资料',
+    description: '修改昵称，查看账号信息',
+    icon: UserRound,
+  },
   { href: '/user/points', title: '积分记录', description: '查看积分余额和流水', icon: Coins },
-  { href: '/user/security', title: '账号安全', description: '修改密码和注销账号', icon: LockKeyhole },
+  {
+    href: '/user/security',
+    title: '账号安全',
+    description: '修改密码和注销账号',
+    icon: LockKeyhole,
+  },
 ];
 
 function getJoinedDays(createdAt) {
@@ -40,7 +50,10 @@ function formatTransactionTime(value) {
 
 export default function UserOverviewPage() {
   const { user, openCheckIn } = useAuth();
-  const currentMonthLabel = new Date().toLocaleDateString('zh-CN', { year: 'numeric', month: 'long' });
+  const currentMonthLabel = new Date().toLocaleDateString('zh-CN', {
+    year: 'numeric',
+    month: 'long',
+  });
   const [checkInInfo, setCheckInInfo] = useState(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
@@ -110,15 +123,28 @@ export default function UserOverviewPage() {
               <p className="mt-1 text-[11px] text-text-secondary">{stat.detail}</p>
             </>
           );
-          const className = "rounded-2xl border border-border bg-card p-4 text-left transition-all hover:-translate-y-0.5 hover:shadow-md";
+          const className =
+            'rounded-2xl border border-border bg-card p-4 text-left transition-all hover:-translate-y-0.5 hover:shadow-md';
 
           if (stat.action) {
-            return <button key={stat.label} type="button" onClick={stat.action} className={className}>{content}</button>;
+            return (
+              <button key={stat.label} type="button" onClick={stat.action} className={className}>
+                {content}
+              </button>
+            );
           }
           if (stat.href) {
-            return <Link key={stat.label} href={stat.href} className={className}>{content}</Link>;
+            return (
+              <Link key={stat.label} href={stat.href} className={className}>
+                {content}
+              </Link>
+            );
           }
-          return <div key={stat.label} className={className}>{content}</div>;
+          return (
+            <div key={stat.label} className={className}>
+              {content}
+            </div>
+          );
         })}
       </div>
 
@@ -130,18 +156,23 @@ export default function UserOverviewPage() {
               <Flame className="h-4 w-4 text-emerald-500" aria-hidden="true" />
               <h3 className="text-sm font-bold text-text">签到状态</h3>
             </div>
-            <p className="mt-1 text-xs text-text-secondary">{currentMonthLabel} · 开启新的连签周期赚取奖励</p>
+            <p className="mt-1 text-xs text-text-secondary">
+              {currentMonthLabel} · 开启新的连签周期赚取奖励
+            </p>
           </div>
-          <button 
-            type="button" 
-            onClick={openCheckIn} 
+          <button
+            type="button"
+            onClick={openCheckIn}
             className={`inline-flex items-center justify-center gap-1.5 rounded-xl border px-4 py-2 text-xs font-semibold transition-colors ${
-              checkInInfo?.todayChecked 
-                ? 'bg-bg-primary border-border text-text-secondary cursor-default' 
+              checkInInfo?.todayChecked
+                ? 'bg-bg-primary border-border text-text-secondary cursor-default'
                 : 'bg-emerald-500 border-emerald-500 text-white hover:bg-emerald-600 shadow-sm'
             }`}
           >
-            <Flame className={`h-3.5 w-3.5 ${checkInInfo?.todayChecked ? 'text-text-tertiary' : 'text-white'}`} aria-hidden="true" />
+            <Flame
+              className={`h-3.5 w-3.5 ${checkInInfo?.todayChecked ? 'text-text-tertiary' : 'text-white'}`}
+              aria-hidden="true"
+            />
             {checkInInfo?.todayChecked ? '今日已签到' : '立即打卡'}
           </button>
         </div>
@@ -151,19 +182,25 @@ export default function UserOverviewPage() {
           <div className="rounded-xl bg-bg-primary p-4 border border-border/50">
             <div className="text-[11px] text-text-secondary mb-1">本月打卡</div>
             <div className="flex items-baseline gap-1">
-              <span className="text-xl font-bold text-text">{checkInInfo?.monthCheckinCount || 0}</span>
-              <span className="text-xs text-text-tertiary">/ {checkInInfo?.daysInMonth || 30} 天</span>
+              <span className="text-xl font-bold text-text">
+                {checkInInfo?.monthCheckinCount || 0}
+              </span>
+              <span className="text-xs text-text-tertiary">
+                / {checkInInfo?.daysInMonth || 30} 天
+              </span>
             </div>
             <div className="mt-1.5 text-[10px] text-text-tertiary truncate">
               {checkInInfo?.currentTier || '正在计算签到奖励'}
             </div>
           </div>
-          
+
           {/* Card 2: 连签进度 */}
           <div className="rounded-xl bg-bg-primary p-4 border border-border/50">
             <div className="text-[11px] text-text-secondary mb-1">当前连续签到</div>
             <div className="flex items-baseline gap-1">
-              <span className="text-xl font-bold text-emerald-500">{checkInInfo?.cycleDay || 1}</span>
+              <span className="text-xl font-bold text-emerald-500">
+                {checkInInfo?.cycleDay || 1}
+              </span>
               <span className="text-xs text-text-tertiary">天</span>
             </div>
             <div className="mt-1.5 text-[10px] text-emerald-600/70 dark:text-emerald-400/70 truncate">
@@ -177,7 +214,9 @@ export default function UserOverviewPage() {
               <>
                 <div className="text-[11px] text-text-secondary mb-1">距离下个大奖</div>
                 <div className="flex items-baseline gap-1">
-                  <span className="text-xl font-bold text-amber-500">{checkInInfo.nextMilestone.daysRemaining}</span>
+                  <span className="text-xl font-bold text-amber-500">
+                    {checkInInfo.nextMilestone.daysRemaining}
+                  </span>
                   <span className="text-xs text-text-tertiary">天</span>
                 </div>
                 <div className="mt-1.5 text-[10px] font-medium text-amber-600 dark:text-amber-400 truncate">
@@ -208,7 +247,11 @@ export default function UserOverviewPage() {
             {shortcuts.map((item) => {
               const Icon = item.icon;
               return (
-                <Link key={item.href} href={item.href} className="group flex items-center gap-4 rounded-2xl border border-border bg-card p-4 transition-all hover:shadow-md">
+                <Link
+                  key={item.href}
+                  href={item.href}
+                  className="group flex items-center gap-4 rounded-2xl border border-border bg-card p-4 transition-all hover:shadow-md"
+                >
                   <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-bg-primary text-[var(--theme-accent)]">
                     <Icon className="h-5 w-5" aria-hidden="true" />
                   </div>
@@ -216,7 +259,10 @@ export default function UserOverviewPage() {
                     <h4 className="text-sm font-bold text-text">{item.title}</h4>
                     <p className="mt-1 truncate text-xs text-text-secondary">{item.description}</p>
                   </div>
-                  <ArrowRight className="h-4 w-4 shrink-0 text-text-secondary transition-transform group-hover:translate-x-1" aria-hidden="true" />
+                  <ArrowRight
+                    className="h-4 w-4 shrink-0 text-text-secondary transition-transform group-hover:translate-x-1"
+                    aria-hidden="true"
+                  />
                 </Link>
               );
             })}
@@ -229,33 +275,55 @@ export default function UserOverviewPage() {
               <Coins className="h-4 w-4 text-amber-500" aria-hidden="true" />
               <h3 className="text-sm font-bold text-text">最近积分动态</h3>
             </div>
-            <Link href="/user/points" className="text-xs font-medium text-[var(--theme-accent)] hover:underline">查看全部</Link>
+            <Link
+              href="/user/points"
+              className="text-xs font-medium text-[var(--theme-accent)] hover:underline"
+            >
+              查看全部
+            </Link>
           </div>
 
           {loading ? (
             <div className="space-y-3" aria-label="正在加载积分动态">
-              {[1, 2, 3].map((item) => <div key={item} className="h-12 animate-pulse rounded-xl bg-bg-primary" />)}
+              {[1, 2, 3].map((item) => (
+                <div key={item} className="h-12 animate-pulse rounded-xl bg-bg-primary" />
+              ))}
             </div>
           ) : error ? (
             <div className="flex min-h-36 flex-col items-center justify-center text-center">
               <p className="text-xs text-rose-500">{error}</p>
-              <button type="button" onClick={fetchOverview} className="mt-3 inline-flex items-center gap-1.5 rounded-lg border border-border px-3 py-1.5 text-xs text-text hover:bg-bg-primary">
-                <RefreshCw className="h-3.5 w-3.5" aria-hidden="true" />重试
+              <button
+                type="button"
+                onClick={fetchOverview}
+                className="mt-3 inline-flex items-center gap-1.5 rounded-lg border border-border px-3 py-1.5 text-xs text-text hover:bg-bg-primary"
+              >
+                <RefreshCw className="h-3.5 w-3.5" aria-hidden="true" />
+                重试
               </button>
             </div>
           ) : checkInInfo?.history?.length ? (
             <div className="divide-y divide-border">
               {checkInInfo.history.slice(0, 5).map((transaction) => (
-                <div key={transaction.id} className="flex items-center gap-3 py-3 first:pt-0 last:pb-0">
+                <div
+                  key={transaction.id}
+                  className="flex items-center gap-3 py-3 first:pt-0 last:pb-0"
+                >
                   <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-emerald-500/10 text-emerald-500">
                     <CircleCheck className="h-4 w-4" aria-hidden="true" />
                   </div>
                   <div className="min-w-0 flex-1">
-                    <p className="truncate text-xs font-medium text-text">{transaction.description}</p>
-                    <p className="mt-0.5 text-[11px] text-text-secondary">{formatTransactionTime(transaction.createdAt)}</p>
+                    <p className="truncate text-xs font-medium text-text">
+                      {transaction.description}
+                    </p>
+                    <p className="mt-0.5 text-[11px] text-text-secondary">
+                      {formatTransactionTime(transaction.createdAt)}
+                    </p>
                   </div>
-                  <span className={`text-sm font-bold ${transaction.amount >= 0 ? 'text-emerald-500' : 'text-rose-500'}`}>
-                    {transaction.amount >= 0 ? '+' : ''}{transaction.amount}
+                  <span
+                    className={`text-sm font-bold ${transaction.amount >= 0 ? 'text-emerald-500' : 'text-rose-500'}`}
+                  >
+                    {transaction.amount >= 0 ? '+' : ''}
+                    {transaction.amount}
                   </span>
                 </div>
               ))}
@@ -264,7 +332,13 @@ export default function UserOverviewPage() {
             <div className="flex min-h-36 flex-col items-center justify-center text-center">
               <Coins className="mb-3 h-8 w-8 text-text-secondary" aria-hidden="true" />
               <p className="text-sm font-medium text-text">暂无积分记录</p>
-              <button type="button" onClick={openCheckIn} className="mt-2 text-xs font-medium text-[var(--theme-accent)] hover:underline">去签到赚取积分</button>
+              <button
+                type="button"
+                onClick={openCheckIn}
+                className="mt-2 text-xs font-medium text-[var(--theme-accent)] hover:underline"
+              >
+                去签到赚取积分
+              </button>
             </div>
           )}
         </section>

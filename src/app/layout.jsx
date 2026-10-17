@@ -23,7 +23,8 @@ export async function generateMetadata() {
   const settings = await getSystemSettings();
   return {
     title: settings.site_title || '极粹工具 (Essence Tools)',
-    description: settings.site_description || '免费在线工具集合，所有工具在浏览器本地运行，不上传任何数据。',
+    description:
+      settings.site_description || '免费在线工具集合，所有工具在浏览器本地运行，不上传任何数据。',
     keywords: settings.site_keywords || '在线工具, 小说排版, HTML编辑器, Markdown编辑器, 开发工具',
   };
 }
@@ -51,23 +52,21 @@ export default async function RootLayout({ children }) {
         <ThemeProvider>
           <ToastProvider>
             <AuthProvider>
-            <SidebarProvider>
-              <div className="flex h-screen overflow-hidden">
-                <Sidebar tools={tools} toolsByCategory={toolsByCategory} />
-                <div className="flex flex-col flex-1 min-w-0 overflow-hidden">
-                  <Topbar />
-                  <main className="flex-1 overflow-y-auto p-4 sm:p-5 md:p-6 lg:p-8">
-                    <ErrorBoundary>
-                      {children}
-                    </ErrorBoundary>
-                  </main>
+              <SidebarProvider>
+                <div className="flex h-screen overflow-hidden">
+                  <Sidebar tools={tools} toolsByCategory={toolsByCategory} />
+                  <div className="flex flex-col flex-1 min-w-0 overflow-hidden">
+                    <Topbar />
+                    <main className="flex-1 overflow-y-auto p-4 sm:p-5 md:p-6 lg:p-8">
+                      <ErrorBoundary>{children}</ErrorBoundary>
+                    </main>
+                  </div>
                 </div>
-              </div>
-              <AuthModal />
-              <CheckInModal />
-            </SidebarProvider>
-            <Toast />
-          </AuthProvider>
+                <AuthModal />
+                <CheckInModal />
+              </SidebarProvider>
+              <Toast />
+            </AuthProvider>
           </ToastProvider>
         </ThemeProvider>
       </body>
