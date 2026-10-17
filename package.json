@@ -2,6 +2,14 @@
   "name": "essence-tools",
   "version": "0.1.0",
   "private": true,
+  "license": "UNLICENSED",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/Aa1689756333/essence-tools.git"
+  },
+  "engines": {
+    "node": ">=20"
+  },
   "scripts": {
     "dev": "next dev --turbopack",
     "build": "next build",
