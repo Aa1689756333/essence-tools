@@ -8,6 +8,11 @@ on:
 jobs:
   lint-and-build:
     runs-on: ubuntu-latest
+    env:
+      # schema.prisma 的 provider 是 sqlite，用相对 file: 路径与本地开发保持一致；
+      # 该文件仅存在于 CI 容器内，且已被 .gitignore 覆盖。
+      DATABASE_URL: 'file:./dev.db'
+      JWT_SECRET: 'ci-test-secret-key-not-for-production'
     steps:
       - uses: actions/checkout@v5
       - uses: actions/setup-node@v5
@@ -15,10 +20,11 @@ jobs:
           node-version: 22
           cache: npm
       - run: npm ci
+      # Prisma Client 不会在 npm ci 时自动生成，build 阶段引用 @prisma/client 会失败
+      - run: npx prisma generate
+      # 建出空库结构，供 next build 预渲染时查询
+      - run: npx prisma db push
       - run: npm run lint
       - run: npm run format:check
       - run: npm run build
-        env:
-          DATABASE_URL: "postgresql://fake:fake@localhost:5432/fake"
-          JWT_SECRET: "ci-test-secret-key-not-for-production"
       - run: npm test
