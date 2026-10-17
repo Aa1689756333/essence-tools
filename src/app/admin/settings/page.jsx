@@ -100,7 +100,7 @@ export default function AdminSettingsPage() {
       secure: true,
       user: '',
       pass: '',
-      fromName: 'ToolBox',
+      fromName: '极粹工具',
       fromEmail: '',
     },
     checkin_config: getDefaultCheckinConfig(),
@@ -159,7 +159,7 @@ export default function AdminSettingsPage() {
             secure: smtpObj.secure ?? true,
             user: smtpObj.user || '',
             pass: smtpObj.pass || '',
-            fromName: smtpObj.fromName || 'ToolBox',
+            fromName: smtpObj.fromName || '极粹工具',
             fromEmail: smtpObj.fromEmail || '',
           },
           checkin_config: checkinObj,
@@ -312,7 +312,7 @@ export default function AdminSettingsPage() {
                 type="text"
                 value={form.site_title}
                 onChange={(e) => setForm({ ...form, site_title: e.target.value })}
-                placeholder="ToolBox · 在线工具箱"
+                placeholder="极粹工具 · 在线工具箱"
                 className="w-full px-3 py-2 bg-bg border border-border rounded-xl text-xs text-text focus:outline-none focus:border-border-light"
               />
               <p className="text-[11px] text-text-tertiary mt-1">
@@ -616,7 +616,7 @@ export default function AdminSettingsPage() {
                       smtp_config: { ...form.smtp_config, fromName: e.target.value },
                     })
                   }
-                  placeholder="ToolBox 官方团队"
+                  placeholder="极粹工具 官方团队"
                   className="w-full px-3 py-2 bg-bg border border-border rounded-xl text-xs text-text focus:outline-none"
                 />
               </div>

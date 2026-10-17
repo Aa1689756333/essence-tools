@@ -1,6 +1,6 @@
 {
-  "name": "ToolBox 工具箱",
-  "short_name": "ToolBox",
+  "name": "极粹工具 (Essence Tools)",
+  "short_name": "极粹工具",
   "description": "在线效率工具集合：小说排版、HTML编辑、Markdown编辑",
   "start_url": "/",
   "display": "standalone",

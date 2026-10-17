@@ -18,12 +18,12 @@ function getJwtSecret() {
     console.warn(
       '⚠️ JWT_SECRET not configured, using development fallback. DO NOT use in production!'
     );
-    _jwtSecretKey = new TextEncoder().encode('toolbox-dev-secret-key');
+    _jwtSecretKey = new TextEncoder().encode('essence-tools-dev-secret-key');
   }
   return _jwtSecretKey;
 }
 
-export const COOKIE_NAME = 'toolbox_session';
+export const COOKIE_NAME = 'essence_session';
 
 export async function hashPassword(password) {
   return await bcrypt.hash(password, 10);

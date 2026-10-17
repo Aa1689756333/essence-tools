@@ -71,10 +71,11 @@ describe('JWT 令牌', () => {
   });
 });
 
-// cookie 名与浏览器里已存的会话绑定，改名会踢掉所有在线用户，
-// 因此把它钉在这里：真要改，必须是有意识地让这个测试失败。
-it('会话 cookie 名保持稳定', () => {
-  expect(COOKIE_NAME).toBe('toolbox_session');
+// cookie 名与浏览器里已存的会话绑定，改名会踢掉所有在线用户，所以把它钉在这里。
+// 当前项目未发布、无真实用户，本次随品牌更名把 toolbox_session 改成 essence_session，
+// auth.js 与 middleware.js 必须使用同一个名字，改动时让这个测试失败是预期行为。
+it('会话 cookie 名保持稳定，且与 middleware 一致', () => {
+  expect(COOKIE_NAME).toBe('essence_session');
 });
 
 describe('getSessionUser', () => {

@@ -6,7 +6,7 @@ const MarkdownEditor = dynamic(() => import('@/tools/markdown-editor/MarkdownEdi
 });
 
 export const metadata = {
-  title: 'Markdown 编辑器 - ToolBox',
+  title: 'Markdown 编辑器 - 极粹工具',
   description: '在线 Markdown 编辑器，实时预览渲染效果，支持导出为 Markdown 或 HTML 文件。',
 };
 

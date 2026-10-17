@@ -145,7 +145,7 @@ export default function AuthModal() {
           <Sparkles className="w-6 h-6" style={{ color: 'var(--theme-accent, #10b981)' }} />
         </div>
         <h2 className="text-xl font-bold text-text tracking-tight">
-          {isForgotPassword ? '重置密码' : isLogin ? '欢迎回到 ToolBox' : '创建新账户'}
+          {isForgotPassword ? '重置密码' : isLogin ? '欢迎回到极粹工具' : '创建新账户'}
         </h2>
         <p className="text-xs text-text-secondary mt-1">
           {isForgotPassword

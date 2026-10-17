@@ -1,7 +1,7 @@
 import db from './db';
 
 export const DEFAULT_SETTINGS = {
-  site_title: 'ToolBox · 在线工具箱',
+  site_title: '极粹工具 · 在线工具箱',
   site_description: '免费在线工具集合，所有工具在浏览器本地运行，不上传任何数据。',
   site_keywords: '在线工具, 小说排版, HTML编辑器, Markdown编辑器, 开发工具',
   allow_registration: 'true',
@@ -15,7 +15,7 @@ export const DEFAULT_SETTINGS = {
     secure: true,
     user: '',
     pass: '',
-    fromName: 'ToolBox',
+    fromName: '极粹工具',
     fromEmail: '',
   }),
   checkin_config: JSON.stringify({

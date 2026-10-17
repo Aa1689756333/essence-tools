@@ -78,7 +78,7 @@ model EmailVerification {
 //    provider = "postgresql"
 //
 // 2. 在生产环境配置 DATABASE_URL 环境变量，例如：
-//    DATABASE_URL="postgresql://user:password@host:5432/toolbox?sslmode=require"
+//    DATABASE_URL="postgresql://user:password@host:5432/essence_tools?sslmode=require"
 //    推荐使用 Neon (https://neon.tech) 或 Supabase 的免费 PostgreSQL
 //
 // 3. 生成迁移并部署：

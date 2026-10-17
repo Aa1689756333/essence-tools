@@ -18,12 +18,12 @@ function getJwtSecret() {
       'CRITICAL: JWT_SECRET not configured in production! All sessions will be invalid.'
     );
   } else {
-    _jwtSecretKey = new TextEncoder().encode('toolbox-dev-secret-key');
+    _jwtSecretKey = new TextEncoder().encode('essence-tools-dev-secret-key');
   }
   return _jwtSecretKey;
 }
 
-const COOKIE_NAME = 'toolbox_session';
+const COOKIE_NAME = 'essence_session';
 
 export async function middleware(request) {
   const { pathname } = request.nextUrl;

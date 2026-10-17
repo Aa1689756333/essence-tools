@@ -69,11 +69,11 @@ export async function POST(req) {
 
     await sendMail({
       to: email,
-      subject: '【ToolBox】注册验证码',
+      subject: '【极粹工具】注册验证码',
       html: `
         <div style="font-family: sans-serif; padding: 24px; color: #333; max-width: 480px; margin: 0 auto;">
-          <h2 style="color: #10b981; margin-bottom: 8px;">ToolBox 注册验证码</h2>
-          <p style="color: #666; font-size: 14px;">您正在注册 ToolBox 账户，验证码为：</p>
+          <h2 style="color: #10b981; margin-bottom: 8px;">极粹工具 注册验证码</h2>
+          <p style="color: #666; font-size: 14px;">您正在注册 极粹工具 账户，验证码为：</p>
           <div style="font-size: 32px; font-weight: bold; letter-spacing: 8px; color: #111; background: #f3f4f6; border-radius: 12px; padding: 16px; text-align: center; margin: 16px 0;">${result.code}</div>
           <p style="color: #888; font-size: 13px;">验证码 10 分钟内有效，请勿泄露给他人。若非本人操作，请忽略此邮件。</p>
           <hr style="border: none; border-top: 1px solid #eee; margin: 20px 0;" />

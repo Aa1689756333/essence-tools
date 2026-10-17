@@ -8,7 +8,7 @@ function isStorageAvailable() {
   if (storageAvailable !== null) return storageAvailable;
   if (typeof window === 'undefined') return (storageAvailable = false);
   try {
-    const testKey = '__toolbox_storage_test__';
+    const testKey = '__essence_storage_test__';
     window.localStorage.setItem(testKey, '1');
     window.localStorage.removeItem(testKey);
     storageAvailable = true;
