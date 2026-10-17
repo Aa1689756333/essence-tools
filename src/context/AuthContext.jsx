@@ -11,7 +11,8 @@ export function AuthProvider({ children }) {
   const [authModalMode, setAuthModalMode] = useState('login'); // 'login' | 'register'
   const [showCheckInModal, setShowCheckInModal] = useState(false);
 
-  const fetchMe = useCallback(async (retryCount = 0) => {
+  // 用具名函数表达式自引用，避免在声明完成前读取外层的 fetchMe 变量
+  const fetchMe = useCallback(async function fetchMeWithRetry(retryCount = 0) {
     try {
       if (retryCount === 0) setLoading(true);
       const res = await fetch('/api/auth/me');
@@ -25,7 +26,7 @@ export function AuthProvider({ children }) {
     } catch (err) {
       if (retryCount < 2) {
         const backoff = 1000 * Math.pow(2, retryCount);
-        setTimeout(() => fetchMe(retryCount + 1), backoff);
+        setTimeout(() => fetchMeWithRetry(retryCount + 1), backoff);
       } else {
         setUser(null);
         setLoading(false);
@@ -35,7 +36,7 @@ export function AuthProvider({ children }) {
 
   useEffect(() => {
     fetchMe();
-    
+
     const handleOnline = () => fetchMe();
     window.addEventListener('online', handleOnline);
     return () => window.removeEventListener('online', handleOnline);
@@ -105,7 +106,7 @@ export function AuthProvider({ children }) {
   const closeCheckIn = () => setShowCheckInModal(false);
 
   const updateUser = (updatedUser) => {
-    setUser(prev => (prev ? { ...prev, ...updatedUser } : updatedUser));
+    setUser((prev) => (prev ? { ...prev, ...updatedUser } : updatedUser));
   };
 
   return (
